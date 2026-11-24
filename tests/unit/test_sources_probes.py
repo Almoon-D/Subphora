@@ -375,3 +375,49 @@ def test_the_table_has_one_row_per_check_and_a_summary() -> None:
     assert table[0].split() == ["SERVICE", "CHECK", "STATUS", "DETAIL"]
     assert table[1].startswith("a          sample  ok")
     assert table[-1] == "1 ok, 1 failed, 0 not checked"
+
+
+async def test_capabilities_and_sample_go_without_origin_and_cors_with_it() -> None:
+    with respx.mock as mock:
+        route = mock.get(CATASTRO_WMS).respond(
+            200, content=fixture_bytes("catastro_wms_capabilities.xml"), headers=XML
+        )
+        await run(catastro_wms(sample=None), mock)
+    first, cors = route.calls[0].request, route.calls[-1].request
+    assert "Origin" not in first.headers
+    assert cors.headers["Origin"] == ORIGIN
+    assert route.call_count == 2
+
+
+async def test_a_firewall_that_rejects_browsers_is_recorded_as_no_cors() -> None:
+    sample = {"description": "page", "expect_content_type": "text/html", "expect_text": "levels"}
+    entry = service(kind="download", web_mercator=None, layers=[], sample=sample, cors=False)
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        if "Origin" in request.headers:
+            return httpx.Response(200, text="<html>Request Rejected</html>")
+        return httpx.Response(
+            200, text="<html>levels</html>", headers={"content-type": "text/html"}
+        )
+
+    with respx.mock as mock:
+        mock.get("https://wms.example.org/wms").mock(side_effect=answer)
+        results = await run(entry, mock)
+    assert statuses(results) == {CheckName.SAMPLE: CheckStatus.OK, CheckName.CORS: CheckStatus.OK}
+    assert details(results)[CheckName.CORS].startswith("not allowed, as recorded")
+
+
+async def test_a_cors_request_that_breaks_leaves_cors_unchecked() -> None:
+    sample = {"description": "page", "expect_content_type": "text/html"}
+    entry = service(kind="download", web_mercator=None, layers=[], sample=sample, cors=True)
+
+    def answer(request: httpx.Request) -> httpx.Response:
+        if "Origin" in request.headers:
+            raise httpx.ReadError("reset")
+        return httpx.Response(200, text="<html></html>", headers={"content-type": "text/html"})
+
+    with respx.mock as mock:
+        mock.get("https://wms.example.org/wms").mock(side_effect=answer)
+        results = await run(entry, mock)
+    assert statuses(results)[CheckName.SAMPLE] is CheckStatus.OK
+    assert statuses(results)[CheckName.CORS] is CheckStatus.NOT_CHECKED

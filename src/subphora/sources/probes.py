@@ -169,36 +169,42 @@ async def check_service(
                 f"needs a key ({service.key_env}); probed by the session that uses the key",
             )
         ]
-    headers = {"Origin": origin}
     results: list[CheckResult] = []
-    responses: list[FetchedResponse] = []
+    reached = False
     capabilities: Capabilities | None = None
 
+    # Capabilities and sample go without an Origin, as the server will call them; some
+    # firewalls reject any request that carries one (docs/knowledge/water-authorities.md).
     if service.kind in KINDS_WITH_CAPABILITIES:
-        result, capabilities, response = await _check_capabilities(client, service, headers)
+        result, capabilities, response = await _check_capabilities(client, service)
         results.append(result)
-        if response is not None:
-            responses.append(response)
+        reached = reached or response is not None
         if service.web_mercator is not None:
             results.append(_check_web_mercator(service, capabilities))
 
     if service.sample is not None:
-        result, response = await _check_sample(client, service, headers)
+        result, response = await _check_sample(client, service)
         results.append(result)
-        if response is not None:
-            responses.insert(0, response)
+        reached = reached or response is not None
 
     if service.cors is not None:
-        results.append(_check_cors(service, responses, origin))
+        results.append(await _check_cors(client, service, origin, reached))
     return results
 
 
+def _sample_request(service: Service) -> tuple[str, Params]:
+    sample = service.sample
+    assert sample is not None
+    url = service.base_url.rstrip("/") + sample.path if sample.path else service.base_url
+    return url, sample.params
+
+
 async def _check_capabilities(
-    client: CatalogueClient, service: Service, headers: dict[str, str]
+    client: CatalogueClient, service: Service
 ) -> tuple[CheckResult, Capabilities | None, FetchedResponse | None]:
     url, params = capabilities_request(service)
     try:
-        response = await client.get(url, params=params, headers=headers)
+        response = await client.get(url, params=params)
     except SourceError as exc:
         return _result(service, CheckName.CAPABILITIES, CheckStatus.FAILED, str(exc)), None, None
     if response.status_code != 200:
@@ -236,13 +242,13 @@ def _check_web_mercator(service: Service, capabilities: Capabilities | None) -> 
 
 
 async def _check_sample(
-    client: CatalogueClient, service: Service, headers: dict[str, str]
+    client: CatalogueClient, service: Service
 ) -> tuple[CheckResult, FetchedResponse | None]:
     sample = service.sample
     assert sample is not None
-    url = service.base_url.rstrip("/") + sample.path if sample.path else service.base_url
+    url, params = _sample_request(service)
     try:
-        response = await client.get(url, params=sample.params, headers=headers)
+        response = await client.get(url, params=params)
     except SourceError as exc:
         return _result(service, CheckName.SAMPLE, CheckStatus.FAILED, str(exc)), None
     if response.status_code != 200:
@@ -266,10 +272,20 @@ def _snippet(response: FetchedResponse) -> str:
     return " ".join(response.text[:120].split())
 
 
-def _check_cors(service: Service, responses: list[FetchedResponse], origin: str) -> CheckResult:
-    if not responses:
-        return _result(service, CheckName.CORS, CheckStatus.NOT_CHECKED, "no response to inspect")
-    allowed = _cors_allowed(responses[0], origin)
+async def _check_cors(
+    client: CatalogueClient, service: Service, origin: str, reached: bool
+) -> CheckResult:
+    """Repeat the sample (or capabilities) request as a browser would, with an Origin."""
+    if not reached:
+        return _result(service, CheckName.CORS, CheckStatus.NOT_CHECKED, "service unreachable")
+    url, params = (
+        _sample_request(service) if service.sample is not None else capabilities_request(service)
+    )
+    try:
+        response = await client.get(url, params=params, headers={"Origin": origin})
+    except SourceError as exc:
+        return _result(service, CheckName.CORS, CheckStatus.NOT_CHECKED, str(exc))
+    allowed = _cors_allowed(response, origin)
     if allowed == service.cors:
         detail = "allowed" if allowed else "not allowed, as recorded: needs the server's proxy"
         return _result(service, CheckName.CORS, CheckStatus.OK, detail)

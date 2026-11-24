@@ -471,6 +471,161 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
+  # ── Basin authorities and regional water agencies (docs/knowledge/water-authorities.md)
+  - id: chguadiana-wms
+    name: Guadiana basin services, piezometric network (WMS)
+    publisher: Confederación Hidrográfica del Guadiana
+    kind: wms
+    # The district (ES040) spans these regions; the district boundary is the real extent.
+    coverage: [ES-EX, ES-CM, ES-AN]
+    base_url: https://geoguadiana.chguadiana.es/geoserver/wms
+    layers: ["redescontrol:Piezometria"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "CH Guadiana WMS: AccessConstraints none, Fees none"
+    attribution: "Confederación Hidrográfica del Guadiana"
+    terms_url: https://geoguadiana.chguadiana.es/geoserver/wms?service=WMS&request=GetCapabilities
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: one 256-pixel map of the piezometers around Daimiel
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "redescontrol:Piezometria", STYLES: "", CRS: "EPSG:3857", BBOX: "-412000,4722000,-392000,4742000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      expect_content_type: image/png
+
+  - id: chguadiana-piezometry
+    name: Guadiana official piezometric network, monthly levels (spreadsheet)
+    publisher: Confederación Hidrográfica del Guadiana
+    kind: download
+    coverage: [ES-EX, ES-CM, ES-AN]
+    base_url: https://www.chguadiana.es/cuenca-hidrografica/hidrologia/aguas-subterraneas/piezometria
+    licence: "Not stated on the page (VERIFY-LIVE(basin-terms))"
+    attribution: "Confederación Hidrográfica del Guadiana"
+    terms_url: https://www.chguadiana.es/cuenca-hidrografica/hidrologia/aguas-subterraneas/piezometria
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the piezometry page that links the monthly spreadsheet
+      expect_content_type: text/html
+      expect_text: "Red%20Oficial%20Guadiana"
+
+  - id: chduero-wms
+    name: Duero basin services (MÍRAME-IDEDuero WMS)
+    publisher: Confederación Hidrográfica del Duero
+    kind: wms
+    coverage: [ES-CL]
+    base_url: https://mirame.chduero.es/duerowfd
+    layers: [Red_oficial_control_nivel, Piezometria_200, Masa_Subterranea_Superior, Masa_Subterranea_Inferior]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "CH Duero WMS: AccessConstraints NONE, Fees NONE"
+    attribution: "Confederación Hidrográfica del Duero"
+    terms_url: https://mirame.chduero.es/duerowfd?service=WMS&version=1.1.1&request=GetCapabilities
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: chebro-piezometry
+    name: Ebro official piezometric network, data per piezometer (spreadsheets)
+    publisher: Confederación Hidrográfica del Ebro
+    kind: download
+    coverage: [ES-AR, ES-NC, ES-RI, ES-CT, ES-PV, ES-CL, ES-CB]
+    base_url: https://www.chebro.es/web/guest/red-piezometrica-oficial
+    licence: "Not stated on the page (VERIFY-LIVE(basin-terms))"
+    attribution: "Confederación Hidrográfica del Ebro"
+    terms_url: https://www.chebro.es/web/guest/red-piezometrica-oficial
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the list of piezometers with a spreadsheet per point
+      expect_content_type: text/html
+      expect_text: ".xls"
+
+  - id: chj-piezometry
+    name: Júcar piezometric network, reports and field measurements
+    publisher: Confederación Hidrográfica del Júcar
+    kind: download
+    coverage: [ES-VC, ES-CM, ES-AR]
+    base_url: https://www.chj.es/es-es/medioambiente/redescontrol/Paginas/Piezometria.aspx
+    # Its firewall answers "Request Rejected" to any request with an Origin header.
+    cors: false
+    licence: "Not stated on the page (VERIFY-LIVE(basin-terms))"
+    attribution: "Confederación Hidrográfica del Júcar"
+    terms_url: https://www.chj.es/es-es/medioambiente/redescontrol/Paginas/Piezometria.aspx
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the piezometry page that links the reports and the data download
+      expect_content_type: text/html
+      expect_text: "F71_Puntos_de_control_piezometrico"
+
+  - id: ura-wms
+    name: Basque Water Agency services (WMS)
+    publisher: Agencia Vasca del Agua (URA)
+    kind: wms
+    coverage: [ES-PV]
+    base_url: https://www.geo.euskadi.eus/WMS_URA
+    layers: [hasub_masas_agua, ecea_masas_subterraneas]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "URA WMS: no access constraint stated"
+    attribution: "URA - Agencia Vasca del Agua"
+    terms_url: https://www.geo.euskadi.eus/WMS_URA?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: icgc-hydrogeology-wms
+    name: Hydrogeology of Catalonia (WMS)
+    publisher: Institut Cartogràfic i Geològic de Catalunya (ICGC)
+    kind: wms
+    coverage: [ES-CT]
+    base_url: https://geoserveis.icgc.cat/servei/catalunya/hidrogeologia/wms
+    layers: [unitats_hidrogeologiques, punts_aigua, piezometries_quaternaris]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: "ICGC: public information with total right of access (level A)"
+    attribution: "Institut Cartogràfic i Geològic de Catalunya"
+    terms_url: https://geoserveis.icgc.cat/servei/catalunya/hidrogeologia/wms?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: ideib-groundwater
+    name: Balearic groundwater census, control points and bodies (ArcGIS REST)
+    publisher: Govern de les Illes Balears, Direcció General de Recursos Hídrics
+    kind: rest
+    coverage: [ES-IB]
+    base_url: https://ideib.caib.es/geoserveis/rest/services/public
+    cors: true
+    licence: "Not stated in the service (VERIFY-LIVE(basin-terms)); the census is labelled provisional, without legal validity"
+    attribution: "Govern de les Illes Balears"
+    terms_url: https://ideib.caib.es/geoserveis/rest/services/public/GOIB_AutCon_AigSubter_IB/MapServer?f=pjson
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: the groundwater service description with its piezometric control points
+      path: /GOIB_AutCon_AigSubter_IB/MapServer
+      params: {f: json}
+      expect_content_type: application/json
+      expect_text: "Piezom"
+
+  - id: idena-wms
+    name: Navarra spatial data services, soil map 1:25,000 (WMS)
+    publisher: Gobierno de Navarra (IDENA)
+    kind: wms
+    coverage: [ES-NC]
+    base_url: https://idena.navarra.es/ogc/wms
+    layers: [EDAFOL_Pol_Suelos25m]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "Gobierno de Navarra (IDENA), CC BY 4.0"
+    terms_url: https://idena.navarra.es/ogc/wms?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
   # ── Junta de Andalucía, REDIAM (docs/knowledge/junta-andalucia.md) ───────────────────
   - id: rediam-water-bodies
     name: Andalusian water bodies, plans 2022-2027 (WMS)

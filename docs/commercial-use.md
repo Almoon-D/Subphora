@@ -13,7 +13,10 @@ one adds a row; evidence and dates live in the knowledge file named.
 | IGME (CN IGME-CSIC) | Access to water levels and analyses per water point (needed by session 07 too) | Only in the BDAguas web application, no documented API or download | `docs/knowledge/igme.md` |
 | Dirección General del Catastro | Confirmation that showing cadastral maps and parcel outlines to paying customers fits the licence (own use or transformed value-added products; no untransformed redistribution; not called "cartografía catastral"; no tiled requests, no massive downloads) | Licencia de acceso y uso INSPIRE, `https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf` | `docs/knowledge/catastro.md` |
 | Junta de Andalucía (REDIAM) | Confirmation that "free and gratuitous use citing the authors" covers a paid product | REDIAM WMS `AccessConstraints` | `docs/knowledge/junta-andalucia.md` |
-| Confederación Hidrográfica del Guadalquivir | Its public map services (IDE-CHG) were not reachable; ask for the current endpoints and terms | `idechg.chguadalquivir.es` redirects to an error page | `docs/knowledge/miteco-basins.md` |
+| Confederación Hidrográfica del Guadalquivir | Its public map services (IDE-CHG) were not reachable; ask for the current endpoints and terms | `idechg.chguadalquivir.es` redirects to an error page | `docs/knowledge/water-authorities.md` |
+| MITECO, Dirección General del Agua | Automated access to the national piezometry database for a paid service (today it is a hand download behind a human-only form) | Download form with an ALTCHA challenge | `docs/knowledge/water-authorities.md` |
+| CH Guadiana, CH Ebro, CH Júcar; Govern de les Illes Balears | The licence of their level spreadsheets, downloads and service, not stated on their pages | Their piezometry pages and service | `docs/knowledge/water-authorities.md` |
+| CH Segura, CH Tajo, CH Miño-Sil, Augas de Galicia, the seven Canary island water councils | Their data services and terms (none reachable or found from the cloud) | — | `docs/knowledge/water-authorities.md` |
 
 ## Cost, not permission
 
@@ -25,7 +28,9 @@ one adds a row; evidence and dates live in the knowledge file named.
 
 IGN/CNIG (PNOA, base maps, MDT, CartoCiudad: CC BY 4.0), FEGA (SIGPAC: CC BY 4.0), MITECO
 ("sin limitaciones al acceso público", reuse citing the source), SoilGrids (CC BY 4.0),
-Copernicus (free and open, with attribution), AEMET (use authorised citing AEMET). Each
+Copernicus (free and open, with attribution), AEMET (use authorised citing AEMET), IDENA
+Navarra (CC BY 4.0), CH Duero and CH Guadiana WMS (no constraint), URA WMS (none stated),
+ICGC (public, full access). Each
 keeps its attribution text from `config/defaults/sources.yaml`.
 
 ## Beyond data licences (for the decision that allows selling)

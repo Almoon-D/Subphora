@@ -34,8 +34,15 @@
 - VERIFY-LIVE(chg-ide): every path on `idechg.chguadalquivir.es` redirected to an error page
   from the cloud session; find the CHG's OGC endpoints (MITECO's national services cover
   the bodies meanwhile). Queued by 01; unblocked by a browser look at the CHG geoportal.
-- VERIFY-LIVE(piezometric-levels): where MITECO or the basins publish piezometric level
-  series (the network service has no levels). Queued by 01; needed by session 07.
+- VERIFY-LIVE(piezometric-levels): open the national piezometry database (a hand download,
+  behind a human-only form) and the basin spreadsheets (Guadiana, Ebro, Júcar) and record
+  their columns and dates (`docs/knowledge/water-authorities.md`). Queued by 01; the owner
+  downloads the national file before session 07, which needs it.
+- VERIFY-LIVE(basin-terms): the licence of the basin spreadsheets and downloads (Guadiana,
+  Ebro, Júcar) and of the Balearic service, not stated on their pages. Queued by 01; session 07.
+- VERIFY-LIVE(water-authorities-unreached): CH Guadalquivir, Segura, Tajo, Miño-Sil, Augas de
+  Galicia and the Canary island councils published no reachable data service from the cloud;
+  find their endpoints from a browser. Queued by 01; session 07 (levels) and 09 (rules).
 - VERIFY-LIVE(igme-water-levels): levels per IGME water point exist only in the BDAguas web
   app, with no documented API; ask IGME or find a download. Queued by 01; session 07.
 - VERIFY-LIVE(igme-geode-download): the GEODE vector download route and size. Queued by 01;
@@ -69,6 +76,18 @@
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
 
+### 01 — All basin authorities and regional water agencies (2026-11-24, version 0.1.2)
+
+- Landed: `docs/knowledge/water-authorities.md` (all 25 districts, who manages each, what it
+  publishes); 9 catalogue entries (Guadiana, Duero, Ebro, Júcar, URA, ICGC, Balearics,
+  IDENA soils); probes send capabilities and samples without `Origin` and check CORS apart.
+- Live: `sources check` 111 ok, 0 failed, 2 not checked. Level series exist: a national
+  MITECO database (hand download, human-only form) and basin spreadsheets (Guadiana, Ebro,
+  Júcar); CH Júcar's firewall rejects any request carrying `Origin`; Navarra has a 1:25,000
+  soil map. Not reached: CHG, Segura, Tajo, Miño-Sil, Augas de Galicia, Canary councils.
+- Prompt edit: 07 (where the levels come from). Commercial-use rows added.
+- VERIFY-LIVE: piezometric-levels (rewritten), basin-terms, water-authorities-unreached.
+
 ### 01 — Owner ruling: Spain-wide product, country modules (2026-11-24, version 0.1.1)
 
 - Landed: decision 0014; catalogue `coverage`/`coverage_excludes` in ISO 3166 codes, shown
@@ -95,7 +114,8 @@
   for REDIAM and the lithostratigraphic map, soil per 0013, no zona de policía service),
   06 (MDT02 fallback), 07 (piezometric levels first), 11 (no cadastral tiles in packs);
   MASTER_PLAN §3 and §4.7 likewise.
-- VERIFY-LIVE: chg-ide, piezometric-levels, igme-water-levels, igme-geode-download,
+- VERIFY-LIVE: chg-ide, piezometric-levels, basin-terms, water-authorities-unreached,
+  igme-water-levels, igme-geode-download,
   cnig-mdt02-coverage, egms-terms, keyed-services.
 
 ### 00 — Owner ruling after the plan (2026-11-24, version 0.0.0)

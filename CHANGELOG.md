@@ -7,6 +7,16 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.1.2] - 2026-11-24
+
+- Every water authority in Spain is now surveyed: the river-basin confederations and the
+  regional water agencies, with what each publishes and where its well-level data can be had.
+- `subphora sources check` now also checks the Guadiana, Duero, Ebro and Júcar basins, the
+  Basque and Catalan services, the Balearic groundwater census and Navarra's detailed soil
+  map.
+- The checks call services the way the app's server will, and test browser access apart:
+  one basin's firewall turns away any browser request.
+
 ## [0.1.1] - 2026-11-24
 
 - Subphora is now planned as a product for all of Spain, ready for more countries later:

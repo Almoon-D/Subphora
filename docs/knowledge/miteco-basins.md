@@ -53,10 +53,9 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   (Activo…), `cod_masa`. Example: 24 piezometers around Daimiel, such as ES040ESBT000404013
   "La Mancha" (115 m deep, active). **No levels**: the service gives the network, not the
   measurements. `(GetFeature, 2026-11-24)`
-- Level series per piezometer were not found as an API on this host. MITECO publishes the
-  piezometric data through its monitoring-network viewer and the SIA; the route for
-  levels is open: `VERIFY-LIVE(piezometric-levels)`. Session 07 (depth to water) depends on
-  it; until then depth stays "not available" (hard rule 1).
+- Level series: MITECO publishes a national piezometry database (18.5 MB) behind a
+  human-only download form, and several basins publish their own (Guadiana, Ebro, Júcar):
+  routes and terms in `water-authorities.md`. The WMS/WFS above give the network only.
 - `sondeos` ("Catálogo de Sondeos"): `n_sondeo`, `x`, `y`, `z`, `nom_demar`, `mun_nom` — a
   borehole catalogue without depth or result fields in the map service. `(GetFeature, 2026-11-24)`
 
@@ -77,6 +76,8 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
 
 ## Basin authorities
 
+- Every basin authority and regional water agency of Spain, with what it publishes and how
+  it is reached, is in `water-authorities.md`.
 - **Guadalquivir (CHG, ES050):** the plan states that its water bodies are defined in the
   IDE-CHG (`idechg.chguadalquivir.es`). From the cloud session every path tried on that host
   redirected to an error page (`http://www.chguadalquivir.es/error404?`), so no CHG OGC
@@ -85,9 +86,8 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
 - **Cuencas Mediterráneas Andaluzas (ES060):** the competent authority is the Junta de
   Andalucía; REDIAM publishes its bodies (see `junta-andalucia.md`), and MITECO's national
   services include them (`namespace` juntadeandalucia.es).
-- Other basins (Segura, Júcar, Ebro, Tajo, Guadiana, Duero, Miño-Sil, Cantábrico, the
-  internal basins of Catalonia, the Balearics, the Canaries…) appear in the same national
-  MITECO services with their `cod_ddhh`; their own portals were not probed.
+- Every other district appears in the same national MITECO services with its `cod_ddhh`;
+  their own portals are surveyed in `water-authorities.md`.
 
 ## Terms
 

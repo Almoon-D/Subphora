@@ -28,6 +28,16 @@ Hosts `maps.isric.org` (SoilGrids), `www.juntadeandalucia.es` (REDIAM soil map),
 - ESDB: "freely available to the public after user registration" through an online form;
   the 1 km raster library likewise. `(GET the dataset page, 2026-11-24)`
 
+## Regional detail
+
+- Navarra publishes a **soil map at 1:25,000** in IDENA, WMS `https://idena.navarra.es/ogc/wms`:
+  `EDAFOL_Pol_Suelos25m` (soil units), `EDAFOL_Pol_Suelos25m_` (phases),
+  `EDAFOL_Sym_RedObSuelos` (observation network), `EDAFOL_Pol_Suelos25mMI` (index of the
+  municipalities covered); EPSG:3857; CORS `*`; licence CC BY 4.0 (capabilities).
+  Catalogue id `idena-wms`. `(GetCapabilities, 2026-11-24)`
+- Other regions' soil maps were not surveyed. Where a region publishes one, it is a context
+  layer for that region; SoilGrids stays the nationwide model input (decision 0013).
+
 ## Recommendation
 
 **SoilGrids 2.0** as the model input and the soil layer for all of Spain: it is the only

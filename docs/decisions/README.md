@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0015](0015-finish-test-then-permissions.md) | Finish the project, test on the owner's land, then seek permissions | accepted |
 | [0014](0014-spain-wide-country-modules.md) | A Spain-wide product built for more countries; no test area in the repository | accepted |
 | [0013](0013-soilgrids-soil-source.md) | SoilGrids 2.0 as the soil source | accepted |
 | [0012](0012-google-map-tiles-api.md) | Google base maps through the Map Tiles API in MapLibre | accepted |

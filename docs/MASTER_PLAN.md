@@ -13,7 +13,9 @@ farmers and the people who advise them, anywhere in Spain, and is built so that 
 countries can be added later (decision 0014). Its first users are the owner and a few
 non-technical people of a family farming company (dry farmland, olive groves and almond
 orchards); their land is the test area, which lives in private configuration and never in
-the repository. Nothing in the code or the design favours one area of Spain.
+the repository. Nothing in the code or the design favours one area of Spain. Nothing is
+sold before the owner has tested the finished project on his land; the permissions a sale
+would need are tracked in `docs/commercial-use.md` (decision 0015).
 
 For a location (a cadastral reference, a SIGPAC reference, an address, a municipality,
 coordinates, or a point or polygon drawn on the map) the app shows:

@@ -69,7 +69,7 @@ and permeability map, hydrogeological map, water-point database), MITECO and the
 authorities (groundwater bodies and status, piezometric network, rivers, public water domain,
 zona de policía, basin plans), the Junta de Andalucía (Andalusian Mediterranean basins,
 REDIAM), Copernicus (Sentinel-2, EGMS), AEMET. Foral cadastres (País Vasco, Navarra) are not
-supported (decision 0010).
+supported yet (decision 0010), they will be implemented once subphora is finished.
 
 **Jurisdiction.** All of Spain for maps and the model; legal rules first for the basins that
 cover the owner's estates (Guadalquivir; Andalusian Mediterranean basins), each other basin

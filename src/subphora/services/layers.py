@@ -79,6 +79,8 @@ class _Drawn:
     layer: str
     style: str
     min_zoom: int
+    # The deepest zoom the proxy draws it at; None: the overlays' max_zoom.
+    max_zoom: int | None
     info: FeatureInfo | None
     export: ArcgisExport | None
 
@@ -122,6 +124,7 @@ class LayerService:
             layer=overlay.layer,
             style=overlay.style,
             min_zoom=overlay.min_zoom,
+            max_zoom=None,
             info=overlay.info,
             export=overlay.export,
         )
@@ -133,6 +136,7 @@ class LayerService:
             layer=layer.layer,
             style=layer.style,
             min_zoom=layer.min_zoom,
+            max_zoom=layer.max_zoom,
             info=layer.info,
             export=None,
         )
@@ -146,7 +150,10 @@ class LayerService:
 
     def _check_zoom(self, drawn: _Drawn, zoom: float, *, tile: bool) -> None:
         # Beyond max_zoom the browser enlarges the last tiles: a tap there is still answered.
-        top = self._map.overlays.max_zoom if tile else MAX_TILE_ZOOM
+        if tile:
+            top = self._map.overlays.max_zoom if drawn.max_zoom is None else drawn.max_zoom
+        else:
+            top = MAX_TILE_ZOOM
         if not drawn.min_zoom <= zoom <= top:
             raise LayerError(
                 LayerFailure.OUTSIDE_ZOOM_RANGE,

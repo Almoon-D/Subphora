@@ -31,6 +31,25 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
   `(GetCapabilities, 2026-11-24)` Vector downloads: the page
   `https://info.igme.es/cartografiadigital/geologica/Geode.aspx` answers; the download
   route behind it was not traced: `VERIFY-LIVE(igme-geode-download)`.
+- **GEODE's editions are per zone**: the service states none (version 3.5.0); each zone
+  is a dataset in the IDEE INSPIRE catalogue (`https://www.idee.es/csw-inspire-idee`, ids
+  `ESPIGMEGEODE50Z<zone>…`), with its own dates (publication, or the latest of
+  publication, revision and edition): 1000 Cantábrica, 1100 Asturoccidental-Leonesa, 1300
+  Ollo de Sapo and the seven Canary islands 2007 (the islands' edition date 2009); 1200
+  Galicia occidental 2009; 1400 Esquisto-grauváquico 2013; 1500 Ossa-Morena 2009; 1600
+  Vasco-Cantábrica y Pirineos 2008 (edition 2009); 1700 Cordillera Ibérica 2010 (revision);
+  1800 Prebético 2011; 2100 Béticas internas 2010; 2210 Mallorca-Cabrera 2009; 2211
+  Ibiza-Formentera 2010; 2300 Duero-Almazán 2010 (edition); 2400 Tajo-Mancha 2009; 2500
+  Obejo-Valsequillo 2010; 2600 Guadalquivir 2014; 2700 Ebro 2010; 2800 Valenciana 2014;
+  3100 Sudportuguesa 2009; 2212 Menorca not read (the catalogue answered empty twice). The
+  zone at a point is the "Código zona GEODE" a tap returns; the zones layer cannot be
+  queried by area (REST query refused), so the zones over a region are sampled by taps on
+  a grid. `(IDEE CSW GetRecords, record XML, GetFeatureInfo, 2026-11-24)`
+- The 1:200,000 lithostratigraphic and permeability maps: **second edition**, created
+  2005-09-18, published 2007-09-30, revised 2009-08-05 (IDEE records
+  `ESPIGMELITOESTRATIGRAFICO200…`, `ESPIGMEPERMEABILIDADES200…`). The water-point database
+  (`ESPIGMEPUNTOSAGUA20190723`) states only a creation date, 1970: no edition.
+  `(record XML, 2026-11-24)`
 - Geological 1:200,000 (`IGME_Geologico_200`), 1:1,000,000 (`IGME_Geologico_1M`), regional
   maps (Murcia, Valencia, Alicante…) also exist. `(GET /Cartografia_Geologica?f=json, 2026-11-24)`
 

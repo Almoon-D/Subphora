@@ -147,7 +147,7 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
         tiles: overlayTiles(regional, origin).map((tile) => clipTemplate(regional.area_ids, overlay.tile_size, tile)),
         tileSize: overlay.tile_size,
         minzoom: regional.min_zoom,
-        maxzoom: overlay.max_zoom,
+        maxzoom: regional.max_zoom,
         // Tiles outside the areas' box are never requested.
         bounds: regional.bounds,
         attribution: regional.attribution,

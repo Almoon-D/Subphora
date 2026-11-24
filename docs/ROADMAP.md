@@ -9,8 +9,8 @@
 | 02 | `docs/sessions/done/02-first-slice.md` | Opus 5.5, high | done |
 | 03 | `docs/sessions/done/03-official-layers.md` | Opus 5.5, high | done |
 | 03b | `docs/sessions/done/03b-regional-detail.md` | Opus 5.5, high | done |
-| 03ba | `docs/sessions/03ba-regional-evidence.md` | Opus 5.5, high | next |
-| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
+| 03ba | `docs/sessions/done/03ba-regional-evidence.md` | Opus 5.5, high | done |
+| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | next |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
 | 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
@@ -57,12 +57,20 @@
   Castilla y León, Castilla-La Mancha, Extremadura, Galicia, Murcia, La Rioja and Ceuta, the
   ACA and five basin authorities did not answer from the cloud (resets, TLS failures, a
   Cloudflare challenge); find their geology, soil and water endpoints from a browser in
-  Spain and survey them under decision 0023 (`docs/knowledge/regional-layers.md`). Queued
-  by 03b; session 03ba or the owner.
-- VERIFY-LIVE(national-editions): GEODE, the IGME water points, permeability and
-  lithostratigraphy and the MITECO springs, piezometers and public water domain state no
-  edition, so no regional layer can qualify over them (decision 0024). Queued by 03b;
-  session 03ba.
+  Spain and survey them under decision 0023 (`docs/knowledge/regional-layers.md`); the
+  Catalan rivers wait on the ACA's. Queued by 03b; still open after 03ba; the owner.
+- VERIFY-LIVE(national-network-editions): the editions of MITECO's springs and piezometer
+  networks (their records sit on `catalogo.datosabiertos.miteco.gob.es`, whose certificate
+  chain the cloud cannot verify) and of the IGME water points (its record gives only a 1970
+  creation date). Until known, no regional springs, water-point or piezometer layer
+  qualifies: Navarra, Catalonia, the Balearics, the Basque Country, Andalusia, CH Guadiana
+  and CH Duero wait on it. Queued by 03ba; the owner (a browser) or IGME and MITECO.
+- VERIFY-LIVE(regional-editions): the Cantabrian river network and CH Guadiana's
+  high-density network state no edition; ask their publishers. Queued by 03ba.
+- VERIFY-LIVE(cantabria-geology-editions): the date of each of the 57 sheets of Cantabria's
+  1:25,000 geological map (sheet 58-III: December 2009) against GEODE's zones there
+  (2007-2010); its tap answers only a pixel colour, so a qualifying version needs the
+  sheet layer's links too. Queued by 03ba.
 - VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
   until the owner's key exists (session 15). Queued by 01.
 
@@ -99,8 +107,16 @@
   puts the whole API behind the owner's access control before it is exposed. (03)
 - SoilGrids gives no value on a tap; the parcel view (session 06) reads clay and sand from
   its WCS at the parcel, everywhere in Spain alike. (03)
-- Regional layers: three qualify and are drawn (03b); the services the survey could not
-  judge yet are session 03ba's. (03, 03b)
+- Regional layers: eight qualify and are drawn (03b, 03ba); every surveyed cell has a
+  verdict; the open ones wait on the VERIFY-LIVE items above. (03, 03b, 03ba)
+- CH Duero zones its groundwater bodies in two horizons; only the general one (52 bodies,
+  the whole district) is drawn. The upper horizon (12 bodies) needs its own layer and a tap
+  that says which horizon answered. (03ba)
+- Catalonia's 1:25,000 soil map and the Valencian GeoCV25 cover part of their regions:
+  elsewhere a tap says the regional map has nothing there (soils) or GEODE answers
+  (geology). (03ba)
+- The Balearic, Basque and Catalan water-point inventories name private owners or their
+  businesses: if a later session adds one, its tap must never show those fields. (03ba)
 - The Navarra soil map covers only the municipalities surveyed so far (IDENA's index
   layer): elsewhere in Navarra the regional layer draws nothing, SoilGrids shows beneath,
   and a tap says the regional map has nothing there. (03b)
@@ -116,6 +132,21 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 03ba — The regional layers still waiting for evidence (2026-11-24, version 0.5.0)
+
+- Landed: a verdict for every E cell (`docs/knowledge/regional-layers.md`); national
+  editions from the publishers' records (GEODE per zone 2007-2014, IGME permeability and
+  lithostratigraphy 2009); five new regional layers: Catalonia soils 1:25,000 (2025),
+  Navarra geology 1:25,000 (2011), Valencian geology 1:25,000 (2024), CH Guadiana's
+  perimeters closed to new abstractions and CH Duero's groundwater zoning (plans 2022-2027);
+  areas ES-VC, ES020, ES040; decision 0025 (`national_edition`, `max_zoom`).
+- Verdicts: Balearic geology, rivers O and DPH K; Navarra rivers and hydrogeological
+  aspects O; Basque rivers O; springs, water points and piezometers everywhere V.
+- Live (real API): each new layer answers inside its area with its scale and date, and
+  where it maps nothing the national layer answers.
+- VERIFY-LIVE: national-network-editions, regional-editions, cantabria-geology-editions;
+  regional-hosts-unreached stays open.
 
 ### 03b — Regional detail over the national layers (2026-11-24, version 0.4.0)
 

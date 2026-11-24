@@ -54,6 +54,10 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   (Activo…), `cod_masa`. Example: 24 piezometers around Daimiel, such as ES040ESBT000404013
   "La Mancha" (115 m deep, active). **No levels**: the service gives the network, not the
   measurements. `(GetFeature, 2026-11-24)`
+- Edition: none stated. The capabilities name the metadata records of `RedPiezometrica`
+  and `manantiales` on `catalogo.datosabiertos.miteco.gob.es` (ids `78f8661b…`,
+  `320c3e32…`), whose certificate chain the cloud cannot verify; the IDEE catalogue does
+  not hold them. `VERIFY-LIVE(national-network-editions)`. `(GetCapabilities, 2026-11-24)`
 - Level series: MITECO publishes a national piezometry database (18.5 MB) behind a
   human-only download form, and several basins publish their own (Guadiana, Ebro, Júcar):
   routes and terms in `water-authorities.md`. The WMS/WFS above give the network only.
@@ -76,6 +80,11 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   wider: where `DPH_Estimado` has no polygon, session 09 derives it as a buffer of the
   channel plus the `ZI_Laminas_ZFP` polygons, and says which it used (see
   `legal-groundwater.md`). `(GetFeatureInfo, GetLegendGraphic, 2026-11-24)`
+- `DPH_Estimado` carries each stretch's study, date and authority: in Mallorca it answers
+  the Govern balear's own SNCZI study ("Organismo: Gobierno de las Islas Baleares"). Its
+  record "Cauces con DPH cartográfico" (IDEE, `88e3e8c0…`) gives creation 2026-07-10,
+  publication 2026-05-25 and revision 2012-03-02: no edition for the layer as a whole.
+  `(GetFeatureInfo, record XML, 2026-11-24)`
 - `redhidrografica_2027` (rivers of the plans, lines with `Nombre` and the water-body code)
   and `manantiales` (the spring gauging network, "Red Hidrométrica de Manantiales": code,
   name, district, condition, elevation, controlled groundwater body, municipality, a link

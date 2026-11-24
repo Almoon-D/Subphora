@@ -134,11 +134,12 @@ def parse_feature_info(content: bytes, parser: InfoParser) -> list[Attributes]:
 def allowed_fields(
     features: Sequence[Attributes], fields: Sequence[str]
 ) -> list[list[tuple[str, str]]]:
-    """Each feature reduced to ``fields``, in that order; a feature with none is dropped."""
-    kept = []
+    """Each feature reduced to ``fields``, in that order; a feature with none, or with the
+    same values as one already kept (two polygons of one unit side by side), is dropped."""
+    kept: list[list[tuple[str, str]]] = []
     for feature in features:
         values = [(name, feature[name].strip()) for name in fields if feature.get(name) is not None]
-        if values:
+        if values and values not in kept:
             kept.append(values)
     return kept
 

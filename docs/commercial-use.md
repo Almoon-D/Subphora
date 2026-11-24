@@ -32,7 +32,7 @@ IGN/CNIG (PNOA, base maps, MDT, CartoCiudad: CC BY 4.0), FEGA (SIGPAC: CC BY 4.0
 ("sin limitaciones al acceso público", reuse citing the source), SoilGrids (CC BY 4.0),
 Copernicus (free and open, with attribution), AEMET (use authorised citing AEMET), IDENA
 Navarra (CC BY 4.0), CH Duero and CH Guadiana WMS (no constraint), URA WMS (none stated),
-ICGC (public, full access), IGN administrative units (CC BY 4.0), Comunidad de Madrid and
+ICGC (public, full access; its legal notice allows any reuse, commercial included, citing the source and the date of last update), IGN administrative units (CC BY 4.0), Comunidad de Madrid and
 the Generalitat Valenciana's ICV (CC BY 4.0). Each
 keeps its attribution text from `config/defaults/sources.yaml`.
 

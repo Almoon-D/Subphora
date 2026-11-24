@@ -33,6 +33,19 @@ def test_a_feature_without_any_allowed_field_is_dropped() -> None:
     assert allowed_fields(features, ["Name", "Code"]) == [[("Name", "River")]]
 
 
+def test_features_that_read_the_same_are_shown_once() -> None:
+    # Two polygons of one soil series meet under the tap: their ids differ, nothing shown does.
+    features = [
+        {"id": "1", "tipus_sol": "Comapregona"},
+        {"id": "2", "tipus_sol": "Comapregona"},
+        {"id": "3", "tipus_sol": "Morull"},
+    ]
+    assert allowed_fields(features, ["tipus_sol"]) == [
+        [("tipus_sol", "Comapregona")],
+        [("tipus_sol", "Morull")],
+    ]
+
+
 def test_a_legend_names_its_style_only_when_there_is_one() -> None:
     assert "STYLE" not in legend_params("a", "")
     assert legend_params("a", "s")["STYLE"] == "s"

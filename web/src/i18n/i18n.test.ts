@@ -39,6 +39,8 @@ describe("t", () => {
       ...MAP.base_maps.map((b) => `base.${b.id}`),
       ...MAP.overlay_groups.map((g) => `group.${g}`),
       ...MAP.overlays.map((o) => `layer.${o.id}`),
+      ...MAP.overlays.flatMap((o) => o.regional.map((r) => `layer.${r.id}`)),
+      ...MAP.overlays.flatMap((o) => o.regional.flatMap((r) => r.area_ids.map((id) => `area.${id}`))),
     ];
     expect(keys.filter((key) => !(key in es))).toEqual([]);
   });

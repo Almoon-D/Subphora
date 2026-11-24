@@ -41,7 +41,15 @@ Hosts `maps.isric.org` (SoilGrids), `www.juntadeandalucia.es` (REDIAM soil map),
   `EDAFOL_Sym_RedObSuelos` (observation network), `EDAFOL_Pol_Suelos25mMI` (index of the
   municipalities covered); EPSG:3857; CORS `*`; licence CC BY 4.0 (capabilities).
   Catalogue id `idena-wms`. `(GetCapabilities, 2026-11-24)`
-- Other regions' soil maps were not surveyed. Where a region publishes one, it is a context
+- Catalonia publishes a **soil map at 1:25,000** in the ICGC, WMS
+  `https://geoserveis.icgc.cat/servei/catalunya/edafologia/wms`, layer `sols-25000`: v1.1,
+  December 2025 (IDEC record `sols-25000-v1r1-202512`), soil series ("Comapregona") with
+  their Soil Taxonomy class ("Haploxerepts fluvèntics") and a description of depth,
+  drainage and texture; partial cover (mostly agricultural land); drawn only at 1:23,000
+  and smaller scales (to zoom 14); GetFeatureInfo `application/json` at any scale; CORS
+  `*`; EPSG:3857. Catalogued as `icgc-soils-wms`, drawn as `catalonia-soils`
+  (`regional-layers.md`). `(GetCapabilities, GetMap, GetFeatureInfo, IDEC CSW, 2026-11-24)`
+- The other regions' soil maps: `regional-layers.md`. Where a region publishes one, it is a context
   layer for that region; SoilGrids stays the nationwide model input (decision 0013).
 
 ## Recommendation

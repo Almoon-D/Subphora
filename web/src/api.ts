@@ -48,6 +48,8 @@ export interface RegionalOverlay {
   tiles: string[];
   proxied: boolean;
   min_zoom: number;
+  /** The deepest zoom its service draws; MapLibre enlarges that level beyond it. */
+  max_zoom: number;
   area_ids: string[];
   /** West, south, east, north: the box enclosing its areas. */
   bounds: [number, number, number, number];

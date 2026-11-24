@@ -5,8 +5,8 @@
 | Session | Prompt | Model and effort | Status |
 |---|---|---|---|
 | 00 | `docs/sessions/done/00-plan.md` | Opus 5.5 | done |
-| 01 | `docs/sessions/01-verify-sources.md` | Opus 5.5, high | next |
-| 02 | `docs/sessions/02-first-slice.md` | Opus 5.5, high | planned |
+| 01 | `docs/sessions/done/01-verify-sources.md` | Opus 5.5, high | done |
+| 02 | `docs/sessions/02-first-slice.md` | Opus 5.5, high | next |
 | 03 | `docs/sessions/03-official-layers.md` | Opus 5.5, high | planned |
 | 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
@@ -31,6 +31,21 @@
   itself, including a github-actions one (it changes `.github/workflows/`, which the
   default token may not be allowed to merge). If that one fails, the maintenance session
   merges it by hand and this line records the outcome. Queued by the template.
+- VERIFY-LIVE(chg-ide): every path on `idechg.chguadalquivir.es` redirected to an error page
+  from the cloud session; find the CHG's OGC endpoints (MITECO's national services cover
+  the bodies meanwhile). Queued by 01; unblocked by a browser look at the CHG geoportal.
+- VERIFY-LIVE(piezometric-levels): where MITECO or the basins publish piezometric level
+  series (the network service has no levels). Queued by 01; needed by session 07.
+- VERIFY-LIVE(igme-water-levels): levels per IGME water point exist only in the BDAguas web
+  app, with no documented API; ask IGME or find a download. Queued by 01; session 07.
+- VERIFY-LIVE(igme-geode-download): the GEODE vector download route and size. Queued by 01;
+  session 05.
+- VERIFY-LIVE(cnig-mdt02-coverage): MDT02 coverage and download route (the CNIG download
+  centre is a JavaScript app). Queued by 01; session 06.
+- VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
+  cloud; read it before session 15 uses EGMS. Queued by 01.
+- VERIFY-LIVE(keyed-services): `aemet-opendata` and `google-map-tiles` are "not checked"
+  until the owner's keys exist (sessions 15 and 03). Queued by 01.
 
 ## Follow-ups
 
@@ -40,6 +55,10 @@
   session 01 verifies them before code depends on them. (00)
 - Node 27 reaches end of life in mid-2027: move to Node 28 when it is released (April 2027),
   in the maintenance session or the session running then (0011). (00)
+- Legal: the mining-safety rules for water boreholes and municipal licences were not read;
+  session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
+- The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
+  from the cloud; the catalogue uses `sigpac-hubcloud.es`. (01)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -47,6 +66,24 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 01 — Verify data sources, terms and legal rules (2026-11-24, version 0.1.0)
+
+- Landed: `config/defaults/sources.yaml` (32 services, 15 hosts) with its schema;
+  `src/subphora/sources/` (catalogue-only async client, per-host limits, retries, probes);
+  `subphora sources check|list`; 12 knowledge files incl. `legal-groundwater.md`;
+  decisions 0012 (Google Map Tiles API) and 0013 (SoilGrids).
+- Live: `sources check` 89 ok, 0 failed, 2 not checked (keys) from the cloud. Catastro
+  forbids tiled WMS requests, rejects curl's User-Agent and resets ~1 in 3 connections;
+  REDIAM lacks CORS; IGME's 1:200,000 lithostratigraphic WMS lacks EPSG:3857; MAGNA dip is
+  digital (251,654 measurements); IGN WCS serves MDT05/MDT25, not MDT02; Llanos de Antequera
+  is in poor status and under preventive control (54.2 wells need authorisation).
+- Prompt edits (facts only): 02 (no tile proxy; Catastro as one untiled image), 03 (proxy
+  for REDIAM and the lithostratigraphic map, soil per 0013, no zona de policía service),
+  06 (MDT02 fallback), 07 (piezometric levels first), 11 (no cadastral tiles in packs);
+  MASTER_PLAN §3 and §4.7 likewise.
+- VERIFY-LIVE: chg-ide, piezometric-levels, igme-water-levels, igme-geode-download,
+  cnig-mdt02-coverage, egms-terms, keyed-services.
 
 ### 00 — Owner ruling after the plan (2026-11-24, version 0.0.0)
 

@@ -20,7 +20,9 @@ drilling-cost range.
    source; spatial block cross-validation; AUC with a bootstrap interval per hydrogeological
    domain; thresholds in `config/`. Results shown on the map and in tap-to-explain.
 2. Calibration where labelled wells pass the threshold; elsewhere the index stays an index.
-3. Water-table surface per groundwater body from piezometric levels, uncertainty growing
+3. First resolve where piezometric level series are published (`VERIFY-LIVE(piezometric-levels)`:
+   MITECO's network service lists piezometers without levels). Water-table surface per
+   groundwater body from piezometric levels, uncertainty growing
    with distance, "unknown" past the maximum distance; depth = ground elevation − water table,
    flagged in karst.
 4. Drilling cost: depth range × cost per metre plus fixed costs, `Decimal`, values in

@@ -11,8 +11,8 @@ up the front end, the API and the way they talk, end to end.
 ## Read
 
 - `docs/MASTER_PLAN.md` §§ 3, 4.1, 4.2, 5.
-- `docs/decisions/` 0004, 0010 and the Google-route decision from session 01.
-- `docs/knowledge/`: Catastro, IGN/CNIG, and the CORS findings for both.
+- `docs/decisions/` 0004, 0010 and 0012 (the Google route).
+- `docs/knowledge/`: Catastro, IGN/CNIG (CORS and EPSG:3857 findings for both).
 
 ## Build
 
@@ -31,8 +31,10 @@ up the front end, the API and the way they talk, end to end.
    in `data/cache/` with the lifetime from the catalogue. Create `domain/` models, `geo/`
    (CRS choice by location: 25829/25830/25831, 4083 in the Canaries), `store/` (file cache),
    `services/` and `api/`, each with its import-linter contract.
-4. If session 01 found that PNOA or the Catastro WMS lacks CORS or EPSG:3857 for MapLibre, a
-   caching tile proxy in the API for those layers only, within the catalogue's limits.
+4. No tile proxy: session 01 found CORS and EPSG:3857 on both PNOA (WMTS,
+   GoogleMapsCompatible) and the Catastro WMS. The Catastro WMS terms forbid tiled requests,
+   so the cadastral overlay is one untiled image per view (a MapLibre `image` source
+   refreshed on move), never a raster tile source. Use the session-01 client for every call.
 5. The page: a search box, PNOA as the base map, the Catastro WMS overlay, the parcel outline,
    zoom to the parcel, attribution for every layer, and clear Spanish error messages.
 6. Tests: reference validation (every failure branch), WFS responses from fixtures (found,

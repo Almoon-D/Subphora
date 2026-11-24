@@ -15,7 +15,8 @@ point when tapped, ranks candidate spots, and compares several selected areas si
 
 ## Build
 
-1. A per-area job: clip the detailed inputs (MDT02/MDT05, MAGNA 1:50,000, faults, water
+1. A per-area job: clip the detailed inputs (MDT02 where the download covers the area, else
+   MDT05 from the IGN WCS — `VERIFY-LIVE(cnig-mdt02-coverage)`; MAGNA 1:50,000, faults, water
    points, digital dip measurements, the soil map), derive slope, wetness index, drainage and
    lineament density, and the dip of permeable layers as a structural input; publish the slope,
    drainage and wetness layers at parcel resolution; and compute index and

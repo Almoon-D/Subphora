@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Capabilities xmlns="http://www.opengis.net/wmts/1.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:inspire_common="http://inspire.ec.europa.eu/schemas/common/1.0" xmlns:inspire_vs="http://inspire.ec.europa.eu/schemas/inspire_vs_ows11/1.0" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/wmts/1.0 http://schemas.opengis.net/wmts/1.0/wmtsGetCapabilities_response.xsd http://inspire.ec.europa.eu/schemas/inspire_vs_ows11/1.0 http://inspire.ec.europa.eu/schemas/inspire_vs_ows11/1.0/inspire_vs_ows_11.xsd">
+<ows:ServiceIdentification>
+	<ows:Title>Ortoimágenes de España (satélite Sentinel2 y ortofotos del PNOA máxima actualidad y ortoimágenes verdaderas núcleos urbanos)</ows:Title>
+	<ows:Abstract>Ortofotos de máxima actualidad del proyecto PNOA (Plan Nacional de Ortofotografía Aérea) visibles a partir de una escala aproximada 1:70.000. Para escalas menores se visualizan las imágenes de satélite Sentinel2 de 10 metros de resolución. Ortoimagen Melilla: Pléiades Neo © Airbus DS (2022). La cobertura PNOA está constituida por mosaicos de distinta fecha de adquisición y distinta resolución (50 y 25 cm). Los datos PNOA se actualizan varias veces al año y los datos Sentinel2 se actualizan semestralmente.  Adicionalmente, en los núcleos urbanos identificados en la capa mosaico, se dispone de las ortoimágenes verdaderas. Las imágenes mundiales de fondo provienen del espectrorradiómetro de imágenes de resolución moderada de la NASA (MODIS). Estas actualizaciones se anuncian en el canal RSS del IGN (https://www.ign.es/ign/rss). Servicio de visualización Teselado conforme al perfil INSPIRE de Web Map Tile Service (WMTS) 1.0.0. Las teselas se pregeneran en formato JPEG y hasta el nivel 19 (correspondiente con una escala aproximada 1:1.000) en el Sistema de Referencia por Coordenadas WGS84 Web Mercator (EPSG:3857).Otros TileMatrixSet disponibles, según este capabilities.</ows:Abstract>
+    <ows:Keywords> 
+			<Keyword>Ortoimágenes</Keyword>
+			<Keyword>Ortoimagen verdadera</Keyword>
+			<Keyword>Infraestructura de Datos Espaciales</Keyword>
+			<Keyword>IDEE</Keyword>
+			<Keyword>Sistema Cartográfico Nacional</Keyword>
+			<Keyword>SCNE</Keyword>
+			<Keyword>España</Keyword>
+			<Keyword>Fondo Español de Garantía Agraria</Keyword>
+			<Keyword>Dirección General de Catastro</Keyword>
+			<Keyword>Comunidad Autónoma de Aragón</Keyword>
+			<Keyword>Canarias</Keyword>
+			<Keyword>Catalunya</Keyword>
+			<Keyword>Comunitat Valenciana</Keyword>
+			<Keyword>Comunidad Foral de Navarra</Keyword>
+			<Keyword>Comunidad Autónoma de La Rioja</Keyword>
+			<Keyword>Comunidad de Extremadura</Keyword>
+			<Keyword>Comunidad de Madrid</Keyword>
+			<Keyword>Diputación de Alicante</Keyword>
+			<Keyword>País Vasco / Euskadi</Keyword>
+			<Keyword>Castilla y León</Keyword>
+			<Keyword>Comunidades Autónomas de Galicia</Keyword>
+			<Keyword>CNIG</Keyword>
+			<Keyword>Instituto Geográfico Nacional</Keyword>
+			<Keyword>IGN</Keyword>
+			<Keyword>Centro Nacional de Información Geográfica</Keyword>
+			<Keyword>PNT</Keyword>
+			<Keyword>MODIS</Keyword>
+			<Keyword>NASA</Keyword>
+		<ows:Keyword vocabulary="ISO 19119 geographic services taxonomy, version 2.3">infoManagementService</ows:Keyword>
+		<ows:Keyword vocabulary="ISO 19119 geographic services taxonomy, version 2.3">infoMapAccessService</ows:Keyword>
+		<ows:Keyword vocabulary="GEMET - INSPIRE themes, version 1.0">Orthoimagery</ows:Keyword>
+	</ows:Keywords>
+  <ows:ServiceType>OGC WMTS</ows:ServiceType>
+  <ows:ServiceTypeVersion>1.0.0</ows:ServiceTypeVersion>
+  <ows:Fees>No se aplican condiciones</ows:Fees> 
+  <ows:AccessConstraints>CC BY 4.0 scne.es</ows:AccessConstraints>
+</ows:ServiceIdentification>
+<ows:ServiceProvider>
+  <ows:ProviderName>Infraestructura de Datos Espaciales de España (IDEE)</ows:ProviderName>
+  <ows:ProviderSite xlink:href="https://www.ign.es"/>
+  <ows:ServiceContact>
+    <ows:IndividualName>Infraestructura de Datos Espaciales de España (IDEE)</ows:IndividualName>
+	<ows:PositionName/>
+	<ows:ContactInfo>
+		<ows:Address>
+			<ows:ElectronicMailAddress>ign@transportes.gob.es</ows:ElectronicMailAddress>
+		</ows:Address>
+		<ows:OnlineResource xlink:type="simple" xlink:href="https://www.ign.es"/>
+	</ows:ContactInfo>
+	<ows:Role>pointOfContact</ows:Role>
+  </ows:ServiceContact>
+</ows:ServiceProvider>
+
+<Contents>
+ <Layer>
+      <ows:Title>Imágenes de satélite Sentinel y ortofotos PNOA</ows:Title>
+      <ows:Abstract>Imagen de satélite Sentinel2 a escalas menores de 1:70.000 y las ortofotografías PNOA de máxima actualidad para escalas mayores, para toda España. Ortoimagen Melilla: Pléiades Neo © Airbus DS (2022).Las teselas se pregeneran en formato JPEG y hasta el nivel 19 (correspondiente con una escala aproximada 1:1.000) en el Sistema de Referencia por Coordenadas WGS84 Web Mercator (EPSG:3857).Otros TileMatrixSet disponibles, según este capabilties.</ows:Abstract>
+      <ows:Identifier>OI.OrthoimageCoverage</ows:Identifier>
+      <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?Service=CSW&amp;Request=GetRecordById&amp;Version=2.0.2&amp;id=spaignMosaicoSentinel2&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;elementSetName=full"/>
+	  <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignPNOA2022"/>
+	  <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignPNOA2023"/>
+	  <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignPNOA2024"/>
+	  <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignPNOA2025"/>
+	  <ows:Metadata xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=spaignTrueOrto2025"/>
+	<Style isDefault="true">
+		<ows:Identifier>default</ows:Identifier>
+		<LegendURL width="35" height="5" format="image/png" xlink:href="https://www.ign.es/wmts/pnoa-ma/leyendas/pnoa-ma.png"/>
+	</Style>
+      <Format>image/jpeg</Format>
+      <Format>image/png</Format>
+      <TileMatrixSetLink>
+        <TileMatrixSet>InspireCRS84Quad</TileMatrixSet>
+	  
+      </TileMatrixSetLink>	  
+      <TileMatrixSetLink>
+        <TileMatrixSet>EPSG:4326</TileMatrixSet>
+       
+      </TileMatrixSetLink>  
+    <TileMatrixSetLink>
+        <TileMatrixSet>EPSG:4258</TileMatrixSet>
+        
+      </TileMatrixSetLink>
+      <TileMatrixSetLink>
+        <TileMatrixSet>EPSG:25830</TileMatrixSet>
+        
+      </TileMatrixSetLink>
+      <TileMatrixSetLink>
+        <TileMatrixSet>EPSG:3857</TileMatrixSet>
+        
+      </TileMatrixSetLink>  
+      <TileMatrixSetLink>
+        <TileMatrixSet>GoogleMapsCompatible</TileMatrixSet>
+        
+      </TileMatrixSetLink>
+	  <TileMatrixSetLink>
+<TileMatrixSet>EPSG:25831</TileMatrixSet>
+
+</TileMatrixSetLink>
+	  <TileMatrixSetLink>
+<TileMatrixSet>EPSG:25829</TileMatrixSet>
+
+</TileMatrixSetLink>
+	<TileMatrixSetLink>
+<TileMatrixSet>EPSG:25828</TileMatrixSet>
+
+      </TileMatrixSetLink>
+    </Layer>
+	<TileMatrixSet>
+		<ows:Identifier>InspireCRS84Quad</ows:Identifier>
+		<ows:SupportedCRS>CRS:84</ows:SupportedCRS>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</TileMatrixSet>
+	<TileMatrixSet>
+		<ows:Identifier>EPSG:4326</ows:Identifier>
+		<ows:SupportedCRS>EPSG:4326</ows:SupportedCRS>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</TileMatrixSet>  
+	<TileMatrixSet>
+		<ows:Identifier>EPSG:4258</ows:Identifier>
+		<ows:SupportedCRS>EPSG:4258</ows:SupportedCRS>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</TileMatrixSet>
+	<TileMatrixSet>
+		<ows:Identifier>EPSG:25830</ows:Identifier>
+		<ows:SupportedCRS>EPSG:25830</ows:SupportedCRS>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</TileMatrixSet>
+	<TileMatrixSet>
+		<ows:Identifier>EPSG:32628</ows:Identifier>
+		<ows:SupportedCRS>EPSG:32628</ows:SupportedCRS>
+		
+		
+		
+		
+		
+		
+		
+	</TileMatrixSet>  
+	<TileMatrixSet>
+<ows:Identifier>EPSG:25829</ows:Identifier>
+<ows:SupportedCRS>EPSG:25829</ows:SupportedCRS>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</TileMatrixSet>
+	<TileMatrixSet>
+<ows:Identifier>EPSG:25828</ows:Identifier>
+		<ows:SupportedCRS>EPSG:25828</ows:SupportedCRS>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</TileMatrixSet>
+	<TileMatrixSet>
+		<ows:Identifier>GoogleMapsCompatible</ows:Identifier>
+		<ows:SupportedCRS>EPSG:3857</ows:SupportedCRS>
+		<!--  crs="urn:ogc:def:crs:EPSG::3857"  -->
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+				
+	</TileMatrixSet>	
+	<TileMatrixSet>
+		<ows:Identifier>EPSG:3857</ows:Identifier>
+		<ows:SupportedCRS>EPSG:3857</ows:SupportedCRS>
+		<!--  crs="urn:ogc:def:crs:EPSG::3857"  -->
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+				
+	</TileMatrixSet>
+
+	<TileMatrixSet>
+<ows:Identifier>EPSG:25831</ows:Identifier>
+<ows:SupportedCRS>urn:ogc:def:crs:EPSG::25831</ows:SupportedCRS>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</TileMatrixSet>
+ 
+</Contents>
+</Capabilities>

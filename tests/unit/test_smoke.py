@@ -62,3 +62,41 @@ def test_domain_models_are_frozen_and_closed() -> None:
         thing.name = "b"
     with pytest.raises(ValueError, match="extra"):
         Thing.model_validate({"name": "a", "other": 1})
+
+
+@pytest.mark.parametrize(
+    ("key", "printed"),
+    [("api.port", "8000"), ("api.host", "127.0.0.1"), ("map.cadastre.style", "")],
+)
+def test_cli_config_prints_one_key(
+    capsys: pytest.CaptureFixture[str], key: str, printed: str
+) -> None:
+    assert main(["config", key]) == 0
+    assert capsys.readouterr().out == printed + "\n"
+
+
+def test_cli_config_prints_a_section_as_json(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["config", "map.initial_view"]) == 0
+    assert '"zoom": 5' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("key", ["nope", "api.nope", "api.port.deeper"])
+def test_cli_config_of_an_unknown_key_is_a_usage_error(
+    capsys: pytest.CaptureFixture[str], key: str
+) -> None:
+    assert main(["config", key]) == 2
+    assert "unknown configuration key" in capsys.readouterr().out
+
+
+def test_cli_serve_runs_the_app_without_an_access_log(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[dict[str, object]] = []
+
+    def run(app: object, **kwargs: object) -> None:
+        calls.append(kwargs)
+
+    monkeypatch.setattr("uvicorn.run", run)
+    assert main(["serve"]) == 0
+    (call,) = calls
+    assert call["host"] == "127.0.0.1"
+    assert call["port"] == 8000
+    assert call["access_log"] is False

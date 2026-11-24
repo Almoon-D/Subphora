@@ -13,6 +13,9 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   over Zaragoza) returns a JPEG with `Access-Control-Allow-Origin: *` and
   `Cache-Control: max-age=31536000`. MapLibre can use it directly; no proxy needed.
   `(GetTile, 2026-11-24)`
+- Over open sea off Lanzarote, some GoogleMapsCompatible tiles near zoom 13 drew as a dark
+  block while the neighbouring ones showed water: PNOA has no imagery there.
+  `(GetTile, browser, 2026-11-24)`
 - WMS `https://www.ign.es/wms-inspire/pnoa-ma`: layers `OI.OrthoimageCoverage`,
   `OI.MosaicElement`, `fondo`; EPSG:3857 offered; CORS `*`. `(GetCapabilities, 2026-11-24)`
 

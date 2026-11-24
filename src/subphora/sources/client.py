@@ -23,6 +23,8 @@ import httpx
 from subphora.config.sources import SourcesSettings
 
 type Params = Mapping[str, str | list[str]]
+# What replaces the network in tests; layers above sources name it without importing httpx.
+type Transport = httpx.AsyncBaseTransport
 
 
 class HostNotAllowedError(Exception):
@@ -35,6 +37,10 @@ class HostNotAllowedError(Exception):
 
 class SourceError(Exception):
     """The service could not be reached or answered in a way the client refuses."""
+
+
+class SourceTimeoutError(SourceError):
+    """The service did not answer in time, on every attempt."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,7 +92,7 @@ class CatalogueClient:
         self,
         sources: SourcesSettings,
         version: str,
-        transport: httpx.AsyncBaseTransport | None = None,
+        transport: Transport | None = None,
     ) -> None:
         # httpx logs every URL at INFO; a URL can carry a key (hard rule: no secrets in logs).
         logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -147,6 +153,8 @@ class CatalogueClient:
                     return await self._fetch(url, params, headers)
             except httpx.TransportError as exc:
                 if attempt == attempts:
+                    if isinstance(exc, httpx.TimeoutException):
+                        raise SourceTimeoutError(_describe(exc, attempts)) from exc
                     raise SourceError(_describe(exc, attempts)) from exc
                 await asyncio.sleep(self._settings.retry_backoff_s * attempt)
         raise AssertionError("unreachable")  # pragma: no cover

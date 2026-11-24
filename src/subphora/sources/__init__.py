@@ -5,7 +5,13 @@ This is the only layer that talks to the network (an import-linter contract keep
 of the layers below it). It calls only the hosts of the source catalogue (hard rule 4).
 """
 
-from subphora.sources.client import CatalogueClient, HostNotAllowedError, SourceError
+from subphora.sources.client import (
+    CatalogueClient,
+    FetchedResponse,
+    HostNotAllowedError,
+    SourceError,
+    SourceTimeoutError,
+)
 from subphora.sources.models import CheckName, CheckResult, CheckStatus
 from subphora.sources.probes import check_catalogue, check_service, format_table
 
@@ -14,8 +20,10 @@ __all__ = [
     "CheckName",
     "CheckResult",
     "CheckStatus",
+    "FetchedResponse",
     "HostNotAllowedError",
     "SourceError",
+    "SourceTimeoutError",
     "check_catalogue",
     "check_service",
     "format_table",

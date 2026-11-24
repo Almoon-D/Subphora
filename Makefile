@@ -4,17 +4,42 @@
 
 UV_RUN := uv run --locked
 
-.PHONY: setup check test fmt lint types imports format-check coverage prompt
+.PHONY: setup check test fmt lint types imports format-check coverage prompt dev web-deps \
+	web-browser web-check
 
-setup:  ## Update uv and Python, install the locked environment
+# The front end (web/) runs on the Node of .nvmrc. Playwright uses its own Chromium unless
+# PLAYWRIGHT_CHROMIUM_EXECUTABLE names one (cloud sessions have one installed); CI adds
+# PLAYWRIGHT_INSTALL_FLAGS=--with-deps for the system libraries.
+WEB_STAMP := web/node_modules/.installed
+PLAYWRIGHT_INSTALL_FLAGS ?=
+
+setup:  ## Update uv and Python, install the locked environments (Python and web)
 	@# An old uv does not know the newest Python. `self update` works for the standalone
 	@# installer; cloud sessions ship uv another way, where `tool install` replaces it.
 	uv self update 2>/dev/null || uv tool install --force uv
 	@# Newest patch of every installed Python (3.15.2 → 3.15.3); the environment follows it.
 	uv python upgrade
 	uv sync --locked
+	$(MAKE) web-deps
 
-check: format-check lint types imports coverage  ## Everything CI runs
+check: format-check lint types imports coverage web-check  ## Everything CI runs
+
+dev: web-deps  ## The API and the web development server together; Ctrl-C stops both
+	scripts/dev.sh
+
+web-deps: $(WEB_STAMP)  ## Install the locked front-end dependencies
+
+$(WEB_STAMP): web/package-lock.json
+	cd web && npm ci --no-audit --no-fund
+	touch $@
+
+web-browser: web-deps  ## Playwright's Chromium, unless one is provided
+	@if [ -z "$${PLAYWRIGHT_CHROMIUM_EXECUTABLE:-}" ]; then \
+	  cd web && npx playwright install $(PLAYWRIGHT_INSTALL_FLAGS) chromium; \
+	fi
+
+web-check: web-browser  ## ESLint, tsc, Vitest, the production build and Playwright
+	cd web && npm run lint && npm run typecheck && npm test && npm run build && npm run e2e
 
 test:  ## pytest only
 	$(UV_RUN) pytest

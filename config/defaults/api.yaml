@@ -1,0 +1,8 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The API server (`subphora serve`). It listens on this machine only until the deployment
+# session (13) puts it behind a proxy.
+host: 127.0.0.1
+port: 8000
+# The Vite development server of `make dev`, which forwards /api to the API above. Its
+# origin must match `sources.client.cors_probe_origin`.
+dev_web_port: 5173

@@ -58,6 +58,33 @@ updates:
       actions-minor-and-patch:
         update-types: [minor, patch]
 
+  # The front end (web/, decision 0016). `typescript` stays on 6.0 for typescript-eslint
+  # while `typescript-7` (an alias) is the compiler: bump the parser only when
+  # typescript-eslint supports TypeScript 7.
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      web-minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      web-security:
+        applies-to: security-updates
+        patterns: ["*"]
+    ignore:
+      - dependency-name: typescript
+        versions: [">=6.1"]
+
   # Uncomment when the project ships a Dockerfile: base images are dependencies too.
   # - package-ecosystem: docker
   #   directory: /deploy

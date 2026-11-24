@@ -115,8 +115,9 @@ Spain), never sent to an LLM.
 **Runtime.** Each part in the language best suited to it: Python for the backend and data
 processing (its geospatial and geophysics libraries have no equal), TypeScript for the front
 end. Every toolchain and dependency at its newest release, even before the ecosystem has
-fully caught up (0011): Python 3.15 and Node 27, each pinned in one file and covered by
-Dependabot; Node moves to 28 when it is released, before 27 reaches end of life. Network I/O is
+fully caught up (0011): Python 3.15 and the newest stable Node (26 until Node 27's stable
+release in April 2027, decision 0016), each pinned in one file (`.python-version`, `.nvmrc`)
+and covered by Dependabot. Network I/O is
 asyncio (`httpx`); CPU-bound raster work runs in a process pool, never in the event loop.
 Money is `Decimal`; datetimes are timezone-aware UTC, shown in `Europe/Madrid` (or
 `Atlantic/Canary`) through `zoneinfo`.

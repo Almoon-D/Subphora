@@ -1,0 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Local storage. A relative path is relative to the repository root; data/ is git-ignored
+# (hard rule 6). Cache lifetimes are per service, in sources.yaml.
+cache_dir: data/cache

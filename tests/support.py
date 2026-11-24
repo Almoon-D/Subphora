@@ -2,9 +2,13 @@
 """Shared test helpers: fixtures on disk and a small source catalogue."""
 
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import httpx
+
+from subphora.config import Settings, load_settings
 from subphora.config.sources import SourcesSettings
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,3 +62,49 @@ def copy_config(tmp_path: Path) -> Path:
     target = tmp_path / "config"
     shutil.copytree(ROOT / "config", target)
     return target
+
+
+def parcel_fixture(name: str) -> bytes:
+    return (FIXTURES / "parcels" / name).read_bytes()
+
+
+def fast_settings(config_dir: Path | None = None) -> Settings:
+    """The real configuration with no waiting between requests or retries (tests only)."""
+    settings = load_settings(config_dir) if config_dir else load_settings()
+    sources = settings.sources
+    services = [
+        service.model_copy(
+            update={"politeness": service.politeness.model_copy(update={"min_interval_s": 0.0})}
+        )
+        for service in sources.services
+    ]
+    client = sources.client.model_copy(update={"retry_backoff_s": 0.0})
+    return settings.model_copy(
+        update={"sources": sources.model_copy(update={"client": client, "services": services})}
+    )
+
+
+type Handler = Callable[[httpx.Request], httpx.Response]
+
+
+class Catastro:
+    """A fake Catastro behind an httpx.MockTransport: canned WFS and DNPRC answers."""
+
+    def __init__(
+        self,
+        wfs: bytes | Handler = b"",
+        dnprc: bytes | Handler = b"",
+    ) -> None:
+        self.wfs = wfs
+        self.dnprc = dnprc
+        self.requests: list[httpx.Request] = []
+
+    def transport(self) -> httpx.MockTransport:
+        return httpx.MockTransport(self._handle)
+
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        answer = self.wfs if request.url.path.endswith("wfsCP.aspx") else self.dnprc
+        if callable(answer):
+            return answer(request)
+        return httpx.Response(200, content=answer)

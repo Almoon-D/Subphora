@@ -87,9 +87,9 @@ enforces it. The session that first touches a rule's area adds its enforcement a
 - **Current toolchains.** The newest stable Python (one place: `.python-version`, mirrored in
   `requires-python`), the newest uv (`make setup` updates it) and dependencies at their
   newest release, even before the ecosystem fully catches up (decision 0011). Another
-  language or runtime (Node, a database, a Docker base image) takes its newest release (Node
-  27 here, then 28), pins it in one file, and adds its ecosystem to
-  `.github/dependabot.yml` in the same PR. A dependency with no release for the newest
+  language or runtime (Node, a database, a Docker base image) takes its newest stable
+  release (Node 26 here until Node 27 is stable, decision 0016), pins it in one file, and
+  adds its ecosystem to `.github/dependabot.yml` in the same PR. A dependency with no release for the newest
   toolchain is a stop condition reported in the PR, not a silent downgrade.
 - **Copyright notice.** Every file that can hold a comment has
   `Copyright (c) 2026 Almoon-D. All rights reserved.` as its first or last line;

@@ -1,0 +1,578 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The source catalogue: the only hosts the HTTP client may call (hard rule 4). Every entry
+# was observed live on 2026-11-24; its behaviour, terms and evidence are in the knowledge
+# file it names. `uv run subphora sources check` re-checks the facts recorded here
+# (layers offered, EPSG:3857, CORS, one small sample) and `subphora sources list` prints it.
+#
+# Per service: kind is wms, wmts, wfs, wcs, ogc_api, rest or download; layers are the
+# layers, feature types, coverages or collections of interest; web_mercator (wms, wmts and
+# wfs only) says whether EPSG:3857 is offered; cors says whether a browser may call the
+# service directly. Politeness is per service; services on one host share the strictest.
+# A cache lifetime of 0 means never cache.
+
+client:
+  user_agent: "subphora/{version}"
+  connect_timeout_s: 10
+  read_timeout_s: 45
+  # The Catastro hosts reset about one connection in three (docs/knowledge/catastro.md).
+  retries: 2
+  retry_backoff_s: 3
+  max_response_bytes: 5000000
+  # The Vite development server's origin, as the browser would send it.
+  cors_probe_origin: "http://localhost:5173"
+
+services:
+  # ── Catastro (docs/knowledge/catastro.md) ─────────────────────────────────────────────
+  - id: catastro-wms
+    name: Cadastral parcels map (INSPIRE WMS)
+    publisher: Dirección General del Catastro
+    kind: wms
+    base_url: https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx
+    layers: [CP.CadastralParcel, CP.CadastralZoning, BU.Building]
+    crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3035]
+    web_mercator: true
+    cors: true
+    licence: "Catastro licence for INSPIRE data and services: free; own use or transformed value-added products; no massive downloads and no tiled requests"
+    attribution: "Dirección General del Catastro"
+    terms_url: https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf
+    knowledge: docs/knowledge/catastro.md
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    sample:
+      description: one 256-pixel map of the parcels around the Antequera dolmens
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: CP.CadastralParcel, STYLES: "", CRS: "EPSG:3857", BBOX: "-507000,4442000,-506000,4443000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      expect_content_type: image/png
+
+  - id: catastro-wfs-parcels
+    name: Cadastral parcel geometry (INSPIRE WFS)
+    publisher: Dirección General del Catastro
+    kind: wfs
+    base_url: https://ovc.catastro.meh.es/INSPIRE/wfsCP.aspx
+    layers: [cp:CadastralParcel, cp:CadastralZoning]
+    crs: [EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3857, EPSG:3035]
+    web_mercator: true
+    cors: true
+    licence: "Catastro licence for INSPIRE data and services: free; own use or transformed value-added products; no massive downloads"
+    attribution: "Dirección General del Catastro"
+    terms_url: https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf
+    knowledge: docs/knowledge/catastro.md
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    sample:
+      description: the public parcel of the Antequera dolmens by cadastral reference
+      params: {service: WFS, version: 2.0.0, request: GetFeature, STOREDQUERY_ID: GetParcel, refcat: 2488901UF6928N, srsname: "EPSG::25830"}
+      expect_content_type: text/xml
+      expect_text: "2488901UF6928N"
+
+  - id: catastro-ovc
+    name: Non-protected cadastral data (OVC JSON services)
+    publisher: Dirección General del Catastro
+    kind: rest
+    base_url: https://ovc.catastro.meh.es/OVCServWeb/OVCWcfCallejero
+    cors: true
+    licence: "Catastro free web services: non-protected data only (everything except owner and value)"
+    attribution: "Dirección General del Catastro"
+    terms_url: https://www.catastro.hacienda.gob.es/ws/Webservices_Libres.pdf
+    knowledge: docs/knowledge/catastro.md
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    sample:
+      description: non-protected data of the Antequera dolmens parcel
+      path: /COVCCallejero.svc/json/Consulta_DNPRC
+      params: {RefCat: 2488901UF6928N}
+      expect_content_type: application/json
+      expect_text: "PARQUE DOLMENICO"
+
+  # ── SIGPAC (docs/knowledge/sigpac.md) ─────────────────────────────────────────────────
+  - id: sigpac-wms
+    name: SIGPAC enclosures map (WMS)
+    publisher: Fondo Español de Garantía Agraria (FEGA)
+    kind: wms
+    base_url: https://sigpac-hubcloud.es/wms
+    layers: [AU.Sigpac:recinto, AU.Sigpac:cultivo_declarado]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SIGPAC, FEGA, CC BY 4.0"
+    terms_url: https://sigpac-hubcloud.es/
+    knowledge: docs/knowledge/sigpac.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: one 256-pixel map of the enclosures at El Torcal de Antequera
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "AU.Sigpac:recinto", STYLES: "", CRS: "EPSG:3857", BBOX: "-506000,4434500,-505500,4435000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      expect_content_type: image/png
+
+  - id: sigpac-queries
+    name: SIGPAC enclosure lookup by code (JSON)
+    publisher: Fondo Español de Garantía Agraria (FEGA)
+    kind: rest
+    base_url: https://sigpac-hubcloud.es/servicioconsultassigpac
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SIGPAC, FEGA, CC BY 4.0"
+    terms_url: https://sigpac-hubcloud.es/
+    knowledge: docs/knowledge/sigpac.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: enclosure 29:15:0:0:167:21:1 (El Torcal de Antequera)
+      path: /query/recinfo/29/15/0/0/167/21/1.json
+      expect_content_type: application/json
+      expect_text: '"poligono":167'
+
+  - id: sigpac-ogcapi
+    name: SIGPAC enclosures (OGC API Features)
+    publisher: Fondo Español de Garantía Agraria (FEGA)
+    kind: ogc_api
+    base_url: https://sigpac-hubcloud.es/ogcapi
+    layers: [recintos, cultivo_declarado]
+    crs: [OGC:CRS84]
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SIGPAC, FEGA, CC BY 4.0"
+    terms_url: https://sigpac-hubcloud.es/
+    knowledge: docs/knowledge/sigpac.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  # ── IGN / CNIG (docs/knowledge/ign-cnig.md) ───────────────────────────────────────────
+  - id: ign-pnoa-wmts
+    name: PNOA orthophoto (WMTS)
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: wmts
+    base_url: https://www.ign.es/wmts/pnoa-ma
+    layers: [OI.OrthoimageCoverage]
+    crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "PNOA CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the zoom-12 tile over Antequera
+      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: OI.OrthoimageCoverage, style: default, format: image/jpeg, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1594", tilecol: "1996"}
+      expect_content_type: image/jpeg
+
+  - id: ign-pnoa-wms
+    name: PNOA orthophoto (WMS)
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: wms
+    base_url: https://www.ign.es/wms-inspire/pnoa-ma
+    layers: [OI.OrthoimageCoverage, OI.MosaicElement]
+    crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "PNOA CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
+
+  - id: ign-base-wmts
+    name: IGN base maps (WMTS)
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: wmts
+    base_url: https://www.ign.es/wmts/ign-base
+    layers: [IGNBaseTodo, IGNBase-gris, IGNBaseOrto]
+    crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "IGN Base CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the zoom-12 base-map tile over Antequera
+      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: IGNBaseTodo, style: default, format: image/png, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1594", tilecol: "1996"}
+      expect_content_type: image/png
+
+  - id: ign-mdt-wcs
+    name: Digital terrain models MDT05 and MDT25 (WCS)
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: wcs
+    base_url: https://servicios.idee.es/wcs-inspire/mdt
+    layers: [Elevacion25830_5, Elevacion25830_25, Elevacion4083_5, Elevacion4083_25]
+    crs: [EPSG:25830, EPSG:4083, EPSG:4258]
+    cors: true
+    licence: CC BY 4.0
+    attribution: "MDT CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: a 500 m square of the 25 m terrain model at the Antequera dolmens
+      params: {service: WCS, version: 2.0.1, request: GetCoverage, CoverageId: Elevacion25830_25, subset: ["x(362000,362500)", "y(4098000,4098500)"], format: image/tiff}
+      expect_content_type: image/tiff
+
+  - id: cartociudad
+    name: CartoCiudad geocoder
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: rest
+    base_url: https://www.cartociudad.es/geocoder/api/geocoder
+    cors: true
+    licence: CC BY 4.0
+    attribution: "CartoCiudad CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: candidates for the name Antequera
+      path: /candidates
+      params: {q: Antequera, limit: "1"}
+      expect_content_type: application/json
+      expect_text: '"muniCode":"29015"'
+
+  - id: cnig-downloads
+    name: CNIG download centre (MDT02, MDT05, MDT25 files)
+    publisher: Centro Nacional de Información Geográfica (CNIG)
+    kind: download
+    base_url: https://centrodedescargas.cnig.es/CentroDescargas/
+    cors: false
+    licence: CC BY 4.0
+    attribution: "CC-BY 4.0 scne.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/ign-cnig.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 31536000}
+    sample:
+      description: the download centre's landing page
+      expect_content_type: text/html
+      expect_text: "Centro de Descargas"
+
+  # ── IGME (docs/knowledge/igme.md) ─────────────────────────────────────────────────────
+  - id: igme-magna-wms
+    name: MAGNA 1:50,000 geological map (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    base_url: https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_MAGNA_50/MapServer/WMSServer
+    # WMS names: 0 lithology colour, 2 contacts and faults, 6 structural measurements.
+    layers: ["0", "2", "6"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution; a paid value-added service on this WMS needs IGME's consent"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: one 256-pixel MAGNA map around Antequera
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "0", STYLES: "", CRS: "EPSG:3857", BBOX: "-510000,4438000,-505000,4443000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
+      expect_content_type: image/png
+
+  - id: igme-geode-wms
+    name: GEODE continuous geological map 1:50,000 (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    base_url: https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer
+    # WMS names: 1 geology polygons, 2 contacts.
+    layers: ["1", "2"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
+  - id: igme-permeability-wms
+    name: Permeability map of Spain 1:200,000 (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Permeabilidad_200/MapServer/WMSServer
+    layers: ["0"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
+  - id: igme-lithostrat-wms
+    name: Lithostratigraphic map of Spain 1:200,000 (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Litoestratigrafico_200/MapServer/WMSServer
+    # WMS names: 0 lithostratigraphy, 1 contacts and fractures, 2 structures.
+    layers: ["0", "1", "2"]
+    crs: [EPSG:4258, EPSG:4326, EPSG:25829, EPSG:25830, EPSG:25831]
+    # Not offered: MapLibre needs the server's proxy or the REST export for this one.
+    web_mercator: false
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
+  - id: igme-hydrogeo-wms
+    name: Hydrogeological map of Spain 1:200,000 (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Hidrogeologico_200/MapServer/WMSServer
+    layers: ["0"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
+  - id: igme-rest
+    name: IGME map services (ArcGIS REST queries)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: rest
+    base_url: https://mapas.igme.es/gis/rest/services
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: three water points of the IGME inventory near Antequera
+      path: /BasesDatos/IGME_PuntosAgua/MapServer/0/query
+      params: {geometry: "-4.62,36.98,-4.50,37.06", geometryType: esriGeometryEnvelope, inSR: "4326", spatialRel: esriSpatialRelIntersects, outFields: "*", returnGeometry: "false", resultRecordCount: "3", f: json}
+      expect_content_type: application/json
+      expect_text: "PROF_m"
+
+  # ── MITECO and basin authorities (docs/knowledge/miteco-basins.md) ────────────────────
+  - id: miteco-gw-bodies
+    name: Groundwater bodies, basin plans 2022-2027 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    base_url: https://gis.miteco.gob.es/geoserver/agua/masas_aguasub_2027/wms
+    layers: [masas_aguasub_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: one 256-pixel map of the groundwater bodies around Antequera
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: masas_aguasub_2027, STYLES: "", CRS: "EPSG:3857", BBOX: "-520000,4430000,-500000,4450000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      expect_content_type: image/png
+
+  - id: miteco-gw-status
+    name: Groundwater body status and risk, 2022-2027 (WFS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wfs
+    base_url: https://gis.miteco.gob.es/geoserver/agua/estado_masas_aguasub_2027/ows
+    layers: ["agua:estado_masas_aguasub_2027"]
+    crs: [EPSG:4258, EPSG:4326, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3857]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: status of the groundwater bodies around Antequera, as GeoJSON
+      params: {service: WFS, version: 2.0.0, request: GetFeature, typeNames: "agua:estado_masas_aguasub_2027", count: "2", outputFormat: application/json, srsName: "EPSG:4326", bbox: "36.95,-4.65,37.10,-4.45,urn:ogc:def:crs:EPSG::4326"}
+      expect_content_type: application/json
+      expect_text: "est_cu_desc"
+
+  - id: miteco-gw-at-risk
+    name: Groundwater bodies declared at risk (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    base_url: https://gis.miteco.gob.es/geoserver/agua/masas_aguasub_riesgo_2027/wms
+    layers: [masas_aguasub_riesgo_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-piezometers
+    name: Piezometric network (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    base_url: https://gis.miteco.gob.es/geoserver/agua/RedPiezometrica/wms
+    layers: [RedPiezometrica]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-public-water-domain
+    name: Public water domain, mapped estimate (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    base_url: https://gis.miteco.gob.es/geoserver/agua/DPH_Estimado/wms
+    layers: [DPH_Estimado]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-river-basin-districts
+    name: River-basin districts, plans 2022-2027 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    base_url: https://gis.miteco.gob.es/geoserver/agua/demarhidro_2027/wms
+    layers: [demarhidro_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  # ── Junta de Andalucía, REDIAM (docs/knowledge/junta-andalucia.md) ───────────────────
+  - id: rediam-water-bodies
+    name: Andalusian water bodies, plans 2022-2027 (WMS)
+    publisher: Junta de Andalucía, REDIAM
+    kind: wms
+    base_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_agua_andalucia_phc_2022_27
+    layers: [masas_subt_polig_and, masas_supf_linea_and]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    # No Access-Control-Allow-Origin: the browser needs the server's proxy for this one.
+    cors: false
+    licence: "REDIAM: free use, citing the authors and owners of the information"
+    attribution: "REDIAM, Junta de Andalucía"
+    terms_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_agua_andalucia_phc_2022_27?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/junta-andalucia.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: rediam-soils
+    name: Soil map of Andalusia 1:400,000 (WMS)
+    publisher: Junta de Andalucía, REDIAM
+    kind: wms
+    base_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_Suelos_Andalucia
+    layers: [unidades_edaficas]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: false
+    licence: "REDIAM: free use, citing the authors and owners of the information"
+    attribution: "REDIAM, Junta de Andalucía; Mapa de Suelos de Andalucía (CSIC, Consejería de Agricultura)"
+    terms_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_Suelos_Andalucia?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    sample:
+      description: one 256-pixel soil map around Antequera
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: unidades_edaficas, STYLES: "", CRS: "EPSG:3857", BBOX: "-520000,4420000,-500000,4440000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
+      expect_content_type: image/png
+
+  # ── Soil (docs/knowledge/soil.md) ─────────────────────────────────────────────────────
+  - id: soilgrids-wcs
+    name: SoilGrids 250 m, clay content (WCS)
+    publisher: ISRIC World Soil Information
+    kind: wcs
+    base_url: https://maps.isric.org/mapserv?map=/map/clay.map
+    layers: [clay_0-5cm_mean, clay_5-15cm_mean]
+    crs: [EPSG:4326, ESRI:54052]
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0"
+    terms_url: https://www.isric.org/about/data-policy
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 31536000}
+
+  - id: esdb
+    name: European Soil Database v2.0 (download after registration)
+    publisher: European Commission, Joint Research Centre (ESDAC)
+    kind: download
+    base_url: https://esdac.jrc.ec.europa.eu/content/european-soil-database-v20-vector-and-attribute-data
+    cors: false
+    licence: "Free after registration on the ESDAC form"
+    attribution: "European Soil Database v2.0, European Commission JRC"
+    terms_url: https://esdac.jrc.ec.europa.eu/content/european-soil-database-v20-vector-and-attribute-data
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 31536000}
+    sample:
+      description: the dataset's landing page
+      expect_content_type: text/html
+      expect_text: "registration"
+
+  # ── Copernicus (docs/knowledge/copernicus.md) ─────────────────────────────────────────
+  - id: copernicus-stac
+    name: Copernicus Data Space catalogue (STAC)
+    publisher: European Commission, Copernicus Data Space Ecosystem
+    kind: rest
+    base_url: https://stac.dataspace.copernicus.eu/v1
+    cors: true
+    licence: "Copernicus Sentinel data legal notice: free and open, with attribution"
+    attribution: "Contains modified Copernicus Sentinel data [year]"
+    terms_url: https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice
+    knowledge: docs/knowledge/copernicus.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 86400}
+    sample:
+      description: the Sentinel-2 L2A collection record
+      path: /collections/sentinel-2-l2a
+      expect_content_type: application/json
+      expect_text: "sentinel-2-l2a"
+
+  - id: egms
+    name: European Ground Motion Service (viewer and downloads)
+    publisher: European Commission, Copernicus Land Monitoring Service
+    kind: download
+    base_url: https://egms.land.copernicus.eu/
+    cors: false
+    licence: "Copernicus data policy: free and open, with attribution; downloads need EU Login"
+    attribution: "European Ground Motion Service, Copernicus Land Monitoring Service"
+    terms_url: https://egms.land.copernicus.eu/
+    knowledge: docs/knowledge/copernicus.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 2592000}
+    sample:
+      description: the viewer's landing page
+      expect_content_type: text/html
+      expect_text: "EU Login"
+
+  # ── AEMET (docs/knowledge/aemet.md) ───────────────────────────────────────────────────
+  - id: aemet-opendata
+    name: AEMET OpenData API
+    publisher: Agencia Estatal de Meteorología (AEMET)
+    kind: rest
+    base_url: https://opendata.aemet.es/opendata/api
+    licence: "AEMET: use and reproduction authorised, citing AEMET as the author"
+    attribution: "© AEMET"
+    terms_url: https://www.aemet.es/es/nota_legal
+    knowledge: docs/knowledge/aemet.md
+    needs_key: true
+    key_env: AEMET_API_KEY
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 86400}
+    sample:
+      description: the inventory of climate stations
+      path: /valores/climatologicos/inventarioestaciones/todasestaciones
+      expect_content_type: application/json
+
+  # ── Google Maps Platform (docs/knowledge/google-maps.md, decision 0012) ──────────────
+  - id: google-map-tiles
+    name: Google Map Tiles API (2D satellite and roadmap)
+    publisher: Google
+    kind: rest
+    base_url: https://tile.googleapis.com/v1
+    licence: "Google Maps Platform Terms of Service and Map Tiles API policies: no caching, no offline use, logo and attribution visible"
+    attribution: "Google Maps"
+    terms_url: https://developers.google.com/maps/documentation/tile/policies
+    knowledge: docs/knowledge/google-maps.md
+    needs_key: true
+    key_env: GOOGLE_MAPS_API_KEY
+    # Never cached or stored (decision 0005, hard rule 4).
+    politeness: {max_concurrent: 4, min_interval_s: 0.0, cache_lifetime_s: 0}
+    sample:
+      description: a session token for the satellite map type
+      path: /createSession
+      expect_content_type: application/json

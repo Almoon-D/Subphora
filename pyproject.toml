@@ -20,6 +20,7 @@ classifiers = [
 # Runtime dependencies: a lower bound and the next major as the upper bound. A tighter
 # bound gets a comment with its reason and an `ignore` in .github/dependabot.yml.
 dependencies = [
+    "httpx>=0.28.1,<1",
     "pydantic>=2.12,<3",
     "PyYAML>=6.0.3,<7",
 ]
@@ -32,8 +33,10 @@ dev = [
     "import-linter>=2.5",
     "mypy>=2.0",
     "pytest>=9.0",
+    "pytest-asyncio>=1.3",
     "pytest-cov>=7.0",
     "pytest-xdist>=3.8",
+    "respx>=0.23.1",
     "ruff>=0.14",
     "types-PyYAML>=6.0.12",
 ]
@@ -58,6 +61,9 @@ per-file-target-version = { ".github/scripts/*.py" = "py312" }
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "RUF", "PT", "PTH", "ARG", "ERA"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["subphora", "tests"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["ARG001", "ARG002"]
 
@@ -79,6 +85,10 @@ testpaths = ["tests"]
 # Tests run in parallel on every core. A tiny suite pays ~1 s for it; a grown one saves
 # a third or more (measured on a 340-file suite on a two-core runner).
 addopts = ["--strict-markers", "--strict-config", "-ra", "--import-mode=importlib", "-n", "auto"]
+# `from tests.support import …` resolves from the repository root.
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 filterwarnings = ["error"]
 
 [tool.coverage.run]
@@ -104,4 +114,24 @@ include_external_packages = true
 name = "The domain layer imports nothing else of ours"
 type = "forbidden"
 source_modules = ["subphora.domain"]
-forbidden_modules = ["subphora.config"]
+forbidden_modules = ["subphora.config", "subphora.sources"]
+
+[[tool.importlinter.contracts]]
+name = "The config layer imports only domain"
+type = "forbidden"
+source_modules = ["subphora.config"]
+forbidden_modules = ["subphora.sources"]
+
+[[tool.importlinter.contracts]]
+name = "The sources layer imports only domain and config"
+type = "forbidden"
+source_modules = ["subphora.sources"]
+forbidden_modules = ["subphora.__main__"]
+
+# Only sources/ talks to the network (hard rule 4: one client, catalogued hosts only).
+[[tool.importlinter.contracts]]
+name = "Only the sources layer imports an HTTP client"
+type = "forbidden"
+source_modules = ["subphora.domain", "subphora.config", "subphora.__main__"]
+forbidden_modules = ["httpx", "httpcore", "http"]
+allow_indirect_imports = true

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WFS_Capabilities version="2.0.0"
+xmlns="http://www.opengis.net/wfs/2.0"
+xmlns:wfs="http://www.opengis.net/wfs/2.0"
+xmlns:ows="http://www.opengis.net/ows/1.1"
+xmlns:ogc="http://www.opengis.net/ogc"
+xmlns:fes="http://www.opengis.net/fes/2.0"
+xmlns:gml="http://www.opengis.net/gml/3.2"
+xmlns:xlink="http://www.w3.org/1999/xlink"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd">
+  <ows:ServiceIdentification>
+    <ows:Title>Spanish INSPIRE Download Service - Cadastral Parcels</ows:Title>
+    <ows:Abstract>
+      WFS from Spanish General Directorate for Cadastre. The download service provides harmonized data from the theme Cadastral
+      Parcels (CP) in GML format according to INSPIRE. The service fulfils technical guidance for INSPIRE download services v. 3.0.1 and
+      simultaneously fulfils the OGC WFS 2.0.0 standard.
+    </ows:Abstract>
+    <ows:Keywords>
+      <ows:Keyword>Cadastral parcels</ows:Keyword>
+      <ows:Keyword>cadastral parcel</ows:Keyword>
+      <ows:Keyword>cadastral zoning</ows:Keyword>
+      <ows:Keyword>Cadastre Spain</ows:Keyword>
+      <ows:Keyword>WFS</ows:Keyword>
+    </ows:Keywords>
+    <ows:ServiceType codeSpace="http://www.opengeospatial.org/">WFS</ows:ServiceType>
+    <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+    <ows:Fees> No conditions apply</ows:Fees>
+    <ows:AccessConstraints> License documentation: https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia_en.pdf </ows:AccessConstraints>
+  </ows:ServiceIdentification>
+  <ows:ServiceProvider>
+    <ows:ProviderName>Spanish General Directorate for Cadastre</ows:ProviderName>
+    <ows:ProviderSite xlink:type="simple" xlink:href="www.catastro.hacienda.gob.es"/>
+    <ows:ServiceContact>
+      <ows:ContactInfo>
+        <ows:Phone>
+          <ows:Voice>+34 902 373 635 – +34 913 874 550</ows:Voice>
+          <ows:Facsimile>+34 91 583 67 32</ows:Facsimile>
+        </ows:Phone>
+        <ows:Address>
+          <ows:DeliveryPoint>Paseo de la Castellana, 272</ows:DeliveryPoint>
+          <ows:City>Madrid</ows:City>
+          <ows:AdministrativeArea>Catastro</ows:AdministrativeArea>
+          <ows:PostalCode>28046</ows:PostalCode>
+          <ows:Country>Spain</ows:Country>
+          <ows:ElectronicMailAddress>productosyservicios@catastro.hacienda.gob.es</ows:ElectronicMailAddress>
+        </ows:Address>
+        <ows:OnlineResource xlink:type="simple" xlink:href="https://www.catastro.hacienda.gob.es/webinspire/documentos/inspire-cp-WFS_en.pdf"/>
+        <ows:HoursOfService>Mo-Fr 9:00 - 20:00</ows:HoursOfService>
+      </ows:ContactInfo>
+    </ows:ServiceContact>
+  </ows:ServiceProvider>
+  
+  <FeatureTypeList>
+    <FeatureType xmlns:cp="http://inspire.ec.europa.eu/schemas/cp/4.0">
+      <Name>cp:CadastralParcel</Name>
+      <Title>Cadastral parcel polygons</Title>
+      <Abstract>The data correspond with the INSPIRE Directive for the theme Cadastral Parcels (CP)</Abstract>
+      <ows:Keywords>
+        <ows:Keyword>Cadastral parcel polygons</ows:Keyword>
+      </ows:Keywords>
+      <DefaultCRS> urn:ogc:def:crs:EPSG::4326</DefaultCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::4258</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25829</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25830</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25831</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3785</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3857</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3035</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3041</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3042</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3043</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::32627</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::32628</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:CRS::84</OtherCRS>
+      <OutputFormats>
+        <Format>text/xml; subtype=gml/3.2.1</Format>
+        <Format>application/gml+xml; version=3.2</Format>
+      </OutputFormats>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-18.5 26.2</ows:LowerCorner>
+        <ows:UpperCorner>5.3 44.8</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+      <!--URL DE METADATOS DEL IGN DE DATOS-->
+      <MetadataURL xlink:type="simple" xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=ES_SDGC_CP"/>
+    </FeatureType>
+    <FeatureType xmlns:cp="http://inspire.ec.europa.eu/schemas/cp/4.0">
+      <Name>cp:CadastralZoning</Name>
+      <Title>Cadastral Zoning polygons</Title>
+      <Abstract>The data correspond with the INSPIRE Directive for the theme Cadastral Zoning (CZ)</Abstract>
+      <ows:Keywords>
+        <ows:Keyword>Cadastral Zoning polygons</ows:Keyword>
+      </ows:Keywords>
+      <DefaultCRS> urn:ogc:def:crs:EPSG::4326</DefaultCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::4258</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25829</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25830</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::25831</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3785</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3857</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3035</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3041</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3042</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::3043</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::32627</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:EPSG::32628</OtherCRS>
+      <OtherCRS>urn:ogc:def:crs:CRS::84</OtherCRS>
+      <OutputFormats>
+        <Format>text/xml; subtype=gml/3.2.1</Format>
+        <Format>application/gml+xml; version=3.2</Format>
+      </OutputFormats>
+      <ows:WGS84BoundingBox>
+        <ows:LowerCorner>-18.5 26.2</ows:LowerCorner>
+        <ows:UpperCorner>5.3 44.8</ows:UpperCorner>
+      </ows:WGS84BoundingBox>
+      <!--URL DE METADATOS DEL IGN DE DATOS-->
+      <MetadataURL xlink:type="simple" xlink:href="https://www.idee.es/csw-inspire-idee/srv/spa/csw?SERVICE=CSW&amp;VERSION=2.0.2&amp;REQUEST=GetRecordById&amp;outputSchema=http://www.isotc211.org/2005/gmd&amp;ElementSetName=full&amp;ID=ES_SDGC_CP"/>
+    </FeatureType>
+  </FeatureTypeList>
+  
+</WFS_Capabilities>

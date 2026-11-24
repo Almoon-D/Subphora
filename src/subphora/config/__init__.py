@@ -9,13 +9,13 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict
+
+from subphora.config.base import Section
+from subphora.config.sources import SourcesSettings
 
 CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
 
-
-class Section(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
+__all__ = ["CONFIG_DIR", "CoreSettings", "Section", "Settings", "SourcesSettings", "load_settings"]
 
 
 class CoreSettings(Section):
@@ -26,6 +26,7 @@ class CoreSettings(Section):
 
 class Settings(Section):
     core: CoreSettings
+    sources: SourcesSettings
 
 
 def _merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:

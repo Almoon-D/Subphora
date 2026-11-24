@@ -30,32 +30,27 @@ def test_cli_without_command_prints_help(capsys: pytest.CaptureFixture[str]) -> 
     assert "usage" in capsys.readouterr().out
 
 
-def test_owner_overrides_defaults(tmp_path: Path) -> None:
-    (tmp_path / "defaults").mkdir()
-    (tmp_path / "defaults" / "core.yaml").write_text("log_level: INFO\n")
-    (tmp_path / "owner.yaml").write_text("core:\n  log_level: DEBUG\n")
-    assert load_settings(tmp_path).core.log_level == "DEBUG"
+def test_owner_overrides_defaults(config_dir: Path) -> None:
+    (config_dir / "owner.yaml").write_text("core:\n  log_level: DEBUG\n")
+    assert load_settings(config_dir).core.log_level == "DEBUG"
 
 
-def test_an_invalid_log_level_is_an_error(tmp_path: Path) -> None:
-    (tmp_path / "defaults").mkdir()
-    (tmp_path / "defaults" / "core.yaml").write_text("log_level: LOUD\n")
+def test_an_invalid_log_level_is_an_error(config_dir: Path) -> None:
+    (config_dir / "defaults" / "core.yaml").write_text("log_level: LOUD\n")
     with pytest.raises(ValueError, match="log_level"):
-        load_settings(tmp_path)
+        load_settings(config_dir)
 
 
-def test_unknown_key_is_an_error(tmp_path: Path) -> None:
-    (tmp_path / "defaults").mkdir()
-    (tmp_path / "defaults" / "core.yaml").write_text("log_level: INFO\ntypo: 1\n")
+def test_unknown_key_is_an_error(config_dir: Path) -> None:
+    (config_dir / "defaults" / "core.yaml").write_text("log_level: INFO\ntypo: 1\n")
     with pytest.raises(ValueError, match="typo"):
-        load_settings(tmp_path)
+        load_settings(config_dir)
 
 
-def test_a_file_that_is_not_a_mapping_is_an_error(tmp_path: Path) -> None:
-    (tmp_path / "defaults").mkdir()
-    (tmp_path / "defaults" / "core.yaml").write_text("- a list\n")
+def test_a_file_that_is_not_a_mapping_is_an_error(config_dir: Path) -> None:
+    (config_dir / "defaults" / "core.yaml").write_text("- a list\n")
     with pytest.raises(ValueError, match="mapping"):
-        load_settings(tmp_path)
+        load_settings(config_dir)
 
 
 def test_domain_models_are_frozen_and_closed() -> None:

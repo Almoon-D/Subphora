@@ -82,8 +82,9 @@ decision 0013). The catalogue of every host, its terms and limits is
 supported yet (decision 0010), they will be implemented once subphora is finished.
 
 **Jurisdiction.** All of Spain for maps, search, the model and the legal filter, with the
-same code and the same quality everywhere (decision 0022): every map layer covers all of
-Spain, and the legal rules are loaded for every river-basin district and every regional
+same code and the same quality everywhere (decision 0022): every map theme has a national
+baseline, replaced where a region, province or basin authority publishes a more detailed
+official service that qualifies under one rule for every region (decision 0023); and the legal rules are loaded for every river-basin district and every regional
 water law. Where field tests happen does not shape the product; no session prompt names a
 region. A district whose rules could not be read says "rules not loaded", with the reason.
 

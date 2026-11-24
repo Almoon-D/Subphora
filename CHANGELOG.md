@@ -7,6 +7,12 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.3.2] - 2026-11-24
+
+- Planned: the map will use each region's own, more detailed official services where they
+  qualify, with the national services as the baseline everywhere and the fallback when a
+  regional one has nothing or fails. Every region is surveyed first, under the same rule.
+
 ## [0.3.1] - 2026-11-24
 
 - The map is the same everywhere in Spain: every layer now covers the whole country. The two

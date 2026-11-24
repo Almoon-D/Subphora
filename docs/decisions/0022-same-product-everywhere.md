@@ -1,6 +1,6 @@
 # 0022 — The same product everywhere: national layers, every basin's rules, no region in prompts
 
-- Date: 2026-11-24 · Status: accepted · Owner ruling · Supersedes the REDIAM layer of 0013 · MASTER_PLAN §3, §4.5
+- Date: 2026-11-24 · Status: accepted; regional layers amended by 0023 · Owner ruling · Supersedes the REDIAM layer of 0013 · MASTER_PLAN §3, §4.5
 - Ruling: field tests happen in Andalusia, but Subphora must work equally well anywhere in
   Spain, and no session prompt names Andalusia or any other region.
 - Applied: the map shows only layers that cover all of Spain (MITECO, IGME, SoilGrids, IGN,

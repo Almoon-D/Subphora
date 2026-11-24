@@ -86,6 +86,10 @@ class Evidence(Section):
     clip_of_national: bool
     # Whether its publisher is the competent authority for the theme in its areas.
     competent_authority: bool
+    # The national layer's edition inside this layer's areas, for a national layer that
+    # states no single edition because it is published in parts, each with its own (GEODE's
+    # zones): the newest part over the areas, from the publisher's metadata. None otherwise.
+    national_edition: int | None = Field(default=None, ge=1900, le=2100)
 
 
 class RegionalLayer(Section):
@@ -97,9 +101,18 @@ class RegionalLayer(Section):
     layer: str
     style: str = ""
     min_zoom: int = Field(ge=0, le=24)
+    # The deepest zoom its service draws (a scale range that stops short of the overlays'
+    # max_zoom); the browser enlarges that level's tiles beyond it. None: the overlays'.
+    max_zoom: int | None = Field(default=None, ge=0, le=24)
     legend: Legend
     info: FeatureInfo | None
     evidence: Evidence
+
+    @model_validator(mode="after")
+    def _zoom_range(self) -> Self:
+        if self.max_zoom is not None and self.max_zoom < self.min_zoom:
+            raise ValueError(f"regional layer {self.id}: max_zoom is below min_zoom")
+        return self
 
 
 class RegionalSettings(Section):
@@ -164,7 +177,8 @@ def qualification_failures(
         failures.append("it is a clip of the national layer")
     if theme in rule.legal_themes and not evidence.competent_authority:
         failures.append("its publisher is not the competent authority for this legal status")
-    regional_year, national_year = evidence.detail.edition, national.edition
+    regional_year = evidence.detail.edition
+    national_year = national.edition if national.edition is not None else evidence.national_edition
     if regional_year is None:
         failures.append("its edition is not stated")
     elif national_year is None:

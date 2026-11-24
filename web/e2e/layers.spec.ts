@@ -30,6 +30,9 @@ const SERVICE_HOSTS = [
   "https://maps.isric.org/**",
   "https://idena.navarra.es/**",
   "https://geoserveis.icgc.cat/**",
+  "https://terramapas.icv.gva.es/**",
+  "https://geoguadiana.chguadiana.es/**",
+  "https://mirame.chduero.es/**",
 ];
 
 interface Mocks {
@@ -325,7 +328,7 @@ test("a regional layer is drawn inside its area over the national one, and answe
   await page.goto("/");
   const soil = page.locator('[data-layer="soil-clay"]');
   await soil.getByRole("checkbox").check();
-  await expect(map(page)).toHaveAttribute("data-regional", "navarra-soils");
+  await expect(map(page)).toHaveAttribute("data-regional", "navarra-soils catalonia-soils");
   // The theme's sources: the national baseline and the regional layer, each with its scale and date.
   await expect(soil.locator('[data-source="soil-clay"]')).toHaveText(
     "Nacional, toda España: ISRIC World Soil Information (celdas de 250 m · edición 2021).",
@@ -333,7 +336,9 @@ test("a regional layer is drawn inside its area over the national one, and answe
   await expect(soil.locator('[data-source="navarra-soils"]')).toHaveText(
     "Regional, dibujada encima dentro de Navarra: Mapa de suelos de Navarra 1:25.000 (escala 1:25.000 · edición 2023).",
   );
-  await expect(soil.getByText("Consulta al tocar solo dentro de Navarra: la capa nacional no devuelve valores.")).toBeVisible();
+  await expect(
+    soil.getByText("Consulta al tocar solo dentro de Navarra y Cataluña: la capa nacional no devuelve valores."),
+  ).toBeVisible();
   // The boundary is read once, and the regional service is asked for its tiles.
   await expect.poll(() => mocks.areaRequests).toEqual(["ES-NC"]);
   await expect.poll(() => mocks.urls.filter((url) => url.startsWith("https://idena.navarra.es/")).length).toBeGreaterThan(0);

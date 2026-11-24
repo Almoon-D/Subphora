@@ -13,7 +13,9 @@ rule:
   official_only: true
   # A regional edition may be this many years older than the national one: 0 means "at
   # least as recent". A national layer whose edition is not stated cannot be compared, so
-  # no regional layer qualifies over it until the national edition is known.
+  # no regional layer qualifies over it until the national edition is known; for one
+  # published in parts with their own editions (GEODE's zones), the regional layer states
+  # the newest part over its areas (evidence.national_edition, decision 0025).
   max_years_older: 0
   # A map at 1:N resolves about N × 0.0005 m on the ground (0.5 mm on the sheet): this
   # compares a map scale with a grid cell (1:25,000 ≈ 12.5 m; SoilGrids' cell is 250 m).
@@ -50,14 +52,19 @@ boundaries:
 areas:
   - {id: ES-NC, kind: region, code: "34150000000", bbox: [-2.51, 41.90, -0.72, 43.32]}
   - {id: ES-CT, kind: region, code: "34090000000", bbox: [0.15, 40.52, 3.34, 42.87]}
+  - {id: ES-VC, kind: region, code: "34100000000", bbox: [-1.53, 37.84, 0.70, 40.79]}
+  # Two state basin authorities whose plans 2022-2027 set where groundwater may be abstracted.
+  - {id: ES020, kind: district, code: ES020, bbox: [-7.72, 40.19, -1.79, 43.13]}
+  - {id: ES040, kind: district, code: ES040, bbox: [-7.53, 37.14, -2.15, 40.16]}
   # The three Andalusian intra-community districts, whose water authority is the Junta.
   - {id: ES060, kind: district, code: ES060, bbox: [-5.66, 36.02, -1.70, 37.60]}
   - {id: ES063, kind: district, code: ES063, bbox: [-6.48, 35.98, -5.03, 37.07]}
   - {id: ES064, kind: district, code: ES064, bbox: [-7.36, 37.07, -6.38, 37.91]}
 
 # The regional layers that qualify. theme: the national overlay (map.yaml) they detail;
-# the panel shows them under it. legend and info as in map.yaml. evidence: what the survey
-# found, against which the rule above is checked.
+# the panel shows them under it. legend and info as in map.yaml (the geological and soil
+# legends are strips thousands of pixels long: none, a tap names the unit). evidence: what
+# the survey found, against which the rule above is checked.
 layers:
   - id: navarra-soils
     theme: soil-clay
@@ -114,5 +121,110 @@ layers:
       # The plans 2022-2027 of the three districts (bodies versioned 2023-02-07).
       detail: {edition: 2023}
       adds: "bodies under preventive control (Andalusian Water Law, art. 51), a legal status the national layer does not carry"
+      clip_of_national: false
+      competent_authority: true
+
+  - id: catalonia-soils
+    theme: soil-clay
+    areas: [ES-CT]
+    service: icgc-soils-wms
+    layer: sols-25000
+    # Drawn from 1:23,000 down: from zoom 15 the browser enlarges zoom 14. Its coverage is
+    # partial; elsewhere in Catalonia a tap answers nothing and SoilGrids has no tap.
+    min_zoom: 11
+    max_zoom: 14
+    legend: {kind: none}
+    info:
+      info_format: application/json
+      parser: geojson
+      fields: ["tipus_sol", "soil_taxon", "descripcio"]
+    evidence:
+      official: true
+      # Soil map of Catalonia 1:25,000 v1.1, December 2025 (its IDEC metadata record).
+      detail: {scale_denominator: 25000, edition: 2025}
+      adds: "soil series by Soil Taxonomy with depth, drainage and texture per unit"
+      clip_of_national: false
+      competent_authority: false
+
+  - id: navarra-geology
+    theme: geode-geology
+    areas: [ES-NC]
+    service: idena-wms
+    layer: GEOLOG_Pol_Litologia
+    min_zoom: 11
+    legend: {kind: none}
+    info:
+      info_format: application/json
+      parser: geojson
+      fields: ["UNIDAD", "ERA", "EDAD", "PISO", "HOJA25M"]
+    evidence:
+      official: true
+      # Geological map of Navarra 1:25,000, published 2011-09-29 (its metadata).
+      detail: {scale_denominator: 25000, edition: 2011}
+      adds: null
+      clip_of_national: false
+      competent_authority: false
+      # GEODE zones 1600, 1700 and 2700 cover Navarra; the newest was published in 2010.
+      national_edition: 2010
+
+  - id: valencia-geology
+    theme: geode-geology
+    areas: [ES-VC]
+    service: icv-geology-wms
+    layer: GeoCV25.UnidadesGeologicas
+    # Still being mapped by the ICV and IGME: where it has no unit, GEODE answers.
+    min_zoom: 11
+    legend: {kind: none}
+    info:
+      info_format: application/vnd.ogc.gml
+      parser: gml
+      fields: ["desc_unit", "name_eda1", "name_eda2", "code_etiq"]
+    evidence:
+      official: true
+      # GeoCV25, 1:25,000, created 2023-04-04, revised 2024-04-10 (its ICV metadata).
+      detail: {scale_denominator: 25000, edition: 2024}
+      adds: null
+      clip_of_national: false
+      competent_authority: false
+      # GEODE zones 1700, 1800, 2100, 2400, 2600 and 2800 cover the Valencian Community;
+      # the newest (2600, 2800) were published in 2014.
+      national_edition: 2014
+
+  - id: guadiana-abstraction-limits
+    theme: groundwater-at-risk
+    areas: [ES040]
+    service: chguadiana-wms
+    layer: "limitacionesph2022:norm_apend_11_1_objetos"
+    min_zoom: 8
+    legend: {kind: wms}
+    info:
+      info_format: application/json
+      parser: geojson
+      fields: ["nom_objeto", "tipo_objet", "zona", "perimetro", "nom_masa", "cod_masa"]
+    evidence:
+      official: true
+      # The Guadiana plan 2022-2027 (RD 35/2023), normative appendix 11.1.
+      detail: {edition: 2023}
+      adds: "perimeters around wetlands, springs and piezometers where no new groundwater abstraction is authorised"
+      clip_of_national: false
+      competent_authority: true
+
+  - id: duero-groundwater-zoning
+    theme: groundwater-at-risk
+    areas: [ES020]
+    service: chduero-wms
+    layer: Zona_No_Autorizada_2021_horizonte_general
+    min_zoom: 5
+    legend: {kind: wms}
+    info:
+      info_format: application/json
+      parser: geojson
+      fields: ["nombre", "f_valoracion_final"]
+    evidence:
+      official: true
+      # The Duero plan 2022-2027 (RD 35/2023, annex IV, art. 33): the zoning lives in
+      # Mírame-IDEDuero; the layer's name carries 2021, the year of the plan's balance.
+      detail: {edition: 2023}
+      adds: "zones not authorised for new abstractions, or with specific limitations, per sector of each groundwater body"
       clip_of_national: false
       competent_authority: true

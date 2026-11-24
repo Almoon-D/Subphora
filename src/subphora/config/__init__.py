@@ -101,8 +101,13 @@ class Settings(Section):
             service = self._catalogued(key, layer.service, "wms", layer.layer)
             if not service.web_mercator:
                 raise ValueError(f"{key}: {service.id} lacks EPSG:3857")
-            if layer.min_zoom > self.map.overlays.max_zoom:
-                raise ValueError(f"{key}: min_zoom is above the overlays' max_zoom")
+            if max(layer.min_zoom, layer.max_zoom or 0) > self.map.overlays.max_zoom:
+                raise ValueError(f"{key}: its zoom range reaches above the overlays' max_zoom")
+            if national.detail.edition is not None and layer.evidence.national_edition is not None:
+                raise ValueError(
+                    f"{key}: {national.id} states its edition; national_edition is only for a "
+                    "national layer published in parts"
+                )
             for area_id in layer.areas:
                 area = regional.area(area_id)
                 if area.kind == "region" and area_id not in service.coverage:

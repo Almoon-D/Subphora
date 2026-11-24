@@ -1,6 +1,6 @@
 # Official-layer fixtures
 
-Real responses fetched on 2026-11-24 with the `subphora/0.2.1` or `0.3.0` User-Agent, untrimmed
+Real responses fetched on 2026-11-24 with the `subphora/0.2.1`, `0.3.0` or `0.4.0` User-Agent, untrimmed
 unless the table says so. Each GetFeatureInfo asked for an image centred on a public place, at its
 centre pixel.
 Third-party data: exempt from the copyright notice.
@@ -18,4 +18,12 @@ Third-party data: exempt from the copyright notice.
 | `icgc_hydrogeology_manresa.xml` | ICGC `unitats_hidrogeologiques_tipus` GetFeatureInfo, `text/xml`, near Manresa (Catalonia) |
 | `rediam_preventive_dalias.gml` | REDIAM `masas_agua_subt_intracom` GetFeatureInfo, `application/vnd.ogc.gml`, in the Campo de Dalías (Almería) |
 | `rediam_preventive_empty.gml` | the same in Málaga, outside any body under preventive control: an empty `msGMLOutput` |
+| `idena_geology_tafalla.json` | IDENA `GEOLOG_Pol_Litologia` GetFeatureInfo, `application/json`, near Tafalla; trimmed to its first feature, geometry removed |
+| `icgc_soils_sample.json` | ICGC `sols-25000` GetFeatureInfo, `application/json`, at 1.0565 E 41.5012 N (Urgell, Catalonia); trimmed to its first feature, geometry removed |
+| `icgc_soils_empty.json` | the same near Manresa, outside the map's cover: an empty FeatureCollection |
+| `icv_geology_alicante.gml` | ICV `GeoCV25.UnidadesGeologicas` GetFeatureInfo, `application/vnd.ogc.gml`, near Alicante |
+| `icv_geology_empty.gml` | the same inland of Valencia (0.70 W 39.25 N), not yet mapped: an empty `msGMLOutput` |
+| `chguadiana_zone_yeguas.json` | CH Guadiana `limitacionesph2022:norm_apend_11_1_objetos` GetFeatureInfo, `application/json`, at the Laguna de las Yeguas; trimmed to two features, geometry removed |
+| `chduero_zoning_medina.json` | CH Duero `Zona_No_Autorizada_2021_horizonte_general` GetFeatureInfo, `application/json`, near Medina del Campo; geometry removed |
+| `chduero_zoning_empty.json` | the same in Ourense (Miño-Sil district): an empty FeatureCollection |
 | `miteco_at_risk_daimiel.json` | MITECO `masas_aguasub_riesgo_2027` GetFeatureInfo, `application/json`, near Daimiel; trimmed to its first feature, geometry removed |

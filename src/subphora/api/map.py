@@ -66,6 +66,8 @@ class RegionalOverlay(DomainModel):
     tiles: tuple[str, ...]
     proxied: bool
     min_zoom: int
+    # The deepest zoom its service draws; the browser enlarges that level beyond it.
+    max_zoom: int
     # The areas it is drawn and asked inside, and the box enclosing them all.
     area_ids: tuple[str, ...]
     bounds: tuple[float, float, float, float]
@@ -178,6 +180,7 @@ def _regional(settings: Settings, layer: RegionalSettings) -> RegionalOverlay:
         tiles=(_tiles(settings, service, layer.id, layer.layer, layer.style),),
         proxied=is_proxied(service),
         min_zoom=layer.min_zoom,
+        max_zoom=settings.map.overlays.max_zoom if layer.max_zoom is None else layer.max_zoom,
         area_ids=tuple(layer.areas),
         bounds=(
             min(box[0] for box in boxes),

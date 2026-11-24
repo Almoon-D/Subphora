@@ -88,7 +88,8 @@ function TapNote({ overlay }: { overlay: Overlay }) {
     return <p className="note">{t("layers.noInfo")}</p>;
   }
   const areas = answering.flatMap((r) => r.area_ids.map((id) => lookup(`area.${id}`, id)));
-  return <p className="note">{t("layers.infoRegionalOnly", { areas: areas.join(", ") })}</p>;
+  const list = new Intl.ListFormat("es", { type: "conjunction" }).format(areas);
+  return <p className="note">{t("layers.infoRegionalOnly", { areas: list })}</p>;
 }
 
 function OverlayControl({

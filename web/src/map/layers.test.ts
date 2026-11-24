@@ -109,7 +109,7 @@ describe("describeRegional", () => {
   it("lists the regional layers of the themes switched on", () => {
     const layers = withOverlay(initialLayers(MAP), "soil-clay", { visible: true });
     expect(describeRegional(MAP, initialLayers(MAP))).toBe("");
-    expect(describeRegional(MAP, layers)).toBe("navarra-soils");
+    expect(describeRegional(MAP, layers)).toBe("navarra-soils catalonia-soils");
   });
 });
 

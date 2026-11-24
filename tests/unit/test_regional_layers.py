@@ -92,6 +92,22 @@ def test_a_layer_that_fails_the_rule_says_why(
     assert failure in qualification_failures(RULE, "soil-clay", evidence(**change), national)
 
 
+def test_a_national_layer_published_in_parts_is_compared_by_its_parts_over_the_area() -> None:
+    # GEODE states no single edition; its zones over the area were published by 2010.
+    geode = LayerDetail(scale_denominator=50000)
+    newer = evidence(
+        detail=LayerDetail(scale_denominator=25000, edition=2011), national_edition=2010
+    )
+    assert qualification_failures(RULE, "geode-geology", newer, geode) == []
+    older = newer.model_copy(update={"national_edition": 2014})
+    assert qualification_failures(RULE, "geode-geology", older, geode) == [
+        "its edition 2011 is older than the national 2014"
+    ]
+    # A national layer that states its edition is compared with that one.
+    stated = LayerDetail(scale_denominator=50000, edition=2009)
+    assert qualification_failures(RULE, "geode-geology", older, stated) == []
+
+
 def test_a_legal_status_comes_only_from_the_competent_authority() -> None:
     richer = evidence(adds="preventive control", detail=LayerDetail(edition=2023))
     national = LayerDetail(edition=2023)
@@ -119,6 +135,11 @@ def test_every_regional_layer_in_the_configuration_qualifies() -> None:
         "navarra-soils",
         "catalonia-hydrogeology",
         "andalusia-preventive-control",
+        "catalonia-soils",
+        "navarra-geology",
+        "valencia-geology",
+        "guadiana-abstraction-limits",
+        "duero-groundwater-zoning",
     }
 
 
@@ -153,6 +174,22 @@ def test_every_regional_layer_in_the_configuration_qualifies() -> None:
             "lacks EPSG:3857",
         ),
         (lambda d: regional_layer(d, "navarra-soils").update(min_zoom=20), "max_zoom"),
+        (lambda d: regional_layer(d, "catalonia-soils").update(max_zoom=10), "below min_zoom"),
+        (lambda d: regional_layer(d, "catalonia-soils").update(max_zoom=20), "max_zoom"),
+        (
+            lambda d: regional_layer(d, "navarra-geology")["evidence"].pop("national_edition"),
+            "navarra-geology does not qualify: the national edition is not stated",
+        ),
+        (
+            lambda d: regional_layer(d, "navarra-soils")["evidence"].update(national_edition=2020),
+            "soil-clay states its edition",
+        ),
+        (
+            lambda d: regional_layer(d, "duero-groundwater-zoning")["evidence"].update(
+                competent_authority=False
+            ),
+            "duero-groundwater-zoning does not qualify: its publisher is not the competent",
+        ),
         (lambda d: d["areas"].append(d["areas"][0]), "duplicate area ids"),
         (lambda d: d["areas"][0].update(id="Navarra"), "not an ISO 3166-2 region"),
         (lambda d: d["areas"][0].update(bbox=[1, 1, 0, 0]), "west, south, east, north"),
@@ -174,8 +211,8 @@ def test_a_regional_layer_that_does_not_fit_stops_the_settings(
 def test_the_map_lists_each_theme_with_its_regional_layers() -> None:
     config = map_config(load_settings())
     themes = {overlay.id: overlay for overlay in config.overlays}
-    (soils,) = themes["soil-clay"].regional
-    assert soils.id == "navarra-soils"
+    soils, catalonia_soils = themes["soil-clay"].regional
+    assert (soils.id, catalonia_soils.id) == ("navarra-soils", "catalonia-soils")
     assert soils.area_ids == ("ES-NC",)
     assert soils.bounds == (-2.51, 41.90, -0.72, 43.32)
     assert soils.detail == LayerDetail(scale_denominator=25000, edition=2023)
@@ -183,7 +220,7 @@ def test_the_map_lists_each_theme_with_its_regional_layers() -> None:
     assert not soils.proxied
     assert themes["soil-clay"].detail == LayerDetail(cell_m=250, edition=2021)
     # REDIAM has no CORS: the API's proxy draws it, and it covers three districts.
-    (andalusia,) = themes["groundwater-at-risk"].regional
+    andalusia = themes["groundwater-at-risk"].regional[0]
     assert andalusia.proxied
     assert andalusia.tiles == ("/api/layers/andalusia-preventive-control/tiles/{z}/{x}/{y}",)
     assert andalusia.area_ids == ("ES060", "ES063", "ES064")
@@ -192,7 +229,19 @@ def test_the_map_lists_each_theme_with_its_regional_layers() -> None:
         "soil-clay",
         "groundwater-at-risk",
         "hydrogeology",
+        "geode-geology",
     }
+    # A regional layer draws up to its service's last zoom, or the overlays' own.
+    regional = {r.id: r for o in config.overlays for r in o.regional}
+    assert regional["catalonia-soils"].max_zoom == 14
+    assert regional["navarra-soils"].max_zoom == 18
+    assert [r.id for r in themes["groundwater-at-risk"].regional] == [
+        "andalusia-preventive-control",
+        "guadiana-abstraction-limits",
+        "duero-groundwater-zoning",
+    ]
+    duero = themes["groundwater-at-risk"].regional[2]
+    assert duero.tiles[0].startswith("https://mirame.chduero.es/geoserver/mirame/wms?")
 
 
 # ── Boundaries ───────────────────────────────────────────────────────────────────────────
@@ -296,6 +345,9 @@ def test_an_answer_that_is_not_a_boundary_is_refused(content: bytes, message: st
 AREA_FIXTURES = {
     "34150000000": "ign_es_nc.json",
     "34090000000": "ign_es_ct.json",
+    "34100000000": "ign_es_vc.json",
+    "ES020": "miteco_es020.json",
+    "ES040": "miteco_es040.json",
     "ES060": "miteco_es060.json",
     "ES063": "miteco_es063.json",
     "ES064": "miteco_es064.json",
@@ -314,16 +366,26 @@ def _timeout(request: httpx.Request) -> httpx.Response:
     raise httpx.ReadTimeout("slow", request=request)
 
 
+GEODE_PATH = "/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer"
+
+
 class Upstream:
-    """Every service behind one MockTransport: boundaries by code, taps by host."""
+    """Every service behind one MockTransport: boundaries by code, taps by the layer asked,
+    else by the service's path, else by host."""
 
     def __init__(self, **answers: Any) -> None:
         defaults: dict[str, Any] = {
             "idena.navarra.es": layer_fixture("idena_soils_tafalla.json"),
+            "GEOLOG_Pol_Litologia": layer_fixture("idena_geology_tafalla.json"),
             "geoserveis.icgc.cat": layer_fixture("icgc_hydrogeology_manresa.xml"),
+            "sols-25000": layer_fixture("icgc_soils_sample.json"),
+            "terramapas.icv.gva.es": layer_fixture("icv_geology_alicante.gml"),
+            "geoguadiana.chguadiana.es": layer_fixture("chguadiana_zone_yeguas.json"),
+            "mirame.chduero.es": layer_fixture("chduero_zoning_medina.json"),
             "www.juntadeandalucia.es": layer_fixture("rediam_preventive_dalias.gml"),
             "gis.miteco.gob.es": layer_fixture("miteco_at_risk_daimiel.json"),
             "mapas.igme.es": layer_fixture("igme_permeability.xml"),
+            GEODE_PATH: layer_fixture("igme_geode_tenerife.json"),
             "boundaries": None,
         }
         defaults.update(answers)
@@ -352,7 +414,13 @@ class Upstream:
                 )
             code = params["FILTER"].split("<fes:Literal>")[1].split("<")[0]
             return httpx.Response(200, content=area_fixture(AREA_FIXTURES[code]))
-        answer = self.answers[request.url.host]
+        layer = params.get("QUERY_LAYERS", params.get("LAYERS"))
+        for key in (layer, request.url.path, request.url.host):
+            if key in self.answers:
+                answer = self.answers[key]
+                break
+        else:
+            raise KeyError(request.url.host)
         if callable(answer):
             return answer(request)
         return httpx.Response(200, content=answer)
@@ -381,6 +449,9 @@ def info(theme: str, lon: float, lat: float, zoom: float = 14) -> str:
 TAFALLA = (-1.70, 42.55)
 MANRESA = (1.80, 41.70)
 DALIAS = (-2.80, 36.76)
+REQUENA = (-0.70, 39.25)
+DAIMIEL = (-3.62, 39.07)
+VALLADOLID = (-4.72, 41.65)
 
 
 async def test_an_area_boundary_is_served_rounded_and_read_once(
@@ -479,6 +550,120 @@ async def test_a_regional_layer_answers_first_inside_its_area(
     assert body["source"]["attribution"] == "Gobierno de Navarra (IDENA), CC BY 4.0"
     (asked,) = upstream.asked("idena.navarra.es")
     assert asked.url.params["QUERY_LAYERS"] == "EDAFOL_Pol_Suelos25m"
+
+
+@pytest.mark.parametrize(
+    ("theme", "point", "layer_id", "area_id", "publisher", "shown", "hidden"),
+    [
+        (
+            "soil-clay",
+            MANRESA,
+            "catalonia-soils",
+            "ES-CT",
+            "Institut Cartogràfic i Geològic de Catalunya (ICGC)",
+            [("tipus_sol", "Comapregona"), ("soil_taxon", "Haploxerepts fluvèntics")],
+            ["codi_cas", "129987"],
+        ),
+        (
+            "geode-geology",
+            TAFALLA,
+            "navarra-geology",
+            "ES-NC",
+            "Gobierno de Navarra (IDENA)",
+            [("UNIDAD", "359 Areniscas,limolitas y arcillas"), ("ERA", "Terciario continental")],
+            ["GEOM_AREA", "BEGINLIFE"],
+        ),
+        (
+            "geode-geology",
+            REQUENA,
+            "valencia-geology",
+            "ES-VC",
+            "Generalitat Valenciana, Institut Cartogràfic Valencià (ICV)",
+            [("code_etiq", "QP4pd"), ("name_eda1", "PLEISTOCENO SUPERIOR")],
+            ["desc_unit_val", "shape_area"],
+        ),
+        (
+            "groundwater-at-risk",
+            DAIMIEL,
+            "guadiana-abstraction-limits",
+            "ES040",
+            "Confederación Hidrográfica del Guadiana",
+            [("nom_objeto", "Laguna de las Yeguas"), ("tipo_objet", "Humedal")],
+            ["IH422003x"],
+        ),
+        (
+            "groundwater-at-risk",
+            VALLADOLID,
+            "duero-groundwater-zoning",
+            "ES020",
+            "Confederación Hidrográfica del Duero",
+            [("f_valoracion_final", "Zona No Autorizada")],
+            ["cod_val_final", "7200368"],
+        ),
+    ],
+)
+async def test_each_regional_layer_answers_inside_its_area_with_its_allowed_fields(
+    settings: Settings,
+    tmp_path: Path,
+    theme: str,
+    point: tuple[float, float],
+    layer_id: str,
+    area_id: str,
+    publisher: str,
+    shown: list[tuple[str, str]],
+    hidden: list[str],
+) -> None:
+    upstream = Upstream()
+    async with serve(settings, upstream, tmp_path) as client:
+        response = await client.get(info(theme, *point, 13))
+    assert response.status_code == 200
+    body = response.json()
+    answered = body["answered_by"]
+    assert (answered["level"], answered["layer_id"], answered["area_id"]) == (
+        "regional",
+        layer_id,
+        area_id,
+    )
+    assert answered["publisher"] == publisher
+    assert answered["detail"] == settings.regional.layer(layer_id).evidence.detail.model_dump()
+    fields = {f["name"]: f["value"] for f in body["features"][0]["fields"]}
+    assert set(shown) <= set(fields.items())
+    for name in hidden:
+        assert name not in response.text
+
+
+@pytest.mark.parametrize(
+    ("theme", "point", "regional", "empty", "national_host"),
+    [
+        ("geode-geology", REQUENA, "valencia-geology", "icv_geology_empty.gml", "mapas.igme.es"),
+        (
+            "groundwater-at-risk",
+            VALLADOLID,
+            "duero-groundwater-zoning",
+            "chduero_zoning_empty.json",
+            "gis.miteco.gob.es",
+        ),
+    ],
+)
+async def test_where_a_regional_layer_maps_nothing_the_national_one_answers(
+    settings: Settings,
+    tmp_path: Path,
+    theme: str,
+    point: tuple[float, float],
+    regional: str,
+    empty: str,
+    national_host: str,
+) -> None:
+    layer = settings.regional.layer(regional).layer
+    upstream = Upstream(**{layer: layer_fixture(empty)})
+    async with serve(settings, upstream, tmp_path) as client:
+        response = await client.get(info(theme, *point, 13))
+    body = response.json()
+    assert body["answered_by"]["level"] == "national"
+    assert body["answered_by"]["layer_id"] == theme
+    assert body["fallbacks"] == [{"layer_id": regional, "reason": "no_feature"}]
+    assert body["features"]
+    assert len(upstream.asked(national_host)) == 1
 
 
 async def test_a_proxied_regional_layer_is_read_in_its_own_format(
@@ -628,8 +813,8 @@ async def test_a_regional_layer_without_cors_is_drawn_by_the_proxy_from_its_getm
 
 
 # One point in every autonomous community and city, at least 2 km from any border. Inside
-# Navarra, Catalonia and the Andalusian intra-community districts the regional layer
-# answers; everywhere else the national one (or, for soils, nobody: SoilGrids gives no tap).
+# the areas of a regional layer that layer answers; everywhere else the national one (or,
+# for soils, nobody: SoilGrids gives no tap).
 POINTS = {
     "ES-AN": (-2.80, 36.76),
     "ES-AR": (-0.88, 41.65),
@@ -652,10 +837,16 @@ POINTS = {
     "ES-ML": (-2.95, 35.29),
 }
 REGIONAL = {
-    "ES-NC": {"soil-clay": "navarra-soils"},
-    "ES-CT": {"hydrogeology": "catalonia-hydrogeology"},
+    "ES-NC": {"soil-clay": "navarra-soils", "geode-geology": "navarra-geology"},
+    "ES-CT": {"hydrogeology": "catalonia-hydrogeology", "soil-clay": "catalonia-soils"},
+    "ES-VC": {"geode-geology": "valencia-geology"},
     "ES-AN": {"groundwater-at-risk": "andalusia-preventive-control"},
+    # Daimiel and Mérida lie in the Guadiana district (ES040), Valladolid in the Duero's.
+    "ES-CM": {"groundwater-at-risk": "guadiana-abstraction-limits"},
+    "ES-EX": {"groundwater-at-risk": "guadiana-abstraction-limits"},
+    "ES-CL": {"groundwater-at-risk": "duero-groundwater-zoning"},
 }
+THEMES = ("soil-clay", "hydrogeology", "groundwater-at-risk", "geode-geology")
 
 
 @pytest.mark.parametrize("region", sorted(POINTS))
@@ -665,7 +856,7 @@ async def test_one_point_per_autonomous_community(
     lon, lat = POINTS[region]
     upstream = Upstream()
     async with serve(settings, upstream, tmp_path) as client:
-        for theme in ("soil-clay", "hydrogeology", "groundwater-at-risk"):
+        for theme in THEMES:
             response = await client.get(info(theme, lon, lat, 14))
             expected = REGIONAL.get(region, {}).get(theme)
             if expected is not None:

@@ -181,6 +181,8 @@ overlays:
         fields: ["Id", "Naturaleza", "Profundidad m", "Cota msnm", "Fecha obra", "Uso", "Unidad Hidrogeologica", "Sistema Acuifero", "Municipio"]
     - id: geode-geology
       group: geology
+      # No single edition: each GEODE zone has its own, published 2007-2014
+      # (docs/knowledge/igme.md); a regional layer is compared with the zones over its area.
       detail: {scale_denominator: 50000}
       service: igme-geode-wms
       layer: "1"
@@ -206,7 +208,8 @@ overlays:
         fields: ["nº de hoja", "unidad cartográfica", "descripción litológica"]
     - id: lithostratigraphy
       group: geology
-      detail: {scale_denominator: 200000}
+      # Second edition, revised 2009-08-05 (its IGME record in the IDEE catalogue).
+      detail: {scale_denominator: 200000, edition: 2009}
       service: igme-lithostrat-wms
       layer: "0"
       opacity: 0.6
@@ -224,7 +227,8 @@ overlays:
         fields: ["Descripciónlitológica", "Permeabilidad", "Era", "Sistema", "Serie", "Piso"]
     - id: permeability
       group: geology
-      detail: {scale_denominator: 200000}
+      # Second edition, revised 2009-08-05 (its IGME record in the IDEE catalogue).
+      detail: {scale_denominator: 200000, edition: 2009}
       service: igme-permeability-wms
       layer: "0"
       opacity: 0.6

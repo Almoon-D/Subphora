@@ -575,13 +575,15 @@ services:
 
   # ── Basin authorities and regional water agencies (docs/knowledge/water-authorities.md)
   - id: chguadiana-wms
-    name: Guadiana basin services, piezometric network (WMS)
+    name: Guadiana basin services, piezometric network and abstraction limits (WMS)
     publisher: Confederación Hidrográfica del Guadiana
     kind: wms
     # The district (ES040) spans these regions; the district boundary is the real extent.
     coverage: [ES-EX, ES-CM, ES-AN]
     base_url: https://geoguadiana.chguadiana.es/geoserver/wms
-    layers: ["redescontrol:Piezometria"]
+    # The perimeters closed to new groundwater abstractions (plan 2022-2027, normative
+    # appendix 11.1): docs/knowledge/regional-layers.md.
+    layers: ["redescontrol:Piezometria", "limitacionesph2022:norm_apend_11_1_objetos"]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
     web_mercator: true
     cors: true
@@ -616,14 +618,17 @@ services:
     publisher: Confederación Hidrográfica del Duero
     kind: wms
     coverage: [ES-CL]
-    base_url: https://mirame.chduero.es/duerowfd
-    layers: [Red_oficial_control_nivel, Piezometria_200, Masa_Subterranea_Superior, Masa_Subterranea_Inferior]
+    # /duerowfd answers with a redirect to this GeoServer endpoint, which serves the same layers.
+    base_url: https://mirame.chduero.es/geoserver/mirame/wms
+    # Zona_No_Autorizada_2021_horizonte_general: the groundwater zoning of the plan
+    # 2022-2027 (docs/knowledge/regional-layers.md).
+    layers: [Red_oficial_control_nivel, Piezometria_200, Masa_Subterranea_Superior, Masa_Subterranea_Inferior, Zona_No_Autorizada_2021_horizonte_general]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
     web_mercator: true
     cors: true
     licence: "CH Duero WMS: AccessConstraints NONE, Fees NONE"
     attribution: "Confederación Hidrográfica del Duero"
-    terms_url: https://mirame.chduero.es/duerowfd?service=WMS&version=1.1.1&request=GetCapabilities
+    terms_url: https://mirame.chduero.es/geoserver/mirame/wms?service=WMS&version=1.3.0&request=GetCapabilities
     knowledge: docs/knowledge/water-authorities.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
@@ -713,12 +718,12 @@ services:
       expect_text: "Piezom"
 
   - id: idena-wms
-    name: Navarra spatial data services, soil map 1:25,000 (WMS)
+    name: Navarra spatial data services, soil and geological maps 1:25,000 (WMS)
     publisher: Gobierno de Navarra (IDENA)
     kind: wms
     coverage: [ES-NC]
     base_url: https://idena.navarra.es/ogc/wms
-    layers: [EDAFOL_Pol_Suelos25m]
+    layers: [EDAFOL_Pol_Suelos25m, GEOLOG_Pol_Litologia]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
     web_mercator: true
     cors: true
@@ -726,6 +731,38 @@ services:
     attribution: "Gobierno de Navarra (IDENA), CC BY 4.0"
     terms_url: https://idena.navarra.es/ogc/wms?request=GetCapabilities&service=WMS
     knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: icgc-soils-wms
+    name: Soil map of Catalonia 1:25,000 (WMS)
+    publisher: Institut Cartogràfic i Geològic de Catalunya (ICGC)
+    kind: wms
+    coverage: [ES-CT]
+    base_url: https://geoserveis.icgc.cat/servei/catalunya/edafologia/wms
+    layers: [sols-25000]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: "ICGC legal notice: reuse worldwide, commercial or not, citing the source and the date of its last update, without altering its meaning (Law 37/2007, art. 8)"
+    attribution: "Institut Cartogràfic i Geològic de Catalunya"
+    terms_url: https://www.icgc.cat/ca/Ajuda/Avis-legal
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: icv-geology-wms
+    name: Geological map of the Valencian Community 1:25,000, GeoCV25 (WMS)
+    publisher: Generalitat Valenciana, Institut Cartogràfic Valencià (ICV)
+    kind: wms
+    coverage: [ES-VC]
+    base_url: https://terramapas.icv.gva.es/29_GeoCV25
+    layers: [GeoCV25.UnidadesGeologicas]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "Institut Cartogràfic Valencià, Generalitat; IGME. CC BY 4.0"
+    terms_url: https://terramapas.icv.gva.es/29_GeoCV25?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/regional-layers.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
   # ── Junta de Andalucía, REDIAM (docs/knowledge/junta-andalucia.md) ───────────────────

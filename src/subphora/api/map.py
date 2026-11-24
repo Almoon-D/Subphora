@@ -67,8 +67,6 @@ class Overlay(DomainModel):
     # Whether a tap asks the API what lies under it.
     feature_info: bool
     attribution: str
-    # ISO 3166 codes of the areas the service covers (ES, ES-AN…).
-    coverage: tuple[str, ...]
 
 
 class MapConfig(DomainModel):
@@ -156,7 +154,6 @@ def _overlay(settings: Settings, overlay: OverlaySettings) -> Overlay:
         legend_url=legend,
         feature_info=overlay.info is not None,
         attribution=service.attribution,
-        coverage=tuple(service.coverage),
     )
 
 

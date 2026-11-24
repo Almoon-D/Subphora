@@ -7,6 +7,16 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.3.1] - 2026-11-24
+
+- The map is the same everywhere in Spain: every layer now covers the whole country. The two
+  Andalusia-only layers are gone; the national groundwater bodies and SoilGrids already
+  covered Andalusia too.
+- New layer: GEODE, IGME's continuous geological map, which also covers the parts of the
+  Canaries where MAGNA has no geology.
+- The legal filter is now planned for every river basin and every regional water law, not
+  two basins first.
+
 ## [0.3.0] - 2026-11-24
 
 - A layer panel beside the map: groundwater bodies, their status and those declared at

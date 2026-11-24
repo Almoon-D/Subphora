@@ -52,15 +52,18 @@ cadastre:
   opacity: 1.0
 
 # The official water, geology and soil layers (WMS), in the panel's groups and drawing
-# order (later layers are drawn on top). A layer whose service has CORS and EPSG:3857 is
-# drawn by the browser from the service; any other goes through the API's tile proxy.
+# order (later layers are drawn on top). Every one covers all of Spain, so the map is the
+# same wherever it is opened (decision 0022). A layer whose service has CORS and EPSG:3857
+# is drawn by the browser from the service; any other names an ArcGIS export, which the
+# API's tile proxy draws.
 #
 # Per layer: min_zoom is the first zoom at which the service draws it (ArcGIS layers carry
 # a scale range: 1:283,482 is zoom 11, 1:94,494 zoom 13, 1:23,624 zoom 15); legend is the
 # service's GetLegendGraphic (wms), the legend image its capabilities name (url) or none
-# (MAGNA's legends are lists of symbol codes); info is how a tap reads the features under
-# it (GetFeatureInfo in info_format, read by parser) and the only fields shown, by the names
-# the service gives them: anything else, protected data included, is never shown.
+# (the MAGNA and GEODE legends are lists of symbol codes); info is how a tap reads the
+# features under it (GetFeatureInfo in info_format, read by parser) and the only fields
+# shown, by the names the service gives them. Anything else (geometry, internal ids,
+# misleading fields, or a field a service adds later) never reaches the browser.
 overlays:
   groups: [water, geology, soil]
   tile_size: 256
@@ -107,17 +110,6 @@ overlays:
         info_format: application/json
         parser: geojson
         fields: ["Código de masa", "Nombre masa de agua", "Organismo cuenca", "Tipo de riesgo", "Declaración de riesgo", "Fecha declaración", "Link base legal declaración"]
-    - id: andalusian-groundwater-bodies
-      group: water
-      service: rediam-water-bodies
-      layer: masas_subt_polig_and
-      opacity: 0.5
-      min_zoom: 7
-      legend: {kind: wms}
-      info:
-        info_format: application/vnd.ogc.gml
-        parser: gml
-        fields: [CodMasa, NomMasa, NomDemarc, Area, FormGeo]
     - id: public-water-domain
       group: water
       service: miteco-public-water-domain
@@ -174,6 +166,18 @@ overlays:
         parser: geojson
         # Not the reference flow: a 0 there means unknown, not dry (docs/knowledge/igme.md).
         fields: ["Id", "Naturaleza", "Profundidad m", "Cota msnm", "Fecha obra", "Uso", "Unidad Hidrogeologica", "Sistema Acuifero", "Municipio"]
+    - id: geode-geology
+      group: geology
+      service: igme-geode-wms
+      layer: "1"
+      opacity: 0.6
+      min_zoom: 11
+      # GEODE's legend is a list of symbol codes, like MAGNA's.
+      legend: {kind: none}
+      info:
+        info_format: application/geo+json
+        parser: geojson
+        fields: ["Descripción Unidad Geológica", "Código de Unidad Geológica", "Edad Inferior", "Edad Superior", "Código zona GEODE"]
     - id: magna-lithology
       group: geology
       service: igme-magna-wms
@@ -255,14 +259,3 @@ overlays:
       legend: {kind: wms}
       # Its GetFeatureInfo answers no value (docs/knowledge/soil.md): no tap.
       info: null
-    - id: andalusian-soils
-      group: soil
-      service: rediam-soils
-      layer: unidades_edaficas
-      opacity: 0.6
-      min_zoom: 7
-      legend: {kind: wms}
-      info:
-        info_format: application/vnd.ogc.gml
-        parser: gml
-        fields: [Codigo_unidad, Descripcion]

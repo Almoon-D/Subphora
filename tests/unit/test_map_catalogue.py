@@ -50,6 +50,15 @@ def test_every_layer_comes_from_the_catalogue() -> None:
     assert all(o.attribution for o in config.overlays)
 
 
+def test_every_layer_covers_all_of_spain() -> None:
+    """The same map wherever it is opened (decision 0022): no regional layer."""
+    settings = load_settings()
+    for overlay in settings.map.overlays.layers:
+        service = settings.sources.service(overlay.service)
+        assert service.coverage == ["ES"], overlay.id
+        assert service.coverage_excludes == [], overlay.id
+
+
 def test_a_layer_with_cors_and_web_mercator_is_drawn_from_its_service() -> None:
     config = map_config(load_settings())
     status = next(o for o in config.overlays if o.id == "groundwater-status")
@@ -72,15 +81,10 @@ def test_a_layer_with_cors_and_web_mercator_is_drawn_from_its_service() -> None:
 def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
     config = map_config(load_settings())
     proxied = {o.id: o for o in config.overlays if o.proxied}
-    assert set(proxied) == {
-        "andalusian-groundwater-bodies",
-        "andalusian-soils",
-        "lithostratigraphy",
-    }
+    assert set(proxied) == {"lithostratigraphy"}
     assert proxied["lithostratigraphy"].tiles == (
         "/api/layers/lithostratigraphy/tiles/{z}/{x}/{y}",
     )
-    assert proxied["andalusian-soils"].coverage == ("ES-AN",)
     magna = next(o for o in config.overlays if o.id == "magna-lithology")
     assert magna.legend_url is None  # MAGNA's legends are lists of symbol codes
 
@@ -97,7 +101,7 @@ def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
         (lambda d: overlay(d, "lithostratigraphy").pop("export"), "no export"),
         (
             lambda d: overlay(d, "rivers").update(export=overlay(d, "lithostratigraphy")["export"]),
-            "no export is needed",
+            "has CORS and EPSG:3857; no export is needed",
         ),
         (
             lambda d: overlay(d, "lithostratigraphy")["export"].update(service="igme-magna-wms"),
@@ -112,6 +116,13 @@ def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
             "legend must be on mapas.igme.es",
         ),
         (lambda d: overlay(d, "permeability")["legend"].pop("url"), "exactly when its kind"),
+        # A service without CORS (REDIAM) cannot be drawn by the browser and has no export.
+        (
+            lambda d: overlay(d, "rivers").update(
+                service="rediam-soils", layer="unidades_edaficas"
+            ),
+            "lacks CORS or EPSG:3857 and has no export",
+        ),
         (lambda d: overlay(d, "rivers").update(group="weather"), "not in groups"),
         (lambda d: overlay(d, "rivers").update(id="springs"), "duplicate overlay ids"),
         (lambda d: overlay(d, "rivers").update(min_zoom=20), "above max_zoom"),

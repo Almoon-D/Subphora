@@ -28,7 +28,6 @@ const SERVICE_HOSTS = [
   "https://gis.miteco.gob.es/**",
   "https://mapas.igme.es/**",
   "https://maps.isric.org/**",
-  "https://www.juntadeandalucia.es/**",
 ];
 
 interface Mocks {
@@ -108,13 +107,12 @@ test("every water and geology layer switches on over the parcel", async ({ page 
   const tile = new URL(rivers ? (tileRequests(mocks, rivers)[0] ?? "") : "");
   expect(tile.searchParams.get("CRS")).toBe("EPSG:3857");
   expect(tile.searchParams.get("BBOX")?.split(",")).toHaveLength(4);
-  // The services without CORS or EPSG:3857 are reached through the API only.
-  expect(mocks.urls.filter((url) => url.startsWith("https://www.juntadeandalucia.es/"))).toEqual([]);
+  // The service without EPSG:3857 is reached through the API only.
   expect(mocks.urls.some((url) => url.includes("/api/layers/lithostratigraphy/tiles/"))).toBe(true);
+  expect(mocks.urls.some((url) => url.includes("IGME_Litoestratigrafico_200"))).toBe(false);
   // Every source drawn is credited on the map.
   await expect(attribution(page)).toContainText("© Ministerio para la Transición Ecológica y el Reto Demográfico");
   await expect(attribution(page)).toContainText("Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)");
-  await expect(attribution(page)).toContainText("REDIAM, Junta de Andalucía");
   await expect(attribution(page)).toContainText("Dirección General del Catastro");
 });
 
@@ -157,8 +155,6 @@ test("a layer below its zoom says so and is not requested", async ({ page }) => 
   await expect(magna.getByText("Visible desde el zoom 11: acerca el mapa.")).toBeVisible();
   await page.waitForTimeout(500);
   expect(mocks.urls.filter((url) => url.startsWith("https://mapas.igme.es/"))).toEqual([]);
-  // Regional layers name their coverage.
-  await expect(page.locator('[data-layer="andalusian-soils"]').getByText("Solo en: Andalucía.")).toBeVisible();
 });
 
 test("the base map switches between PNOA and the IGN maps", async ({ page }) => {

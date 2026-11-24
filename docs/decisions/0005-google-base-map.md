@@ -9,3 +9,5 @@
   the current terms and picks Map Tiles API in MapLibre (its policy covers third-party
   renderers) or the Maps JavaScript API, in a new decision.
 - Rejected: scraping Google tiles (against the terms); Google as the only base map.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 from pathlib import Path
 
 import pytest

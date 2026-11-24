@@ -1,6 +1,6 @@
 # subphora
 
-Estima dónde es más probable encontrar agua subterránea en cualquier lugar de España, a partir de datos públicos y del campo, con su incertidumbre y su situación legal, para una empresa agrícola familiar.
+Subphora: mapa de probabilidad de agua subterránea para cualquier parcela de España — dónde buscar, a qué profundidad, con qué certeza y si se permite perforar.
 
 ## Ajustes de GitHub
 
@@ -31,4 +31,4 @@ make check     # todo lo que corre CI
 uv run subphora --help
 ```
 
-Copyright (c) 2027 AlmoonD. All rights reserved.
+Copyright (c) 2026 Almoon-D. All rights reserved.

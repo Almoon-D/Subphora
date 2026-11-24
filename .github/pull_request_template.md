@@ -1,3 +1,5 @@
+<!-- Copyright (c) 2026 Almoon-D. All rights reserved. -->
+
 ## Plan
 
 <!-- 5–15 bullets, written before the code. -->

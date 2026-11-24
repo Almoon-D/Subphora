@@ -90,3 +90,5 @@ For the chosen instrument the plan must cover: bill of materials with current pr
 4. The build plan as sessions, each small and ending in something I can see or run. Suggested order (change it if you have a better one): research/verification of every data source and legal rule → parcel lookup and map viewer with official layers → water-potential model v1 with explainability and validation → legal filter → field mode with GPS and offline → per-parcel report → hardware build and integration → learning from field data. Put a working end-to-end slice early rather than perfecting one layer.
 5. The "Proposals for the owner" list (§0), and the list of things only I can do (create a Google Cloud project and key with a cap, pick parcels for testing, find data from our existing wells, buy hardware).
 6. The prompt for session 01 with model and effort, as AGENTS.md says.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

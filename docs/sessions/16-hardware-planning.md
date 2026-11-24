@@ -1,4 +1,4 @@
-# Session 15 — Hardware planning
+# Session 16 — Hardware planning
 
 Model and effort: Opus 5.5, high.
 
@@ -9,7 +9,7 @@ decides what (if anything) to build or buy. No hardware is built in this session
 
 ## Read
 
-- `docs/BRIEF.md` § 5, decision 0008, `docs/MASTER_PLAN.md` § 4.7.
+- `docs/BRIEF.md` § 5, decision 0008, `docs/MASTER_PLAN.md` § 4.8.
 
 ## Build
 
@@ -29,3 +29,5 @@ decides what (if anything) to build or buy. No hardware is built in this session
 ## Done when
 
 - The owner has ruled on the recommendation and the next sessions are written.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

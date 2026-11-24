@@ -7,3 +7,5 @@
   cadastre is not supported yet" message. The national potential map still covers them;
   only cadastral lookup is missing.
 - Rejected: integrating four foral services now (no current user benefit).
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

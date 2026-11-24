@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """The release workflow's script, run against the repository on every change."""
 
 import importlib.util

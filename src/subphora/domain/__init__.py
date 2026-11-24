@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """Domain models: frozen, strict, importing nothing else of ours (import-linter contract)."""
 
 from pydantic import BaseModel, ConfigDict

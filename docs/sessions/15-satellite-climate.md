@@ -1,4 +1,4 @@
-# Session 14 — Satellite and climate layers
+# Session 15 — Satellite and climate layers
 
 Model and effort: Opus 5.5, high.
 
@@ -28,3 +28,5 @@ appear as context layers.
 
 - `make check` is green and the new layers show on the map, with the validation result
   that decided whether NDVI enters the model.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -11,3 +11,5 @@
   open for a monthly session (each rebase re-runs CI); GitHub auto-merge (needs branch
   protection, unavailable to private repositories on Free).
 - Cost: one CI run per pull request plus about two short runs per Dependabot batch.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

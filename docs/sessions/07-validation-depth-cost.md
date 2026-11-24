@@ -31,9 +31,11 @@ drilling-cost range.
 
 ## DO NOT BUILD
 
-- The legal filter; learning from the owner's wells (session 13).
+- The legal filter; learning from the owner's wells (session 14).
 
 ## Done when
 
 - `make check` is green and in `make dev` each area shows its validation result, and each
   candidate its depth and cost range or an explicit "unknown".
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -1,4 +1,4 @@
-# Session 09 — Field mode
+# Session 10 — Field mode
 
 Model and effort: Opus 5.5, high.
 
@@ -10,13 +10,13 @@ syncing them later without loss.
 
 ## Read
 
-- `docs/MASTER_PLAN.md` § 4.6 and § 3 (Interface).
+- `docs/MASTER_PLAN.md` § 4.7 and § 3 (Interface).
 - AGENTS.md hard rule 5.
 
 ## Build
 
 1. A field-mode screen: large controls, high contrast, the position, accuracy circle and
-   heading, distance and bearing to the chosen spot, "at the spot" by the §4.6 rule.
+   heading, distance and bearing to the chosen spot, "at the spot" by the §4.7 rule.
 2. Observations (note, photo, voice memo) and track, written to IndexedDB before the UI
    confirms; append-only with UUIDv7 ids.
 3. Sync: an outbox to an idempotent API endpoint storing records and media in `data/`
@@ -27,9 +27,11 @@ syncing them later without loss.
 
 ## DO NOT BUILD
 
-- Offline map packs (session 10); login and deployment (session 12); instrument readings.
+- Offline map packs (session 11); login and deployment (session 13); instrument readings.
 
 ## Done when
 
 - `make check` is green and on the laptop (`make dev`) the owner can walk the flow with the
-  browser offline and see the records sync when it comes back. On the phone after session 12.
+  browser offline and see the records sync when it comes back. On the phone after session 13.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

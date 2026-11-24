@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """The release a commit on ``main`` publishes: version, tag, pre-release flag and notes.
 
 The version is ``pyproject.toml``'s ``project.version`` (plain semantic versioning); the

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """Command-line entry point: ``uv run subphora --help``."""
 
 import argparse

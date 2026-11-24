@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 # Developer commands. Everything runs inside the uv-managed environment, against the locked
 # dependency set (uv.lock).
 

@@ -11,7 +11,7 @@ written from memory.
 
 ## Read
 
-- `docs/MASTER_PLAN.md` §§ 1–4 (§3 Data sources, §4.2 the `sources/` layer, §4.4 legal).
+- `docs/MASTER_PLAN.md` §§ 1–4 (§3 Data sources, §4.2 the `sources/` layer, §4.5 legal).
 - `docs/decisions/` 0003–0006 and 0010.
 - `docs/BRIEF.md` §§ 2, 3 (legal filter) and 6, for the services and rules the owner named.
 
@@ -45,20 +45,25 @@ written from memory.
      confirm that caching for offline use is allowed).
    - IGME: MAGNA 1:50,000 WMS and the vector downloads (GEODE), the 1:200,000
      lithostratigraphic and permeability map, the hydrogeological map, faults, the
-     water-point database (what fields: depth, yield, water level, dry), and the licence.
+     water-point database (what fields: depth, yield, water level, dry, lithology logs),
+     the structural data of the geological maps (bedding dip and strike: digital or only
+     printed symbols, which sheets), any regional 3D geological models, and the licence.
+   - Soil maps: the national and Andalusian options (for example REDIAM, the European Soil
+     Database, SoilGrids) with scale, attributes that bear on infiltration, and licence;
+     recommend one.
    - MITECO and the basin authorities: groundwater bodies and their status (quantitative,
      chemical, at risk, declared overexploited) in the current basin-plan cycle, the
      piezometric network and its levels, rivers, public water domain and zona de policía
      (SNCZI), river-basin districts. Guadalquivir (CHG) and the Andalusian Mediterranean
      basins (Junta de Andalucía) in detail; note which other basins publish the same.
    - Copernicus (Sentinel-2 access, EGMS) and AEMET OpenData (key needed): access route
-     and licence only; they are used in session 14.
+     and licence only; they are used in session 15.
    - Google Maps Platform: Map Tiles API and Maps JavaScript API terms on third-party
      renderers, overlays, attribution, caching and offline use, and how to set hard daily
      quota caps. Record the route as a new decision that follows 0005.
    - Nationwide inputs for session 05: which datasets cover all of Spain, at what scale,
      in which format and download size (permeability 1:200,000, lithology, MDT, groundwater
-     bodies, water points), and their date.
+     bodies, water points, soil), and their date.
 5. **Legal knowledge** `docs/knowledge/legal-groundwater.md`: article 54.2 of the
    consolidated Water Law (the 7,000 m³/year regime) and the articles of the Public Water
    Domain Regulation that govern it (authorisation or notice, distances to other wells and
@@ -66,7 +71,7 @@ written from memory.
    part of the current Guadalquivir and Andalusian Mediterranean basin plans on new
    abstractions in groundwater bodies at risk or in poor status; drilling permits. Each rule
    with its BOE/BOJA or plan link, article, and date checked. Mark anything unclear as
-   uncertain rather than guessing: session 08 turns it into rules as data.
+   uncertain rather than guessing: session 09 turns it into rules as data.
 6. If the cloud environment's network blocks a host, record it, queue
    `VERIFY-LIVE(<service>)` in ROADMAP, and tell the owner to run
    `uv run subphora sources check` on their PC.
@@ -85,3 +90,5 @@ written from memory.
   where the network allows, otherwise queued as VERIFY-LIVE).
 - One knowledge file per service and the legal knowledge file exist, every finding tagged
   with route and date, and the Google-route decision is recorded.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

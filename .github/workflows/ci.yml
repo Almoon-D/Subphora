@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 name: CI
 
 # `ci` runs exactly what a contributor runs locally: `make check`. It is the check a ruleset

@@ -25,15 +25,18 @@ coordinates, or a point or polygon drawn on the map) the app shows:
 4. **Whether drilling is allowed:** the competent water authority, the groundwater body and
    its legal status, and the main rules that apply, as plain-language guidance with the
    official source and its date. It is never legal advice.
-5. **In the field:** the user's live GPS position on a detailed map, guidance to a candidate
+5. **What lies below:** terrain layers (slope, drainage, wetness), the dip of the rock
+   layers where the geological map records it, the soil map, and an interpretive geological
+   cross-section along a line the user draws, always marked as interpretation.
+6. **In the field:** the user's live GPS position on a detailed map, guidance to a candidate
    spot, and observations (notes, photos, voice memos, track) recorded without coverage and
    synced later.
 
-"Done" for version 1 (after session 12): the owner types a cadastral reference, sees the
+"Done" for version 1 (after session 13): the owner types a cadastral reference, sees the
 parcel with the official layers and our water-potential map, opens the per-parcel report,
 walks to the best candidate spot with a phone, and logs a field observation there.
-After version 1: a well registry whose results update the map (13), satellite and climate
-layers (14), and the hardware plan (15).
+After version 1: a well registry whose results update the map (14), satellite and climate
+layers (15), and the hardware plan (16).
 
 The product never claims to see water. It estimates a likelihood and shows what would
 reduce the uncertainty.
@@ -52,15 +55,16 @@ reduce the uncertainty.
   or used offline.
 - No paid service, paid API or recurring cost without the owner's approval in a decision.
 - No unprompted recommendations to hire a hydrogeologist or other professional. The
-  professional export pack (session 11) exists for when the owner chooses to use one.
-- No hardware design or purchase before session 15. Until then, the data model only stays
-  open to a future instrument (§4.7).
+  professional export pack (session 12) exists for when the owner chooses to use one.
+- No hardware design or purchase before session 16. Until then, the data model only stays
+  open to a future instrument (§4.8).
 
 ## 3. Constraints
 
 **Budget.** Public open data first, free tiers, zero recurring spend by default. Google Maps
 only with the owner's key and hard daily quota caps per API (a budget alert alone is not a
-cap). Any paid service or API needs an owner decision first.
+cap). Any paid service or API, however cheap, needs the owner's approval in a decision first
+(0011).
 
 **Data sources** (each verified live in session 01, recorded in `docs/knowledge/`):
 Catastro (WMS; INSPIRE WFS for parcel geometry), SIGPAC (FEGA), IGN/CNIG (PNOA orthophoto,
@@ -68,7 +72,9 @@ MDT02/MDT05/MDT25, CartoCiudad geocoder), IGME (MAGNA 1:50,000, 1:200,000 lithos
 and permeability map, hydrogeological map, water-point database), MITECO and the basin
 authorities (groundwater bodies and status, piezometric network, rivers, public water domain,
 zona de policía, basin plans), the Junta de Andalucía (Andalusian Mediterranean basins,
-REDIAM), Copernicus (Sentinel-2, EGMS), AEMET. Foral cadastres (País Vasco, Navarra) are not
+REDIAM), Copernicus (Sentinel-2, EGMS), AEMET; the structural data of the geological maps
+(bedding dip and strike), public borehole logs with lithology, and a soil map (session 01
+chooses the source). Foral cadastres (País Vasco, Navarra) are not
 supported yet (decision 0010), they will be implemented once subphora is finished.
 
 **Jurisdiction.** All of Spain for maps and the model; legal rules first for the basins that
@@ -90,18 +96,26 @@ User-Agent and no personal contact data.
 private: stored only on the owner's devices and server, never committed (`data/` is
 git-ignored), never in fixtures (tests use public or synthetic parcels), never sent to an LLM.
 
-**Runtime.** Python (newest stable) for the backend and data processing; TypeScript on the
-newest Node LTS for the front end, pinned in one file and covered by Dependabot. Network I/O is
+**Runtime.** Each part in the language best suited to it: Python for the backend and data
+processing (its geospatial and geophysics libraries have no equal), TypeScript for the front
+end. Every toolchain and dependency at its newest release, even before the ecosystem has
+fully caught up (0011): Python 3.15 and Node 27, each pinned in one file and covered by
+Dependabot; Node moves to 28 when it is released, before 27 reaches end of life. Network I/O is
 asyncio (`httpx`); CPU-bound raster work runs in a process pool, never in the event loop.
 Money is `Decimal`; datetimes are timezone-aware UTC, shown in `Europe/Madrid` (or
 `Atlantic/Canary`) through `zoneinfo`.
+
+**Copyright.** Every file that can hold a comment carries the notice
+`Copyright (c) 2026 Almoon-D. All rights reserved.` as its first or last line; files that
+cannot (JSON, lock files, `.python-version`, binaries, empty markers) and third-party data
+(fixtures) are exempt by an explicit list. A test enforces it (0011).
 
 **Interface.** Spanish, every string translatable from day one. Field mode has large controls,
 high contrast for sunlight, and works with gloves.
 
 **Hosting.** Any cheap Linux machine: a free tier (such as Oracle Cloud Always Free), a cheap
 paid server, or a computer the owner buys. The app is packaged to run on any of them; the
-owner picks in session 12 (decision 0007). Until then it runs locally (`make dev`).
+owner picks in session 13 (decision 0007). Until then it runs locally (`make dev`).
 
 ## 4. Architecture
 
@@ -127,11 +141,12 @@ iPhone (decision 0004). Two modes:
 
 - **Research mode:** search (cadastral, SIGPAC, address, municipality, coordinates, drawn
   point or polygon); switchable layers with opacity and legend; the national and parcel
-  potential maps; tap-to-explain; ranked candidate spots; parcel comparison; report export.
+  potential maps; terrain, dip and soil layers; tap-to-explain; ranked candidate spots;
+  parcel comparison; the geological cross-section; report export.
 - **Field mode:** live position with accuracy circle and heading; distance and direction to
   a chosen spot; observations (note, photo, voice memo) and track; downloaded offline packs.
   IndexedDB is the device's source of truth: every observation is written there before the
-  UI confirms it, and an outbox syncs it later with an idempotency key (§4.6).
+  UI confirms it, and an outbox syncs it later with an idempotency key (§4.7).
 
 Base maps: PNOA orthophoto (default) and IGN maps; Google satellite and road only when a key
 is configured (decision 0005). Official layers come from their WMS/WMTS services directly,
@@ -170,9 +185,10 @@ without network.
 
 **Criteria.** Each input becomes a 0–1 suitability through a lookup table or function in
 `config/`, with the source of every weight and class recorded:
-lithology and permeability, structure (faults and lineament density), terrain (slope, topographic
-wetness index, drainage proximity), groundwater-body status, distance to and yield of known
-water points, piezometric depth, and later the late-summer vegetation anomaly (14).
+lithology and permeability, structure (faults, lineament density, and the dip of permeable
+layers where it is recorded), terrain (slope, topographic wetness index, drainage proximity),
+soil infiltration capacity, groundwater-body status, distance to and yield of known
+water points, piezometric depth, and later the late-summer vegetation anomaly (15).
 
 **Score.** A weighted linear combination over the inputs available at that cell, with the
 weights renormalised over what is present. Until it is calibrated (session 07) the score is a
@@ -189,7 +205,7 @@ source, date and resolution, the missing inputs, and the confidence breakdown.
 
 **Candidates.** The top cells of a parcel by score among those above a minimum confidence,
 separated by a minimum distance (both in `config/`), each with score, confidence, estimated
-depth and legal status ("not evaluated" until session 08).
+depth and legal status ("not evaluated" until session 09).
 
 **Validation and calibration (07).** Against public water points (productive where yield is
 recorded; dry where a source says so) with spatial block cross-validation: AUC with a
@@ -204,13 +220,23 @@ maximum distance (in `config/`). Depth = ground elevation (LiDAR) − water-tabl
 with propagated uncertainty, flagged as unreliable in karst. Drilling cost = depth range ×
 cost per metre plus fixed costs (`Decimal`, in `config/` with source and date).
 
-**Learning (13).** The owner's well results (depth, flow, dry or productive) and field
+**Learning (14).** The owner's well results (depth, flow, dry or productive) and field
 observations update the probabilities locally: a Bayesian update of the calibrated prior with
 a spatially decaying likelihood whose range is in `config/`. A machine-learning model is
 considered only once the labelled wells pass a threshold in `config/`, and only if it beats the
 transparent model under the same validation.
 
-### 4.4 Legal filter (session 08)
+### 4.4 Geological cross-section (session 08)
+
+Along a line the user draws, the app draws an interpretive section of the ground: surface
+elevation from LiDAR, the geological units cut by the line, their dips projected downward,
+public borehole logs near the line, and the water-table estimate of §4.3 where it exists.
+It is labelled "interpretation" throughout, with confidence falling with depth and with the
+distance to the nearest borehole; below the deepest evidence the section is drawn as
+unknown, never extrapolated without a mark. No national 3D model of the subsurface exists,
+so this view never pretends to be one.
+
+### 4.5 Legal filter (session 09)
 
 From the location: the river-basin district and competent authority (a Confederación
 Hidrográfica or a regional agency, such as the Junta de Andalucía for the Andalusian
@@ -222,7 +248,7 @@ with the official source (BOE, BOJA, basin plan), its date and the date it was c
 engine evaluates them and returns "probably not allowed", "conditions apply", "no blocking
 rule found" or "rules not loaded for this basin". Every output carries the disclaimer.
 
-### 4.5 Reports (session 11)
+### 4.6 Reports (session 12)
 
 `report/` renders a per-parcel PDF (WeasyPrint) that a hydrogeologist or water authority can
 read: maps, candidates, scores with confidence, explanations, validation skill, depth and
@@ -230,7 +256,7 @@ cost ranges, legal guidance, every source with its date and attribution, and the
 limitations. The professional export pack adds a ZIP with the layers (GeoPackage, COG) and
 tables (CSV).
 
-### 4.6 Field mode and offline
+### 4.7 Field mode and offline
 
 - **Positioning:** the browser Geolocation API with its reported accuracy circle. A position
   only counts as "at the spot" within a distance in `config/`, and never if the accuracy is
@@ -239,22 +265,22 @@ tables (CSV).
   kind, payload and media as IndexedDB blobs). An edit is a new version, never an overwrite.
   The server accepts the same id twice as one record, so a retried sync never duplicates or
   loses data.
-- **Offline packs (10):** for the selected parcels and a buffer, the PNOA and cadastral
+- **Offline packs (11):** for the selected parcels and a buffer, the PNOA and cadastral
   tiles, our potential and confidence layers, and the parcel geometry, at zooms in `config/`,
   stored by the service worker with persistent storage requested. Google layers are never in
   a pack.
 - **Data safety:** a manual export of all unsynced data to a file, and a visible count of
   unsynced records.
 
-### 4.7 Room for hardware
+### 4.8 Room for hardware
 
-Hardware is not designed before session 15 (decision 0008). The design keeps two things open
+Hardware is not designed before session 16 (decision 0008). The design keeps two things open
 for it: observations have a `kind`, so a future instrument reading or survey line is a new
 kind rather than a new store; and a measurement that injects current is gated by the safety
 checklist of hard rule 3, which the session that first controls or imports instrument data
 enforces in code.
 
-### 4.8 Deployment (session 12)
+### 4.9 Deployment (session 13)
 
 Docker Compose with the API and a Caddy reverse proxy (HTTPS, static PWA), on any Linux host
 (x86-64 or ARM64). A login for the few users (hashed passwords, secure cookies), nightly
@@ -269,16 +295,16 @@ src/subphora/
   config/     settings schema and loader
   sources/    external-service clients and the source catalogue          (01)
   geo/        CRS, reprojection, clipping, terrain derivatives           (02, 05)
-  model/      water-potential model, validation, depth, cost             (05)
-  legal/      legal filter                                               (08)
+  model/      water-potential model, validation, depth, cost, section    (05, 07, 08)
+  legal/      legal filter                                               (09)
   store/      SQLite for private data, file cache                        (02)
   services/   use cases                                                  (02)
-  report/     PDF and export pack                                        (11)
+  report/     PDF and export pack                                        (12)
   api/        FastAPI app                                                (02)
 web/          the PWA: Vite, React, TypeScript, MapLibre GL JS           (02)
-config/       defaults/, owner.yaml, legal/ (rules as data)              (08)
+config/       defaults/, owner.yaml, legal/ (rules as data)              (09)
 data/         private data and caches, git-ignored                       (02)
-deploy/       Docker Compose and Caddy                                   (12)
+deploy/       Docker Compose and Caddy                                   (13)
 ```
 
 The number is the session that creates each package.
@@ -292,16 +318,19 @@ Each session ends in something the owner can see or run. The table with status i
 |---|---|---|
 | 01 | Verify data sources, terms and legal rules | `subphora sources check` prints the status of every service; a knowledge file per source |
 | 02 | First end-to-end slice | `make dev`: type a cadastral reference, see the parcel on PNOA with the cadastral layer |
-| 03 | Official layers | Water and geology layers, optional Google base map, opacity and legend |
+| 03 | Official layers | Water, geology (with dip symbols) and soil layers, optional Google base map, opacity and legend |
 | 04 | More ways to search | SIGPAC, coordinates, municipality, address, drawn point or polygon |
-| 05 | National potential map v0 | All of Spain coloured by potential index, with its confidence layer |
+| 05 | National potential map v0 | All of Spain coloured by potential index, with its confidence layer and the slope, drainage and wetness layers |
 | 06 | Parcel detail | High-resolution parcel map, tap-to-explain, ranked candidates, parcel comparison |
 | 07 | Validation, depth and cost | Model skill against known wells per area; estimated depth and drilling-cost range |
-| 08 | Legal filter | Authority, groundwater-body status, key rules and the "probably cannot drill" flag |
-| 09 | Field mode | GPS position, guidance to a spot, observations and track without coverage, then sync |
-| 10 | Offline map packs | Parcels downloaded for use with no coverage |
-| 11 | Report and professional pack | The per-parcel PDF and the ZIP |
-| 12 | Deployment | The app on the owner's chosen host with login, installed on a phone: version 1 |
-| 13 | Well registry and learning | Logged wells and outcomes update the map |
-| 14 | Satellite and climate layers | Late-summer vegetation anomaly (irrigation masked), ground motion, rainfall |
-| 15 | Hardware planning | Options compared with prices; the owner decides |
+| 08 | Geological cross-section | Draw a line, see an interpretive section of the ground below it, marked as interpretation |
+| 09 | Legal filter | Authority, groundwater-body status, key rules and the "probably cannot drill" flag |
+| 10 | Field mode | GPS position, guidance to a spot, observations and track without coverage, then sync |
+| 11 | Offline map packs | Parcels downloaded for use with no coverage |
+| 12 | Report and professional pack | The per-parcel PDF and the ZIP |
+| 13 | Deployment | The app on the owner's chosen host with login, installed on a phone: version 1 |
+| 14 | Well registry and learning | Logged wells and outcomes update the map |
+| 15 | Satellite and climate layers | Late-summer vegetation anomaly (irrigation masked), ground motion, rainfall |
+| 16 | Hardware planning | Options compared with prices; the owner decides |
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 # Expert defaults. The owner overrides any key in config/owner.yaml.
 # Python logging level: DEBUG, INFO, WARNING, ERROR or CRITICAL.
 log_level: INFO

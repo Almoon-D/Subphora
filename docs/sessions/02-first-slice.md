@@ -16,8 +16,9 @@ up the front end, the API and the way they talk, end to end.
 
 ## Build
 
-1. `web/`: Vite, React, TypeScript and MapLibre GL JS on the newest Node LTS, pinned in one
-   file (`.nvmrc` or `package.json` engines); ESLint, `tsc --noEmit`, Vitest and Playwright
+1. `web/`: Vite, React, TypeScript and MapLibre GL JS, each at its newest release, on Node 27
+   (decision 0011), pinned in one file (`.nvmrc`); every source file carries the copyright
+   notice (the copyright test covers `web/`); ESLint, `tsc --noEmit`, Vitest and Playwright
    (use the pre-installed browser). Spanish strings through a translation catalogue from the
    first string. Add the `npm` ecosystem to `.github/dependabot.yml`.
 2. `make dev` runs the API and the Vite dev server; `make check` also runs the web checks.
@@ -47,3 +48,5 @@ up the front end, the API and the way they talk, end to end.
 
 - `make check` (Python and web) is green, and `make dev` → open the URL → type a public
   cadastral reference → the parcel appears outlined on PNOA with the cadastral layer.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

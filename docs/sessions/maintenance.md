@@ -18,3 +18,5 @@ Model and effort: Sonnet 5.5, high.
 5. ROADMAP: close resolved follow-ups; archive old session-log entries past ~300 lines.
 6. Bump the patch version with its CHANGELOG section, then finish with the end-of-session
    protocol in AGENTS.md.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -16,7 +16,9 @@ point when tapped, ranks candidate spots, and compares several selected areas si
 ## Build
 
 1. A per-area job: clip the detailed inputs (MDT02/MDT05, MAGNA 1:50,000, faults, water
-   points), derive slope, wetness index, drainage and lineament density, and compute index and
+   points, digital dip measurements, the soil map), derive slope, wetness index, drainage and
+   lineament density, and the dip of permeable layers as a structural input; publish the slope,
+   drainage and wetness layers at parcel resolution; and compute index and
    confidence with the session-05 model at parcel resolution; cached per area; job status
    visible in the UI.
 2. Tap-to-explain at parcel scale: score, each input's value, contribution, source, date and
@@ -34,3 +36,5 @@ point when tapped, ranks candidate spots, and compares several selected areas si
 
 - `make check` is green and in `make dev` a selected parcel shows its detailed map, tap-to-explain
   and ranked candidates, and two parcels can be compared.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

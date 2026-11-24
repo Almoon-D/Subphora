@@ -3,3 +3,5 @@
 You are working on subphora. AGENTS.md is your operating manual: follow it, including the
 end-of-session protocol (PR, self-review, fix, merge, release, report). Work only on the session
 below; anything else goes to Follow-ups.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

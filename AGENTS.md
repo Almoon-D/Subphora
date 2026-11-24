@@ -154,11 +154,14 @@ public one runs free. Follow these rules either way, so a project can go private
    `pyproject.toml` (minor per session, patch for fixes; a new project starts at 0.0.0 and
    its first session releases 0.1.0). Move your prompt file to
    `docs/sessions/done/`. Never create or push tags: the release workflow does.
-5. You may correct later prompts in `docs/sessions/` only to fix facts, paths or
+5. If a finding shows that a paid product would need someone's permission or would change a
+   term (a licence, an access constraint, a price), add a row to `docs/commercial-use.md`
+   (decision 0015).
+6. You may correct later prompts in `docs/sessions/` only to fix facts, paths or
    dependencies your work changed — never to add scope. Log each edit.
-6. If you cannot finish everything with quality, merge a coherent, tested subset and add
+7. If you cannot finish everything with quality, merge a coherent, tested subset and add
    `docs/sessions/<id>a-<slug>.md` with the remainder.
-7. Leave the next session ready: its prompt in `docs/sessions/` still matches what you built
+8. Leave the next session ready: its prompt in `docs/sessions/` still matches what you built
    (fix it, logging the edit), and ROADMAP → "What runs next" names it. If the plan has no
    next session written, write its prompt from `MASTER_PLAN.md`, in the format of
    `docs/sessions/TEMPLATE.md`, with the model the owner should pick.

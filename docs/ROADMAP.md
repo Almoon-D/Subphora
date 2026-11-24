@@ -55,8 +55,8 @@
   session 01 verifies them before code depends on them. (00)
 - Node 27 reaches end of life in mid-2027: move to Node 28 when it is released (April 2027),
   in the maintenance session or the session running then (0011). (00)
-- Commercial use: settle the MAGNA WMS, Catastro, Google and multi-customer questions of
-  decision 0014 in a decision before anything is sold. (01)
+- Commercial use: no sale before the owner has tested the finished project on his land
+  (decision 0015); whom to contact then is kept in `docs/commercial-use.md`. (01)
 - Legal: the mining-safety rules for water boreholes and municipal licences were not read;
   session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
 - The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
@@ -77,7 +77,8 @@
   session 02 (prompts 02, 04, 05, 09, 11, 16 edited for it).
 - Live: `sources check` 89 ok, 0 failed, 2 not checked; Catastro has no reference in Navarra
   or the Basque Country (error 16); its WFS answers EPSG:4083 requests in EPSG:4326.
-- Open for the owner: the terms that change when the product is sold (decision 0014).
+- Then (0015): no sale before the owner tests the finished project on his land; organisations
+  to contact afterwards in `docs/commercial-use.md`; the brief reworded without places.
 
 ### 01 — Verify data sources, terms and legal rules (2026-11-24, version 0.1.0)
 

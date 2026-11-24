@@ -8,7 +8,8 @@
 | 01 | `docs/sessions/done/01-verify-sources.md` | Opus 5.5, high | done |
 | 02 | `docs/sessions/done/02-first-slice.md` | Opus 5.5, high | done |
 | 03 | `docs/sessions/done/03-official-layers.md` | Opus 5.5, high | done |
-| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | next |
+| 03b | `docs/sessions/03b-regional-detail.md` | Opus 5.5, high | next |
+| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
 | 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
@@ -87,9 +88,8 @@
   puts the whole API behind the owner's access control before it is exposed. (03)
 - SoilGrids gives no value on a tap; the parcel view (session 06) reads clay and sand from
   its WCS at the parcel, everywhere in Spain alike. (03)
-- Regional layers (soil maps of Navarra, Catalonia, Andalusia…, regional hydrogeology) are
-  left out until every region is surveyed and they can be added under one rule (decision
-  0022). (03)
+- Regional layers wait for session 03b, which surveys every region and adds those that
+  qualify under decision 0023. (03)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -97,6 +97,12 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 03 — Owner ruling: regional detail, national baseline (2026-11-24, version 0.3.2)
+
+- Landed: decision 0023 (a regional service is used where it qualifies, the national one
+  stays as baseline and fallback); prompt `03b-regional-detail.md`, next before 04;
+  MASTER_PLAN §3 reworded.
 
 ### 03 — Owner ruling: the same product everywhere (2026-11-24, version 0.3.1)
 

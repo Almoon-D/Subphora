@@ -6,7 +6,8 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
-| [0022](0022-same-product-everywhere.md) | The same product everywhere: national layers, every basin's rules, no region in prompts | accepted |
+| [0023](0023-regional-detail-national-baseline.md) | Regional detail first, the national service as baseline and fallback | accepted |
+| [0022](0022-same-product-everywhere.md) | The same product everywhere: national layers, every basin's rules, no region in prompts | accepted; regional layers amended by 0023 |
 | [0021](0021-layer-catalogue-proxy-and-taps.md) | Official layers: one catalogue, a tile proxy only where needed, taps through the API | accepted; REDIAM layers removed by 0022 |
 | [0020](0020-no-google-maps.md) | No Google Maps: PNOA and the IGN maps are the base maps | accepted |
 | [0019](0019-typescript-7-1-for-eslint.md) | TypeScript 7.1 for ESLint as soon as it is stable; no TypeScript 6 | accepted |

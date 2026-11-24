@@ -1,0 +1,72 @@
+# Dependabot, tuned for GitHub Free: the binding budget is a private repository's, and a
+# public one loses nothing by it.
+#
+# Dependabot's own jobs are free, but every pull request it opens runs CI, which is not.
+# So: one batch a month, every non-major update in one pull request per ecosystem, and a
+# week of cooldown so a release that is replaced within days never reaches us. CI merges
+# those batches by itself once green (.github/workflows/ci.yml → dependabot-merge), so they
+# are open for minutes and seldom need a rebase. Majors arrive one by one and wait for the
+# monthly maintenance session (docs/sessions/maintenance.md), because each needs reading.
+# Security updates are not on this schedule: GitHub opens them as soon as an advisory lands
+# (Settings → Advanced Security → Dependabot security updates).
+#
+# A project that adds another language or a Dockerfile adds its ecosystem here, with the
+# same schedule, cooldown and grouping (see the commented docker block).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      python-minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+      python-security:
+        applies-to: security-updates
+        patterns: ["*"]
+    # A deliberate upper bound in pyproject.toml gets an `ignore` here with the reason, so
+    # Dependabot does not reopen the same pull request every month. Example:
+    # ignore:
+    #   - dependency-name: cryptography
+    #     versions: [">=51"]   # 51 drops finite-field DH, which the broker's handshake needs
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 2
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions-minor-and-patch:
+        update-types: [minor, patch]
+
+  # Uncomment when the project ships a Dockerfile: base images are dependencies too.
+  # - package-ecosystem: docker
+  #   directory: /deploy
+  #   schedule:
+  #     interval: monthly
+  #     time: "06:00"
+  #     timezone: Europe/Madrid
+  #   open-pull-requests-limit: 1
+  #   cooldown:
+  #     default-days: 7
+  #   groups:
+  #     images-minor-and-patch:
+  #       update-types: [minor, patch]

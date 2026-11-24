@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[codz]
+build/
+dist/
+*.egg-info/
+.venv/
+
+# Tools
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Secrets and local state: never committed (AGENTS.md, hard rules)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+data/
+*.sqlite3
+*.db
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+.import_linter_cache/

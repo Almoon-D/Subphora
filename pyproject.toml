@@ -1,0 +1,102 @@
+[build-system]
+requires = ["hatchling>=1.33"]
+build-backend = "hatchling.build"
+
+[project]
+name = "myproject"
+version = "0.0.0"
+description = "One sentence: what this project does and for whom."
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.15,<3.16"
+authors = [{ name = "Your Name" }]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3.15",
+    "Typing :: Typed",
+]
+# Runtime dependencies: a lower bound and the next major as the upper bound. A tighter
+# bound gets a comment with its reason and an `ignore` in .github/dependabot.yml.
+dependencies = [
+    "pydantic>=2.12,<3",
+    "PyYAML>=6.0.3,<7",
+]
+
+[project.scripts]
+myproject = "myproject.__main__:main"
+
+[dependency-groups]
+dev = [
+    "import-linter>=2.5",
+    "mypy>=2.0",
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "pytest-xdist>=3.8",
+    "ruff>=0.14",
+    "types-PyYAML>=6.0.12",
+]
+
+[tool.uv]
+python-preference = "only-managed"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/myproject"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py315"
+src = ["src", "tests"]
+# The release workflow runs this script on its pinned runner's own Python 3.12.
+per-file-target-version = { ".github/scripts/*.py" = "py312" }
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C4", "RUF", "PT", "PTH", "ARG", "ERA"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ARG001", "ARG002"]
+
+[tool.mypy]
+python_version = "3.15"
+strict = true
+files = ["src"]
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+# Tests run in parallel on every core. A tiny suite pays ~1 s for it; a grown one saves
+# a third or more (measured on a 340-file suite on a two-core runner).
+addopts = ["--strict-markers", "--strict-config", "-ra", "--import-mode=importlib", "-n", "auto"]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["myproject"]
+branch = true
+# sys.monitoring: much lower overhead than the classic tracer.
+core = "sysmon"
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+skip_covered = true
+# Fixed, never lowered to fit a session's measurement. Start at 95 and raise it on purpose.
+fail_under = 95
+
+[tool.importlinter]
+root_packages = ["myproject"]
+include_external_packages = true
+
+# Architecture rules as tests. Add one contract per boundary the design draws
+# (docs/MASTER_PLAN.md → Layout); this first one keeps the domain layer pure.
+[[tool.importlinter.contracts]]
+name = "The domain layer imports nothing else of ours"
+type = "forbidden"
+source_modules = ["myproject.domain"]
+forbidden_modules = ["myproject.config"]

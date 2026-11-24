@@ -1,0 +1,3 @@
+# Expert defaults. The owner overrides any key in config/owner.yaml.
+# Python logging level: DEBUG, INFO, WARNING, ERROR or CRITICAL.
+log_level: INFO

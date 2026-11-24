@@ -1,0 +1,102 @@
+name: CI
+
+# `ci` runs exactly what a contributor runs locally: `make check`. It is the check a ruleset
+# can require, so it always reports: a pull request that touches only prose (docs/, *.md,
+# LICENSE) gets a green `ci` in seconds without installing anything. CHANGELOG.md is not
+# prose here: a test reads it.
+#
+# `dependabot-merge` squash-merges Dependabot's minor and patch updates (security updates
+# included) once `ci` is green; anything else, or an update type it cannot read, stays open. It merges directly, so it works without
+# branch protection or GitHub's auto-merge, both unavailable to private repositories on
+# GitHub Free. Majors stay open for the maintenance session (docs/sessions/maintenance.md).
+#
+# Budget (private repositories on GitHub Free pay in minutes; public ones run free, same
+# rules): pull requests only. A push to `main` is not
+# rebuilt, because main only moves by squash-merging a pull request that CI has just tested,
+# and the agent runs `make check` on main after every merge (AGENTS.md, end-of-session
+# protocol). Run it by hand from the Actions tab (workflow_dispatch) when main needs a proof.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the same pull request cancels the run it supersedes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      UV_PYTHON_PREFERENCE: only-managed
+    steps:
+      - name: Decide whether code changed
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ -z "$PR" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          files=$(gh api --paginate "repos/$REPO/pulls/$PR/files" --jq '.[].filename')
+          code=$(grep -Ev '^(docs/|LICENSE$)|\.md$' <<<"$files" || true)
+          if grep -qx 'CHANGELOG.md' <<<"$files"; then code=CHANGELOG.md; fi
+          if [ -n "$code" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Prose-only change: nothing to build."
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Every action is pinned by commit; Dependabot keeps the pins and their comments current.
+      - if: steps.scope.outputs.code == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      # Python comes from .python-version; uv is the newest release.
+      - if: steps.scope.outputs.code == 'true'
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install the locked environment
+        if: steps.scope.outputs.code == 'true'
+        run: uv sync --locked
+
+      - name: make check
+        if: steps.scope.outputs.code == 'true'
+        run: make check
+
+  dependabot-merge:
+    name: dependabot-merge
+    needs: ci
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Read the update
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98  # v3.1.0
+
+      - name: Merge minor and patch updates only
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-minor' ||
+          steps.meta.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "$PR_URL" --squash

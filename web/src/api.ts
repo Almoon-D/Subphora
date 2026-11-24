@@ -33,7 +33,32 @@ export interface BaseMap {
   attribution: string;
 }
 
-/** An official layer: tiles from its service, or the API's relative proxy route. */
+/** How detailed and recent a layer is, as its publisher states it; null: not stated. */
+export interface LayerDetail {
+  scale_denominator: number | null;
+  cell_m: number | null;
+  edition: number | null;
+}
+
+/** A regional layer of a theme: drawn and asked only inside its areas (decision 0023). */
+export interface RegionalOverlay {
+  id: string;
+  service_id: string;
+  publisher: string;
+  tiles: string[];
+  proxied: boolean;
+  min_zoom: number;
+  area_ids: string[];
+  /** West, south, east, north: the box enclosing its areas. */
+  bounds: [number, number, number, number];
+  legend_url: string | null;
+  feature_info: boolean;
+  attribution: string;
+  detail: LayerDetail;
+}
+
+/** One map theme: its national layer (tiles from its service, or the API's relative proxy
+ * route) and the regional layers drawn over it inside their areas. */
 export interface Overlay {
   id: string;
   group: string;
@@ -47,9 +72,22 @@ export interface Overlay {
   visible: boolean;
   /** Null: the service has no legend a person can read. */
   legend_url: string | null;
-  /** Whether a tap asks the API what lies under it. */
+  /** Whether a tap asks the API what the national layer holds. */
   feature_info: boolean;
   attribution: string;
+  publisher: string;
+  detail: LayerDetail;
+  regional: RegionalOverlay[];
+}
+
+/** An area's official boundary, rounded to a grid shared by every area. */
+export interface AreaBoundary {
+  id: string;
+  kind: "region" | "district";
+  bbox: [number, number, number, number];
+  geometry: { type: "MultiPolygon"; coordinates: Position[][][] };
+  source: Provenance;
+  grid_deg: number;
 }
 
 export interface MapConfig {
@@ -72,11 +110,22 @@ export interface MapConfig {
   overlays: Overlay[];
 }
 
-/** The allowed fields of one layer's features under a tapped point. */
+export type FallbackReason = "no_feature" | "upstream_error" | "upstream_timeout" | "boundary_unavailable";
+
+/** The allowed fields of one theme's features under a tapped point, from the layer that
+ * answered, and the regional layers asked before it that gave no answer. */
 export interface FeatureInfo {
   layer_id: string;
   features: { fields: { name: string; value: string }[] }[];
   source: Provenance;
+  answered_by: {
+    level: "national" | "regional";
+    layer_id: string;
+    publisher: string;
+    detail: LayerDetail;
+    area_id: string | null;
+  };
+  fallbacks: { layer_id: string; reason: FallbackReason }[];
 }
 
 /** Why a lookup failed: the server's codes, then the two the browser adds. */
@@ -130,7 +179,13 @@ export async function fetchMapConfig(fetchFn: Fetch = fetch): Promise<MapConfig>
 }
 
 /** Why a tap on a layer got no answer: the server's codes, then the two the browser adds. */
-export const INFO_FAILURES = ["upstream_timeout", "upstream_error", "network", "unexpected"] as const;
+export const INFO_FAILURES = [
+  "no_feature_info",
+  "upstream_timeout",
+  "upstream_error",
+  "network",
+  "unexpected",
+] as const;
 
 export type InfoFailure = (typeof INFO_FAILURES)[number];
 
@@ -168,4 +223,13 @@ export async function fetchFeatureInfo(
   }
   const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
   return { ok: false, layerId, failure: isInfoFailure(code) ? code : "unexpected" };
+}
+
+/** An area's boundary, for drawing a regional layer inside it. Throws when it cannot. */
+export async function fetchArea(areaId: string, fetchFn: Fetch = fetch): Promise<AreaBoundary> {
+  const response = await fetchFn(`/api/areas/${encodeURIComponent(areaId)}`);
+  if (!response.ok) {
+    throw new Error(`GET /api/areas/${areaId} answered ${String(response.status)}`);
+  }
+  return (await response.json()) as AreaBoundary;
 }

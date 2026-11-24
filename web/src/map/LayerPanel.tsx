@@ -1,9 +1,10 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The layer panel: the base-map switch, then the cadastre and the official layers by group,
-// each with its toggle, opacity, legend, zoom range and source.
-import type { MapConfig, Overlay } from "../api.ts";
+// one entry per theme, each with its toggle, opacity, legend, zoom range and sources: the
+// national layer and, where one qualifies, the regional layers drawn over it in their areas.
+import type { LayerDetail, MapConfig, Overlay } from "../api.ts";
 import { lookup, t } from "../i18n/index.ts";
-import { type LayerState, type MapLayers, overlaysByGroup, reachesZoom, withOverlay } from "./layers.ts";
+import { type LayerState, type MapLayers, overlaysByGroup, reachesZoom, scaleOf, withOverlay } from "./layers.ts";
 
 interface Props {
   config: MapConfig;
@@ -49,6 +50,47 @@ function Legend({ overlay, title }: { overlay: Overlay; title: string }) {
   );
 }
 
+/** "1:25.000 · 2023", with "no indicada" for what the publisher does not state. */
+export function describeDetail(detail: LayerDetail): string {
+  const scale = scaleOf(detail);
+  const scaleText = !scale
+    ? t("detail.noScale")
+    : scale.kind === "scale"
+      ? t("detail.scale", { value: scale.value })
+      : t("detail.cell", { value: scale.value });
+  const edition = detail.edition === null ? t("detail.noEdition") : t("detail.edition", { year: String(detail.edition) });
+  return `${scaleText} · ${edition}`;
+}
+
+function Sources({ overlay }: { overlay: Overlay }) {
+  return (
+    <ul className="note sources">
+      <li data-source={overlay.id}>
+        {t("layers.national", { publisher: overlay.publisher, detail: describeDetail(overlay.detail) })}
+      </li>
+      {overlay.regional.map((regional) => (
+        <li key={regional.id} data-source={regional.id}>
+          {t("layers.regional", {
+            title: lookup(`layer.${regional.id}`, regional.id),
+            areas: regional.area_ids.map((id) => lookup(`area.${id}`, id)).join(", "),
+            detail: describeDetail(regional.detail),
+          })}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A theme whose national layer gives no values may still answer where a regional one does. */
+function TapNote({ overlay }: { overlay: Overlay }) {
+  const answering = overlay.regional.filter((r) => r.feature_info);
+  if (answering.length === 0) {
+    return <p className="note">{t("layers.noInfo")}</p>;
+  }
+  const areas = answering.flatMap((r) => r.area_ids.map((id) => lookup(`area.${id}`, id)));
+  return <p className="note">{t("layers.infoRegionalOnly", { areas: areas.join(", ") })}</p>;
+}
+
 function OverlayControl({
   overlay,
   state,
@@ -84,10 +126,15 @@ function OverlayControl({
           />
           {!reachesZoom(overlay, zoom) && <p className="note hint">{t("layers.fromZoom", { zoom: overlay.min_zoom })}</p>}
           <Legend overlay={overlay} title={title} />
-          {!overlay.feature_info && <p className="note">{t("layers.noInfo")}</p>}
+          {!overlay.feature_info && <TapNote overlay={overlay} />}
         </>
       )}
-      <p className="note source">{t("layers.source", { attribution: overlay.attribution })}</p>
+      <Sources overlay={overlay} />
+      <p className="note source">
+        {t("layers.source", {
+          attribution: [overlay.attribution, ...overlay.regional.map((r) => r.attribution)].join("; "),
+        })}
+      </p>
     </li>
   );
 }

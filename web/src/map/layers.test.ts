@@ -5,12 +5,15 @@ import { describe, expect, it } from "vitest";
 
 import type { MapConfig } from "../api.ts";
 import {
+  answersTap,
   describeOverlays,
+  describeRegional,
   initialLayers,
   overlaysByGroup,
   overlayTiles,
   queryableOverlays,
   reachesZoom,
+  scaleOf,
   withOverlay,
 } from "./layers.ts";
 
@@ -62,16 +65,51 @@ describe("overlayTiles", () => {
   });
 });
 
+// Santiago de Compostela, and Tafalla (Navarra), where the regional soil map answers taps.
+const SANTIAGO = [-8.545, 42.881] as const;
+const TAFALLA = [-1.7, 42.55] as const;
+
 describe("queryableOverlays", () => {
   it("asks only the layers switched on, drawn at the zoom, with feature info", () => {
     let layers = initialLayers(MAP);
-    expect(queryableOverlays(MAP, layers, 16)).toEqual([]);
+    expect(queryableOverlays(MAP, layers, ...SANTIAGO, 16)).toEqual([]);
     for (const id of ["rivers", "water-points", "soil-clay"]) {
       layers = withOverlay(layers, id, { visible: true });
     }
-    expect(queryableOverlays(MAP, layers, 16).map((o) => o.id)).toEqual(["rivers", "water-points"]);
+    expect(queryableOverlays(MAP, layers, ...SANTIAGO, 16).map((o) => o.id)).toEqual(["rivers", "water-points"]);
     // Water points are drawn from zoom 15; SoilGrids answers no value.
-    expect(queryableOverlays(MAP, layers, 12).map((o) => o.id)).toEqual(["rivers"]);
+    expect(queryableOverlays(MAP, layers, ...SANTIAGO, 12).map((o) => o.id)).toEqual(["rivers"]);
+    // In Navarra the regional soil map answers a tap from its own zoom.
+    expect(queryableOverlays(MAP, layers, ...TAFALLA, 16).map((o) => o.id)).toEqual([
+      "rivers",
+      "water-points",
+      "soil-clay",
+    ]);
+  });
+});
+
+describe("answersTap", () => {
+  it("lets a regional layer answer only inside its bounds and from its zoom", () => {
+    const soils = overlay("soil-clay");
+    expect(answersTap(soils, ...TAFALLA, 12)).toBe(true);
+    expect(answersTap(soils, ...TAFALLA, 11)).toBe(false);
+    expect(answersTap(soils, ...SANTIAGO, 16)).toBe(false);
+  });
+});
+
+describe("scaleOf", () => {
+  it("names the scale, the grid cell or nothing", () => {
+    expect(scaleOf(overlay("hydrogeology").detail)).toEqual({ kind: "scale", value: 200000 });
+    expect(scaleOf(overlay("soil-clay").detail)).toEqual({ kind: "cell", value: 250 });
+    expect(scaleOf(overlay("springs").detail)).toBeNull();
+  });
+});
+
+describe("describeRegional", () => {
+  it("lists the regional layers of the themes switched on", () => {
+    const layers = withOverlay(initialLayers(MAP), "soil-clay", { visible: true });
+    expect(describeRegional(MAP, initialLayers(MAP))).toBe("");
+    expect(describeRegional(MAP, layers)).toBe("navarra-soils");
   });
 });
 

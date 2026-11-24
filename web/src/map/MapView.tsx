@@ -1,7 +1,9 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
-// The map: a base map (PNOA or the IGN maps), the official layers as tiles, Catastro's
-// parcels as one image per view, and the parcel found by the search outlined on top.
+// The map: a base map (PNOA or the IGN maps), the official layers as tiles (each theme's
+// regional layers clipped to their areas over its national one), Catastro's parcels as one
+// image per view, and the parcel found by the search outlined on top.
 import {
+  addProtocol,
   type GeoJSONSource,
   type ImageSource,
   type LayerSpecification,
@@ -11,16 +13,18 @@ import {
   Marker,
   MercatorCoordinate,
   NavigationControl,
+  removeProtocol,
   setWorkerUrl,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState } from "react";
 
-import type { MapConfig, Parcel, Position } from "../api.ts";
-import { t } from "../i18n/index.ts";
+import { type AreaBoundary, fetchArea, type MapConfig, type Parcel, type Position } from "../api.ts";
+import { lookup, t } from "../i18n/index.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
-import { describeOverlays, type MapLayers, overlayTiles } from "./layers.ts";
+import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
+import { describeOverlays, describeRegional, type MapLayers, overlayTiles } from "./layers.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
 setWorkerUrl(workerUrl);
@@ -29,6 +33,7 @@ setWorkerUrl(workerUrl);
 const WEB_MERCATOR_HALF_EXTENT_M = 20037508.342789244;
 const baseId = (id: string) => `base-${id}`;
 const overlayId = (id: string) => `overlay-${id}`;
+const regionalId = (id: string) => `regional-${id}`;
 const CADASTRE = "cadastre";
 const PARCEL = "parcel";
 const PARCEL_COLOUR = "#ffd400";
@@ -62,7 +67,7 @@ function viewCorners(map: MaplibreMap): [[number, number], [number, number], [nu
   ];
 }
 
-const visibility = (visible: boolean) => (visible ? "visible" : "none");
+const visibility = (visible: boolean): "visible" | "none" => (visible ? "visible" : "none");
 
 /** Ask for one cadastral image of the current view, or hide the layer when off or zoomed out.
  * Returns whether the zoom allows the parcels to be drawn. */
@@ -105,8 +110,10 @@ function applyLayers(map: MaplibreMap, config: MapConfig, layers: MapLayers): vo
   }
   for (const overlay of config.overlays) {
     const state = layers.overlays[overlay.id];
-    map.setLayoutProperty(overlayId(overlay.id), "visibility", visibility(state?.visible === true));
-    map.setPaintProperty(overlayId(overlay.id), "raster-opacity", state?.opacity ?? overlay.opacity);
+    for (const id of [overlayId(overlay.id), ...overlay.regional.map((r) => regionalId(r.id))]) {
+      map.setLayoutProperty(id, "visibility", visibility(state?.visible === true));
+      map.setPaintProperty(id, "raster-opacity", state?.opacity ?? overlay.opacity);
+    }
   }
   if (map.getLayer(CADASTRE)) {
     map.setPaintProperty(CADASTRE, "raster-opacity", layers.cadastre.opacity);
@@ -134,6 +141,18 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
       maxzoom: overlay.max_zoom,
       attribution: overlay.attribution,
     };
+    for (const regional of overlay.regional) {
+      sources[regionalId(regional.id)] = {
+        type: "raster",
+        tiles: overlayTiles(regional, origin).map((tile) => clipTemplate(regional.area_ids, overlay.tile_size, tile)),
+        tileSize: overlay.tile_size,
+        minzoom: regional.min_zoom,
+        maxzoom: overlay.max_zoom,
+        // Tiles outside the areas' box are never requested.
+        bounds: regional.bounds,
+        attribution: regional.attribution,
+      };
+    }
   }
   const styleLayers: LayerSpecification[] = [
     ...config.base_maps.map(
@@ -144,16 +163,24 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
         layout: { visibility: visibility(base.id === layers.base) },
       }),
     ),
-    ...config.overlays.map((overlay): LayerSpecification => {
+    ...config.overlays.flatMap((overlay): LayerSpecification[] => {
       const state = layers.overlays[overlay.id];
-      return {
-        id: overlayId(overlay.id),
-        type: "raster",
-        source: overlayId(overlay.id),
-        minzoom: overlay.min_zoom,
-        layout: { visibility: visibility(state?.visible === true) },
-        paint: { "raster-opacity": state?.opacity ?? overlay.opacity },
-      };
+      const layout = { visibility: visibility(state?.visible === true) };
+      const paint = { "raster-opacity": state?.opacity ?? overlay.opacity };
+      // The national layer, then its regional layers right above it.
+      return [
+        { id: overlayId(overlay.id), type: "raster", source: overlayId(overlay.id), minzoom: overlay.min_zoom, layout, paint },
+        ...overlay.regional.map(
+          (r): LayerSpecification => ({
+            id: regionalId(r.id),
+            type: "raster",
+            source: regionalId(r.id),
+            minzoom: r.min_zoom,
+            layout,
+            paint,
+          }),
+        ),
+      ];
     }),
   ];
   return { version: 8, sources, layers: styleLayers };
@@ -169,6 +196,29 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
   const onTapRef = useRef(onTap);
   const [loaded, setLoaded] = useState(false);
   const [cadastreReached, setCadastreReached] = useState(false);
+  // Areas whose boundary could not be read: their regional layers are not drawn.
+  const [missingAreas, setMissingAreas] = useState<string[]>([]);
+
+  // Regional tiles are clipped to their areas; each boundary is read once per page, and a
+  // boundary that failed is not asked again for every tile (a reload asks again).
+  useEffect(() => {
+    const boundaries = new Map<string, Promise<AreaBoundary>>();
+    const loadArea = (areaId: string): Promise<AreaBoundary> => {
+      let boundary = boundaries.get(areaId);
+      if (!boundary) {
+        boundary = fetchArea(areaId).catch((error: unknown) => {
+          setMissingAreas((areas) => (areas.includes(areaId) ? areas : [...areas, areaId]));
+          throw error;
+        });
+        boundaries.set(areaId, boundary);
+      }
+      return boundary;
+    };
+    addProtocol(CLIP_PROTOCOL, clipHandler(loadArea));
+    return () => {
+      removeProtocol(CLIP_PROTOCOL);
+    };
+  }, []);
 
   useEffect(() => {
     layersRef.current = layers;
@@ -298,8 +348,10 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
         data-parcel={parcel?.reference ?? ""}
         data-base={loaded ? layers.base : ""}
         data-overlays={loaded ? describeOverlays(config, layers) : ""}
+        data-regional={loaded ? describeRegional(config, layers) : ""}
       />
       {loaded && layers.cadastre.visible && !cadastreReached && <p className="map-hint">{t("map.cadastreHidden")}</p>}
+      {missingAreas.length > 0 && <p className="map-hint">{t("map.areaMissing", { areas: missingAreas.map((id) => lookup(`area.${id}`, id)).join(", ") })}</p>}
     </div>
   );
 }

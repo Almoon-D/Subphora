@@ -4,7 +4,7 @@ Model and effort: Opus 5.5, high.
 
 ## Goal
 
-Before going to an estate, the owner downloads a pack for the selected parcels (PNOA tiles,
+Before going to a site, the user downloads a pack for the selected parcels (PNOA tiles,
 our index and confidence layers, the parcel geometry, the candidates) and
 the map works there with no coverage.
 

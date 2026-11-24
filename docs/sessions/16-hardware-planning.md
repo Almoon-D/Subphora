@@ -15,8 +15,9 @@ decides what (if anything) to build or buy. No hardware is built in this session
 
 1. Research live: manual level meters, resistivity (VES, OhmPi-based ERT, current version,
    price and licences), HVSR, VLF, contracted surveys (ERT, TEM, magnetic resonance) and their
-   prices in Andalusia, positioning needs, level loggers. Cost, depth, what each detects in
-   the owner's geology (Antequera karst; Guadalquivir sediments and marls), build
+   prices in Spain, positioning needs, level loggers. Cost, depth, what each detects in the
+   main Spanish settings (karst limestone, sedimentary basins with marls, hard-rock
+   massifs), build
    difficulty, electrical safety and open-source maturity.
 2. A decision record with the options, the recommendation and budgets, for the owner's ruling.
 3. After the ruling: the hardware sessions' prompts (build guide, safety checklist enforced

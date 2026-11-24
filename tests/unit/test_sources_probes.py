@@ -272,10 +272,10 @@ async def test_a_service_exception_instead_of_an_image_fails_the_sample() -> Non
 
 async def test_a_sample_without_the_expected_text_fails() -> None:
     sample = {
-        "description": "the dolmens parcel",
+        "description": "the Obradoiro parcel",
         "params": {"STOREDQUERY_ID": "GetParcel"},
         "expect_content_type": "text/xml",
-        "expect_text": "2488901UF6928N",
+        "expect_text": "7279701NH3477G",
     }
     entry = service(
         id="catastro-wfs-parcels",
@@ -293,15 +293,15 @@ async def test_a_sample_without_the_expected_text_fails() -> None:
         )
         results = await run(entry, mock)
     assert statuses(results)[CheckName.SAMPLE] is CheckStatus.FAILED
-    assert "lacks '2488901UF6928N'" in details(results)[CheckName.SAMPLE]
+    assert "lacks '7279701NH3477G'" in details(results)[CheckName.SAMPLE]
 
 
 async def test_a_found_parcel_passes_the_sample() -> None:
     sample = {
-        "description": "the dolmens parcel",
+        "description": "the Obradoiro parcel",
         "path": "/query",
         "expect_content_type": "text/xml",
-        "expect_text": "2488901UF6928N",
+        "expect_text": "7279701NH3477G",
     }
     entry = service(kind="rest", base_url=CATASTRO_WFS, web_mercator=None, layers=[], sample=sample)
     with respx.mock as mock:

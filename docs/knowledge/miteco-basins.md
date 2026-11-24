@@ -36,22 +36,23 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   `niv_conf_cu`, `an_val_cu` (assessment period), `f_bue_est_cu` (target date), pressure
   and impact flags. Default CRS EPSG:4258; EPSG:3857 among the others. With a 4326 bbox the
   axis order is latitude, longitude. `(GetFeature, 2026-11-24)`
-- Around Antequera: **ES060MSBT060-033 Llanos de Antequera-Vega de Archidona** — quantitative
-  status *Malo*, chemical *Malo*, at quantitative risk, global *Malo*, assessed 2016-2019,
-  good status expected 2022-2027 (quantitative) and after 2027 (chemical). ES060MSBT060-034
-  Fuente de Piedra — the same, and in `masas_aguasub_riesgo_2027` with `situacion`
-  "Declaración provisional sobreexplotació[n]", declared 2005-06-15 (`link_decl` to the BOP
-  of Málaga), authority "Junta Andalucía". `(GetFeature, 2026-11-24)`
-- The bodies carry `cod_ddhh`: ES050 Guadalquivir, ES060 Cuencas Mediterráneas Andaluzas,
-  etc. `demarhidro_2027` gives the river-basin districts (both found at Antequera).
+- Example, around Daimiel (Guadiana, ES040): **Mancha Occidental I** and **Campo de
+  Calatrava** — quantitative status *Malo*, chemical *Malo*, at quantitative risk. In
+  `masas_aguasub_riesgo_2027` both carry `situacion` "Declaración de riesgo" (2014-12-21 and
+  2017-03-26), `tipo_riesgo`, `org_cuenca` "CH Guadiana" and a `link_decl` to the
+  declaration. Other bodies carry "Declaración provisional sobreexplotació[n]" with older
+  dates. `(GetFeature, 2026-11-24)`
+- The bodies carry `cod_ddhh` (ES040 Guadiana, ES050 Guadalquivir, ES060 Cuencas
+  Mediterráneas Andaluzas…); `demarhidro_2027` gives the river-basin districts. A point near
+  a district boundary can fall in either: the authority follows the exact location.
 
 ## Piezometric network
 
 - `RedPiezometrica`: `pie_cod_eu`, `pie_nombre`, `pie_descri`, `pie_xutm30_et`,
   `pie_yutm30_et`, `pie_z` (ground elevation), `pie_prof` (depth), `pie_estado`
-  (Activo…), `cod_masa`. Two active piezometers in Llanos de Antequera (06.33.004 "Parque
-  de Bomberos", 160 m deep; 06.33.005 "Cueva Romeral", 156 m). **No levels**: the service
-  gives the network, not the measurements. `(GetFeature, 2026-11-24)`
+  (Activo…), `cod_masa`. Example: 24 piezometers around Daimiel, such as ES040ESBT000404013
+  "La Mancha" (115 m deep, active). **No levels**: the service gives the network, not the
+  measurements. `(GetFeature, 2026-11-24)`
 - Level series per piezometer were not found as an API on this host. MITECO publishes the
   piezometric data through its monitoring-network viewer and the SIA; the route for
   levels is open: `VERIFY-LIVE(piezometric-levels)`. Session 07 (depth to water) depends on

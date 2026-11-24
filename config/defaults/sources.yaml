@@ -4,7 +4,9 @@
 # file it names. `uv run subphora sources check` re-checks the facts recorded here
 # (layers offered, EPSG:3857, CORS, one small sample) and `subphora sources list` prints it.
 #
-# Per service: kind is wms, wmts, wfs, wcs, ogc_api, rest or download; layers are the
+# Per service: kind is wms, wmts, wfs, wcs, ogc_api, rest or download; coverage lists the
+# areas it serves as ISO 3166 codes (a country such as ES, or a region such as ES-AN for
+# Andalucía), coverage_excludes the areas inside them it does not serve; layers are the
 # layers, feature types, coverages or collections of interest; web_mercator (wms, wmts and
 # wfs only) says whether EPSG:3857 is offered; cors says whether a browser may call the
 # service directly. Politeness is per service; services on one host share the strictest.
@@ -27,6 +29,9 @@ services:
     name: Cadastral parcels map (INSPIRE WMS)
     publisher: Dirección General del Catastro
     kind: wms
+    coverage: [ES]
+    # Foral cadastres: Navarra and the Basque Country (decision 0010).
+    coverage_excludes: [ES-NC, ES-PV]
     base_url: https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx
     layers: [CP.CadastralParcel, CP.CadastralZoning, BU.Building]
     crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3035]
@@ -38,14 +43,17 @@ services:
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
     sample:
-      description: one 256-pixel map of the parcels around the Antequera dolmens
-      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: CP.CadastralParcel, STYLES: "", CRS: "EPSG:3857", BBOX: "-507000,4442000,-506000,4443000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      description: one 256-pixel map of the parcels around the Praza do Obradoiro, Santiago de Compostela
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: CP.CadastralParcel, STYLES: "", CRS: "EPSG:3857", BBOX: "-951500,5293500,-950900,5294100", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
       expect_content_type: image/png
 
   - id: catastro-wfs-parcels
     name: Cadastral parcel geometry (INSPIRE WFS)
     publisher: Dirección General del Catastro
     kind: wfs
+    coverage: [ES]
+    # Foral cadastres: Navarra and the Basque Country (decision 0010).
+    coverage_excludes: [ES-NC, ES-PV]
     base_url: https://ovc.catastro.meh.es/INSPIRE/wfsCP.aspx
     layers: [cp:CadastralParcel, cp:CadastralZoning]
     crs: [EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3857, EPSG:3035]
@@ -57,15 +65,18 @@ services:
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
     sample:
-      description: the public parcel of the Antequera dolmens by cadastral reference
-      params: {service: WFS, version: 2.0.0, request: GetFeature, STOREDQUERY_ID: GetParcel, refcat: 2488901UF6928N, srsname: "EPSG::25830"}
+      description: the public parcel of the Praza do Obradoiro (UTM zone 29) by cadastral reference
+      params: {service: WFS, version: 2.0.0, request: GetFeature, STOREDQUERY_ID: GetParcel, refcat: 7279701NH3477G, srsname: "EPSG::25830"}
       expect_content_type: text/xml
-      expect_text: "2488901UF6928N"
+      expect_text: "7279701NH3477G"
 
   - id: catastro-ovc
     name: Non-protected cadastral data (OVC JSON services)
     publisher: Dirección General del Catastro
     kind: rest
+    coverage: [ES]
+    # Foral cadastres: Navarra and the Basque Country (decision 0010).
+    coverage_excludes: [ES-NC, ES-PV]
     base_url: https://ovc.catastro.meh.es/OVCServWeb/OVCWcfCallejero
     cors: true
     licence: "Catastro free web services: non-protected data only (everything except owner and value)"
@@ -74,17 +85,18 @@ services:
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
     sample:
-      description: non-protected data of the Antequera dolmens parcel
+      description: non-protected data of the Roman theatre parcel, Mérida
       path: /COVCCallejero.svc/json/Consulta_DNPRC
-      params: {RefCat: 2488901UF6928N}
+      params: {RefCat: 0910001QD3101S}
       expect_content_type: application/json
-      expect_text: "PARQUE DOLMENICO"
+      expect_text: "MERIDA"
 
   # ── SIGPAC (docs/knowledge/sigpac.md) ─────────────────────────────────────────────────
   - id: sigpac-wms
     name: SIGPAC enclosures map (WMS)
     publisher: Fondo Español de Garantía Agraria (FEGA)
     kind: wms
+    coverage: [ES]
     base_url: https://sigpac-hubcloud.es/wms
     layers: [AU.Sigpac:recinto, AU.Sigpac:cultivo_declarado]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -96,14 +108,15 @@ services:
     knowledge: docs/knowledge/sigpac.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
-      description: one 256-pixel map of the enclosures at El Torcal de Antequera
-      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "AU.Sigpac:recinto", STYLES: "", CRS: "EPSG:3857", BBOX: "-506000,4434500,-505500,4435000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      description: one 256-pixel map of the enclosures in Tierra de Campos
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "AU.Sigpac:recinto", STYLES: "", CRS: "EPSG:3857", BBOX: "-551300,5153200,-550800,5153700", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
       expect_content_type: image/png
 
   - id: sigpac-queries
     name: SIGPAC enclosure lookup by code (JSON)
     publisher: Fondo Español de Garantía Agraria (FEGA)
     kind: rest
+    coverage: [ES]
     base_url: https://sigpac-hubcloud.es/servicioconsultassigpac
     cors: true
     licence: CC BY 4.0
@@ -112,15 +125,16 @@ services:
     knowledge: docs/knowledge/sigpac.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
-      description: enclosure 29:15:0:0:167:21:1 (El Torcal de Antequera)
-      path: /query/recinfo/29/15/0/0/167/21/1.json
+      description: enclosure 34:48:0:0:13:12:1 (Tierra de Campos)
+      path: /query/recinfo/34/48/0/0/13/12/1.json
       expect_content_type: application/json
-      expect_text: '"poligono":167'
+      expect_text: '"poligono":13'
 
   - id: sigpac-ogcapi
     name: SIGPAC enclosures (OGC API Features)
     publisher: Fondo Español de Garantía Agraria (FEGA)
     kind: ogc_api
+    coverage: [ES]
     base_url: https://sigpac-hubcloud.es/ogcapi
     layers: [recintos, cultivo_declarado]
     crs: [OGC:CRS84]
@@ -136,6 +150,7 @@ services:
     name: PNOA orthophoto (WMTS)
     publisher: Instituto Geográfico Nacional (IGN)
     kind: wmts
+    coverage: [ES]
     base_url: https://www.ign.es/wmts/pnoa-ma
     layers: [OI.OrthoimageCoverage]
     crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
@@ -147,14 +162,15 @@ services:
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
     sample:
-      description: the zoom-12 tile over Antequera
-      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: OI.OrthoimageCoverage, style: default, format: image/jpeg, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1594", tilecol: "1996"}
+      description: the zoom-12 tile over Zaragoza
+      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: OI.OrthoimageCoverage, style: default, format: image/jpeg, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1525", tilecol: "2037"}
       expect_content_type: image/jpeg
 
   - id: ign-pnoa-wms
     name: PNOA orthophoto (WMS)
     publisher: Instituto Geográfico Nacional (IGN)
     kind: wms
+    coverage: [ES]
     base_url: https://www.ign.es/wms-inspire/pnoa-ma
     layers: [OI.OrthoimageCoverage, OI.MosaicElement]
     crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
@@ -170,6 +186,7 @@ services:
     name: IGN base maps (WMTS)
     publisher: Instituto Geográfico Nacional (IGN)
     kind: wmts
+    coverage: [ES]
     base_url: https://www.ign.es/wmts/ign-base
     layers: [IGNBaseTodo, IGNBase-gris, IGNBaseOrto]
     crs: [EPSG:3857, EPSG:4326, EPSG:4258, EPSG:25829, EPSG:25830, EPSG:25831]
@@ -181,14 +198,15 @@ services:
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
     sample:
-      description: the zoom-12 base-map tile over Antequera
-      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: IGNBaseTodo, style: default, format: image/png, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1594", tilecol: "1996"}
+      description: the zoom-12 base-map tile over Zaragoza
+      params: {service: WMTS, request: GetTile, version: 1.0.0, layer: IGNBaseTodo, style: default, format: image/png, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1525", tilecol: "2037"}
       expect_content_type: image/png
 
   - id: ign-mdt-wcs
     name: Digital terrain models MDT05 and MDT25 (WCS)
     publisher: Instituto Geográfico Nacional (IGN)
     kind: wcs
+    coverage: [ES]
     base_url: https://servicios.idee.es/wcs-inspire/mdt
     layers: [Elevacion25830_5, Elevacion25830_25, Elevacion4083_5, Elevacion4083_25]
     crs: [EPSG:25830, EPSG:4083, EPSG:4258]
@@ -199,14 +217,15 @@ services:
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
     sample:
-      description: a 500 m square of the 25 m terrain model at the Antequera dolmens
-      params: {service: WCS, version: 2.0.1, request: GetCoverage, CoverageId: Elevacion25830_25, subset: ["x(362000,362500)", "y(4098000,4098500)"], format: image/tiff}
+      description: a 500 m square of the 25 m terrain model near Zaragoza
+      params: {service: WCS, version: 2.0.1, request: GetCoverage, CoverageId: Elevacion25830_25, subset: ["x(676500,677000)", "y(4613000,4613500)"], format: image/tiff}
       expect_content_type: image/tiff
 
   - id: cartociudad
     name: CartoCiudad geocoder
     publisher: Instituto Geográfico Nacional (IGN)
     kind: rest
+    coverage: [ES]
     base_url: https://www.cartociudad.es/geocoder/api/geocoder
     cors: true
     licence: CC BY 4.0
@@ -215,16 +234,17 @@ services:
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
     sample:
-      description: candidates for the name Antequera
+      description: candidates for the name Zaragoza
       path: /candidates
-      params: {q: Antequera, limit: "1"}
+      params: {q: Zaragoza, limit: "1"}
       expect_content_type: application/json
-      expect_text: '"muniCode":"29015"'
+      expect_text: '"muniCode":"50297"'
 
   - id: cnig-downloads
     name: CNIG download centre (MDT02, MDT05, MDT25 files)
     publisher: Centro Nacional de Información Geográfica (CNIG)
     kind: download
+    coverage: [ES]
     base_url: https://centrodedescargas.cnig.es/CentroDescargas/
     cors: false
     licence: CC BY 4.0
@@ -242,6 +262,7 @@ services:
     name: MAGNA 1:50,000 geological map (WMS)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: wms
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_MAGNA_50/MapServer/WMSServer
     # WMS names: 0 lithology colour, 2 contacts and faults, 6 structural measurements.
     layers: ["0", "2", "6"]
@@ -254,14 +275,15 @@ services:
     knowledge: docs/knowledge/igme.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
     sample:
-      description: one 256-pixel MAGNA map around Antequera
-      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "0", STYLES: "", CRS: "EPSG:3857", BBOX: "-510000,4438000,-505000,4443000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
+      description: one 256-pixel MAGNA map around the Ciudad Encantada, Cuenca
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: "0", STYLES: "", CRS: "EPSG:3857", BBOX: "-224000,4893500,-219000,4898500", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
       expect_content_type: image/png
 
   - id: igme-geode-wms
     name: GEODE continuous geological map 1:50,000 (WMS)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: wms
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/services/Cartografia_Geologica/IGME_Geode_50/MapServer/WMSServer
     # WMS names: 1 geology polygons, 2 contacts.
     layers: ["1", "2"]
@@ -278,6 +300,7 @@ services:
     name: Permeability map of Spain 1:200,000 (WMS)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: wms
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Permeabilidad_200/MapServer/WMSServer
     layers: ["0"]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -293,6 +316,7 @@ services:
     name: Lithostratigraphic map of Spain 1:200,000 (WMS)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: wms
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Litoestratigrafico_200/MapServer/WMSServer
     # WMS names: 0 lithostratigraphy, 1 contacts and fractures, 2 structures.
     layers: ["0", "1", "2"]
@@ -310,6 +334,7 @@ services:
     name: Hydrogeological map of Spain 1:200,000 (WMS)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: wms
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/services/Cartografia_Tematica/IGME_Hidrogeologico_200/MapServer/WMSServer
     layers: ["0"]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -325,6 +350,7 @@ services:
     name: IGME map services (ArcGIS REST queries)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
     kind: rest
+    coverage: [ES]
     base_url: https://mapas.igme.es/gis/rest/services
     cors: true
     licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
@@ -333,9 +359,9 @@ services:
     knowledge: docs/knowledge/igme.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
     sample:
-      description: three water points of the IGME inventory near Antequera
+      description: three water points of the IGME inventory near Daimiel
       path: /BasesDatos/IGME_PuntosAgua/MapServer/0/query
-      params: {geometry: "-4.62,36.98,-4.50,37.06", geometryType: esriGeometryEnvelope, inSR: "4326", spatialRel: esriSpatialRelIntersects, outFields: "*", returnGeometry: "false", resultRecordCount: "3", f: json}
+      params: {geometry: "-3.70,39.00,-3.50,39.15", geometryType: esriGeometryEnvelope, inSR: "4326", spatialRel: esriSpatialRelIntersects, outFields: "*", returnGeometry: "false", resultRecordCount: "3", f: json}
       expect_content_type: application/json
       expect_text: "PROF_m"
 
@@ -344,6 +370,7 @@ services:
     name: Groundwater bodies, basin plans 2022-2027 (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wms
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/masas_aguasub_2027/wms
     layers: [masas_aguasub_2027]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -355,14 +382,15 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
-      description: one 256-pixel map of the groundwater bodies around Antequera
-      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: masas_aguasub_2027, STYLES: "", CRS: "EPSG:3857", BBOX: "-520000,4430000,-500000,4450000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
+      description: one 256-pixel map of the groundwater bodies around Daimiel
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: masas_aguasub_2027, STYLES: "", CRS: "EPSG:3857", BBOX: "-412000,4722000,-392000,4742000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
       expect_content_type: image/png
 
   - id: miteco-gw-status
     name: Groundwater body status and risk, 2022-2027 (WFS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wfs
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/estado_masas_aguasub_2027/ows
     layers: ["agua:estado_masas_aguasub_2027"]
     crs: [EPSG:4258, EPSG:4326, EPSG:25829, EPSG:25830, EPSG:25831, EPSG:3857]
@@ -374,8 +402,8 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
-      description: status of the groundwater bodies around Antequera, as GeoJSON
-      params: {service: WFS, version: 2.0.0, request: GetFeature, typeNames: "agua:estado_masas_aguasub_2027", count: "2", outputFormat: application/json, srsName: "EPSG:4326", bbox: "36.95,-4.65,37.10,-4.45,urn:ogc:def:crs:EPSG::4326"}
+      description: status of the groundwater bodies around Daimiel, as GeoJSON
+      params: {service: WFS, version: 2.0.0, request: GetFeature, typeNames: "agua:estado_masas_aguasub_2027", count: "2", outputFormat: application/json, srsName: "EPSG:4326", bbox: "39.00,-3.70,39.15,-3.50,urn:ogc:def:crs:EPSG::4326"}
       expect_content_type: application/json
       expect_text: "est_cu_desc"
 
@@ -383,6 +411,7 @@ services:
     name: Groundwater bodies declared at risk (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wms
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/masas_aguasub_riesgo_2027/wms
     layers: [masas_aguasub_riesgo_2027]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -398,6 +427,7 @@ services:
     name: Piezometric network (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wms
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/RedPiezometrica/wms
     layers: [RedPiezometrica]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -413,6 +443,7 @@ services:
     name: Public water domain, mapped estimate (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wms
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/DPH_Estimado/wms
     layers: [DPH_Estimado]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -428,6 +459,7 @@ services:
     name: River-basin districts, plans 2022-2027 (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
     kind: wms
+    coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/demarhidro_2027/wms
     layers: [demarhidro_2027]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -444,6 +476,7 @@ services:
     name: Andalusian water bodies, plans 2022-2027 (WMS)
     publisher: Junta de Andalucía, REDIAM
     kind: wms
+    coverage: [ES-AN]
     base_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_agua_andalucia_phc_2022_27
     layers: [masas_subt_polig_and, masas_supf_linea_and]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -460,6 +493,7 @@ services:
     name: Soil map of Andalusia 1:400,000 (WMS)
     publisher: Junta de Andalucía, REDIAM
     kind: wms
+    coverage: [ES-AN]
     base_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_Suelos_Andalucia
     layers: [unidades_edaficas]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
@@ -471,8 +505,8 @@ services:
     knowledge: docs/knowledge/soil.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
-      description: one 256-pixel soil map around Antequera
-      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: unidades_edaficas, STYLES: "", CRS: "EPSG:3857", BBOX: "-520000,4420000,-500000,4440000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
+      description: one 256-pixel soil map around Córdoba
+      params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: unidades_edaficas, STYLES: "", CRS: "EPSG:3857", BBOX: "-542000,4552000,-522000,4572000", WIDTH: "256", HEIGHT: "256", FORMAT: image/png}
       expect_content_type: image/png
 
   # ── Soil (docs/knowledge/soil.md) ─────────────────────────────────────────────────────
@@ -480,6 +514,7 @@ services:
     name: SoilGrids 250 m, clay content (WCS)
     publisher: ISRIC World Soil Information
     kind: wcs
+    coverage: [ES]
     base_url: https://maps.isric.org/mapserv?map=/map/clay.map
     layers: [clay_0-5cm_mean, clay_5-15cm_mean]
     crs: [EPSG:4326, ESRI:54052]
@@ -494,6 +529,7 @@ services:
     name: European Soil Database v2.0 (download after registration)
     publisher: European Commission, Joint Research Centre (ESDAC)
     kind: download
+    coverage: [ES]
     base_url: https://esdac.jrc.ec.europa.eu/content/european-soil-database-v20-vector-and-attribute-data
     cors: false
     licence: "Free after registration on the ESDAC form"
@@ -511,6 +547,7 @@ services:
     name: Copernicus Data Space catalogue (STAC)
     publisher: European Commission, Copernicus Data Space Ecosystem
     kind: rest
+    coverage: [ES]
     base_url: https://stac.dataspace.copernicus.eu/v1
     cors: true
     licence: "Copernicus Sentinel data legal notice: free and open, with attribution"
@@ -528,6 +565,7 @@ services:
     name: European Ground Motion Service (viewer and downloads)
     publisher: European Commission, Copernicus Land Monitoring Service
     kind: download
+    coverage: [ES]
     base_url: https://egms.land.copernicus.eu/
     cors: false
     licence: "Copernicus data policy: free and open, with attribution; downloads need EU Login"
@@ -545,6 +583,7 @@ services:
     name: AEMET OpenData API
     publisher: Agencia Estatal de Meteorología (AEMET)
     kind: rest
+    coverage: [ES]
     base_url: https://opendata.aemet.es/opendata/api
     licence: "AEMET: use and reproduction authorised, citing AEMET as the author"
     attribution: "© AEMET"
@@ -563,6 +602,7 @@ services:
     name: Google Map Tiles API (2D satellite and roadmap)
     publisher: Google
     kind: rest
+    coverage: [ES]
     base_url: https://tile.googleapis.com/v1
     licence: "Google Maps Platform Terms of Service and Map Tiles API policies: no caching, no offline use, logo and attribution visible"
     attribution: "Google Maps"

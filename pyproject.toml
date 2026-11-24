@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "subphora"
-version = "0.1.0"
+version = "0.1.1"
 description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"

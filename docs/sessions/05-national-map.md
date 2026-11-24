@@ -6,7 +6,7 @@ Model and effort: Opus 5.5, high.
 
 When the app opens, all of Spain is coloured by the water-potential index with a confidence
 layer next to it, both computed from nationwide public data by a batch command. The owner
-can zoom from Spain to an estate and tap any point for the index, confidence and inputs.
+can zoom from Spain to a parcel and tap any point for the index, confidence and inputs.
 
 ## Read
 
@@ -23,8 +23,10 @@ can zoom from Spain to an estate and tap any point for the index, confidence and
    `config/`, terrain derivatives at that resolution.
 3. `subphora national build [--region <province|bbox>|--all]`: downloads the nationwide
    inputs politely to `data/`, computes index and confidence grids, and writes raster tiles
-   (PMTiles) for display. CPU work in a process pool. Run it in this session for the
-   provinces of Málaga and Sevilla; the owner runs `--all` on a machine with enough disk.
+   (PMTiles) for display. CPU work in a process pool. `--region` takes an ISO 3166-2 code
+   (a province such as ES-Z, or a region). Run it in this session for two provinces in
+   different hydrogeological settings; the owner runs `--all` on a machine with enough disk.
+   Nothing in the code or config names a test area (decision 0014).
 4. The slope, drainage and wetness-index grids are also published as map layers with legends
    (the owner asked to see them, not only to have them in the model).
 5. The front end shows the index and the confidence layer (legend says "index", not
@@ -39,7 +41,7 @@ can zoom from Spain to an estate and tap any point for the index, confidence and
 
 ## Done when
 
-- `make check` is green, `subphora national build --region <Málaga>` produces tiles, and in
+- `make check` is green, `subphora national build --region <province code>` produces tiles, and in
   `make dev` the map shows the index and confidence over that region with tap-to-explain.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

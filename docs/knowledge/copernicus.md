@@ -9,8 +9,8 @@ Findings observed on 2026-11-24.
 - The STAC catalogue `https://stac.dataspace.copernicus.eu/v1` is public: the collection
   `sentinel-2-l2a` and searches answer without an account, with CORS `*`.
   `(GET /collections/sentinel-2-l2a, 2026-11-24)`
-- A search over Antequera for August 2026 returned
-  `S2C_MSIL2A_20260830T105621_N0512_R094_T30SUG_20260830T144012` (tile T30SUG); its assets
+- A search over Daimiel (Ciudad Real) for August 2026 returned
+  `S2C_MSIL2A_20260830T105621_N0512_R094_T30SVJ_20260830T144012` (tile T30SVJ); its assets
   (`B04_10m`, `B08_10m`, `SCL_20m`…) point to `s3://eodata/…`: reading the pixels needs a
   free CDSE account (S3 keys or an OAuth token), which session 15 requests from the owner.
   `(GET /search, 2026-11-24)`

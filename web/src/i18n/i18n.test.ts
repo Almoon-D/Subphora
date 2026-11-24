@@ -34,12 +34,11 @@ describe("t", () => {
     }
   });
 
-  it("names every base map, group, layer and regional coverage the map serves", () => {
+  it("names every base map, group and layer the map serves", () => {
     const keys = [
       ...MAP.base_maps.map((b) => `base.${b.id}`),
       ...MAP.overlay_groups.map((g) => `group.${g}`),
       ...MAP.overlays.map((o) => `layer.${o.id}`),
-      ...MAP.overlays.flatMap((o) => o.coverage.filter((c) => c.includes("-")).map((c) => `area.${c}`)),
     ];
     expect(keys.filter((key) => !(key in es))).toEqual([]);
   });
@@ -47,7 +46,7 @@ describe("t", () => {
 
 describe("lookup", () => {
   it("falls back to the given text for a key with no message", () => {
-    expect(lookup("field.CodMasa", "CodMasa")).toBe("Código de masa");
+    expect(lookup("field.nº de hoja", "nº de hoja")).toBe("Hoja MAGNA");
     expect(lookup("field.Nombre", "Nombre")).toBe("Nombre");
   });
 });

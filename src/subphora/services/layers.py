@@ -2,8 +2,9 @@
 """The official layers: tiles through the proxy, and what lies under a tapped point.
 
 - A layer whose service has CORS and EPSG:3857 is drawn by the browser from the service;
-  the proxy relays only the others, within the catalogue's limits (the client's per-host
-  politeness, the cache lifetime, the layer's zoom range), and only PNG images.
+  the proxy draws only the others, from the ArcGIS export the catalogue names for them,
+  within the catalogue's limits (the client's per-host politeness, the cache lifetime, the
+  layer's zoom range), and only PNG images.
 - A tap is answered by the API for every layer, whatever its CORS: the API asks the
   service in a CRS it offers, parses the answer and keeps only the fields the map
   catalogue allows, so no other field (protected data included) ever reaches the browser.
@@ -37,7 +38,6 @@ from subphora.sources.wms import (
     allowed_fields,
     export_params,
     feature_info_params,
-    getmap_params,
     is_png,
     parse_feature_info,
 )
@@ -89,20 +89,17 @@ class LayerService:
     async def tile(self, layer_id: str, z: int, x: int, y: int) -> Tile:
         """The PNG tile (z, x, y) of a proxied layer; raises LayerError."""
         overlay, service = self._overlay(layer_id)
-        if not is_proxied(service):
+        # Settings guarantee: a layer the browser cannot draw names an export, and only it.
+        export = overlay.export
+        if export is None:
             raise LayerError(LayerFailure.NOT_PROXIED, f"{layer_id} is drawn from {service.id}")
         if not tile_exists(z, x, y):
             raise LayerError(LayerFailure.INVALID_TILE, f"no tile {z}/{x}/{y}")
         self._check_zoom(overlay, z, tile=True)
-        box = tile_bounds(z, x, y)
         size = self._map.overlays.tile_size
-        if overlay.export is None:
-            source, url = service, service.base_url
-            params = getmap_params(overlay.layer, overlay.style, size, box)
-        else:
-            source = self._sources.service(overlay.export.service)
-            url = source.base_url + overlay.export.path
-            params = export_params(overlay.export.layers, size, box)
+        source = self._sources.service(export.service)
+        url = source.base_url + export.path
+        params = export_params(export.layers, size, tile_bounds(z, x, y))
         fetched = await self._fetch(source, url, params)
         if not is_png(fetched.content):
             raise LayerError(

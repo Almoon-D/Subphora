@@ -5,6 +5,10 @@ official source, article and the date it was read. **Uncertain** marks what the 
 settle; session 09 shows those as "conditions apply" with the open question, never as a
 verdict. Nothing here is legal advice. Read on 2026-11-24.
 
+**Coverage so far:** the national law, one regional water law and two basin plans. The other
+regional water laws and the plans of the other 23 river-basin districts are not read yet;
+session 09 reads them all (decision 0022).
+
 ## National: Water Law and Public Water Domain Regulation
 
 - **TRLA** — Real Decreto Legislativo 1/2001, texto refundido de la Ley de Aguas,

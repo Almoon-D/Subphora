@@ -81,9 +81,15 @@
 - The lithostratigraphic legend is a 3,648×4,423 image (800 KB) shown scaled in the panel
   with a link to full size; a better legend (by unit, from the tap) can come with the
   parcel view (session 06). (03)
-- A proxied layer's tiles wait for the host's politeness (REDIAM: 2 at a time, 0.5 s
-  apart), so a first view of an Andalusian layer fills in over a few seconds; the cache
-  makes the next one immediate. (03)
+- The file cache never deletes an expired entry; with the tile proxy it grows with every
+  view. Session 13 (deployment) adds a size cap or a sweep. (03)
+- `/api/layers/*` answers anyone who reaches the server: fine on `localhost`; session 13
+  puts the whole API behind the owner's access control before it is exposed. (03)
+- SoilGrids gives no value on a tap; the parcel view (session 06) reads clay and sand from
+  its WCS at the parcel, everywhere in Spain alike. (03)
+- Regional layers (soil maps of Navarra, Catalonia, Andalusia…, regional hydrogeology) are
+  left out until every region is surveyed and they can be added under one rule (decision
+  0022). (03)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -91,6 +97,16 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 03 — Owner ruling: the same product everywhere (2026-11-24, version 0.3.1)
+
+- Landed: decision 0022 (no regional layers, every basin's rules, no region in prompts);
+  the two REDIAM layers out of the map, GEODE in; the proxy draws only ArcGIS exports and
+  the MapServer GML parser is gone with REDIAM; MASTER_PLAN §3 and §4.5 reworded.
+- Live: a tap at 17 points, one per region, Canaries, Balearics and Melilla included: every
+  national layer answers everywhere, except MAGNA lithology in parts of Tenerife (GEODE
+  covers it) and groundwater bodies where no body is mapped (correct).
+- Prompt edits: 09 (rules for every district and regional water law; no region named).
 
 ### 03 — Official water and geology layers (2026-11-24, version 0.3.0)
 

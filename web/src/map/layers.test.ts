@@ -54,8 +54,8 @@ describe("withOverlay", () => {
 
 describe("overlayTiles", () => {
   it("makes the proxy's route absolute and leaves a service's URL alone", () => {
-    expect(overlayTiles(overlay("andalusian-soils"), "http://localhost:5173")).toEqual([
-      "http://localhost:5173/api/layers/andalusian-soils/tiles/{z}/{x}/{y}",
+    expect(overlayTiles(overlay("lithostratigraphy"), "http://localhost:5173")).toEqual([
+      "http://localhost:5173/api/layers/lithostratigraphy/tiles/{z}/{x}/{y}",
     ]);
     const [rivers] = overlayTiles(overlay("rivers"), "http://localhost:5173");
     expect(rivers).toMatch(/^https:\/\/gis\.miteco\.gob\.es\/.*BBOX=\{bbox-epsg-3857\}$/);
@@ -86,7 +86,7 @@ describe("overlaysByGroup", () => {
   it("keeps the groups' and the layers' order", () => {
     const groups = overlaysByGroup(MAP);
     expect(groups.map(([group]) => group)).toEqual(["water", "geology", "soil"]);
-    expect(groups[2]?.[1].map((o) => o.id)).toEqual(["soil-clay", "andalusian-soils"]);
+    expect(groups[2]?.[1].map((o) => o.id)).toEqual(["soil-clay"]);
   });
 });
 

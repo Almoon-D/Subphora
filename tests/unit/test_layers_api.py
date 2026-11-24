@@ -14,7 +14,7 @@ from tests.support import FIXTURES, fast_settings
 
 type Handler = Callable[[httpx.Request], httpx.Response]
 
-PNG = (FIXTURES / "layers" / "rediam_soils_tile.png").read_bytes()
+PNG = (FIXTURES / "layers" / "igme_lithostrat_export.png").read_bytes()
 
 
 def layer_fixture(name: str) -> bytes:
@@ -58,62 +58,45 @@ async def serve(
 
 # ── Tiles ──────────────────────────────────────────────────────────────────────────────
 
-# A zoom-12 tile over Córdoba (Andalusia).
-CORDOBA_TILE = "12/1993/1581"
+# A zoom-12 tile over the Ciudad Encantada (Cuenca).
+CUENCA_TILE = "12/2025/1547"
 
 
-async def test_a_proxied_tile_is_a_wms_png_and_is_cached(
+async def test_a_layer_without_web_mercator_comes_from_its_arcgis_export_and_is_cached(
     settings: Settings, tmp_path: Path
 ) -> None:
     upstream = Upstream(answer(PNG))
     async with serve(settings, upstream, tmp_path) as client:
-        first = await client.get(f"/api/layers/andalusian-soils/tiles/{CORDOBA_TILE}")
-        second = await client.get(f"/api/layers/andalusian-soils/tiles/{CORDOBA_TILE}")
+        first = await client.get(f"/api/layers/lithostratigraphy/tiles/{CUENCA_TILE}")
+        second = await client.get(f"/api/layers/lithostratigraphy/tiles/{CUENCA_TILE}")
     assert first.status_code == second.status_code == 200
     assert first.headers["content-type"] == "image/png"
-    assert first.headers["cache-control"] == "public, max-age=604800"
+    assert first.headers["cache-control"] == "public, max-age=2592000"
     assert first.content == second.content == PNG
     (request,) = upstream.requests  # the second came from the cache
-    assert request.url.host == "www.juntadeandalucia.es"
-    params = request.url.params
-    assert (params["REQUEST"], params["LAYERS"], params["CRS"]) == (
-        "GetMap",
-        "unidades_edaficas",
-        "EPSG:3857",
-    )
-    assert (params["WIDTH"], params["HEIGHT"]) == ("256", "256")
-    west, south, east, north = (float(v) for v in params["BBOX"].split(","))
-    assert east - west == pytest.approx(north - south)
-    assert east - west == pytest.approx(9783.94, abs=0.01)  # one zoom-12 tile
-    assert west < -531_000 < east  # Córdoba, in EPSG:3857 metres
-    assert south < 4_561_000 < north
-
-
-async def test_a_layer_without_web_mercator_comes_from_its_arcgis_export(
-    settings: Settings, tmp_path: Path
-) -> None:
-    upstream = Upstream(answer(PNG))
-    async with serve(settings, upstream, tmp_path) as client:
-        response = await client.get("/api/layers/lithostratigraphy/tiles/12/2023/1543")
-    assert response.status_code == 200
-    (request,) = upstream.requests
+    assert request.url.host == "mapas.igme.es"
     assert request.url.path == (
         "/gis/rest/services/Cartografia_Tematica/IGME_Litoestratigrafico_200/MapServer/export"
     )
     params = request.url.params
     assert (params["bboxSR"], params["imageSR"], params["size"]) == ("3857", "3857", "256,256")
     assert (params["layers"], params["f"], params["format"]) == ("show:0", "image", "png32")
+    west, south, east, north = (float(v) for v in params["bbox"].split(","))
+    assert east - west == pytest.approx(north - south)
+    assert east - west == pytest.approx(9783.94, abs=0.01)  # one zoom-12 tile
+    assert west < -222_000 < east  # the Ciudad Encantada, in EPSG:3857 metres
+    assert south < 4_895_000 < north
 
 
 @pytest.mark.parametrize(
     ("path", "status", "code"),
     [
-        ("/api/layers/nope/tiles/12/1993/1581", 404, "unknown_layer"),
+        ("/api/layers/nope/tiles/12/2025/1547", 404, "unknown_layer"),
         # MITECO has CORS and EPSG:3857: the browser calls it, the API does not relay it.
-        ("/api/layers/groundwater-bodies/tiles/12/1993/1581", 404, "not_proxied"),
-        ("/api/layers/andalusian-soils/tiles/3/8/0", 400, "invalid_tile"),
-        ("/api/layers/andalusian-soils/tiles/5/15/12", 422, "outside_zoom_range"),
-        ("/api/layers/andalusian-soils/tiles/19/0/0", 422, "outside_zoom_range"),
+        ("/api/layers/groundwater-bodies/tiles/12/2025/1547", 404, "not_proxied"),
+        ("/api/layers/lithostratigraphy/tiles/3/8/0", 400, "invalid_tile"),
+        ("/api/layers/lithostratigraphy/tiles/10/505/385", 422, "outside_zoom_range"),
+        ("/api/layers/lithostratigraphy/tiles/19/0/0", 422, "outside_zoom_range"),
     ],
 )
 async def test_a_tile_outside_the_catalogue_is_refused_without_calling_out(
@@ -143,7 +126,7 @@ async def test_a_tile_the_service_cannot_give_is_an_explicit_error(
     settings: Settings, tmp_path: Path, handler: Handler, status: int, code: str
 ) -> None:
     async with serve(settings, Upstream(handler), tmp_path) as client:
-        response = await client.get(f"/api/layers/andalusian-soils/tiles/{CORDOBA_TILE}")
+        response = await client.get(f"/api/layers/lithostratigraphy/tiles/{CUENCA_TILE}")
     assert response.status_code == status
     assert response.json()["code"] == code
     # Nothing unusable is cached.
@@ -207,7 +190,11 @@ async def test_a_tap_shows_only_the_allowed_fields_in_their_order(
             [("Descripción", "Estratificación"), ("Dirección de buzamiento", "178")],
         ),
         ("permeability", "igme_permeability.xml", [("Permeabilidad", "MEDIA")]),
-        ("andalusian-soils", "rediam_soils.xml", [("Descripcion", "Fluvisoles calcáreos")]),
+        (
+            "geode-geology",
+            "igme_geode_tenerife.json",
+            [("Descripción Unidad Geológica", "Coladas basálticas")],
+        ),
     ],
 )
 async def test_each_service_format_is_read(
@@ -227,13 +214,11 @@ async def test_each_service_format_is_read(
 
 
 async def test_a_tap_on_nothing_is_an_empty_answer(settings: Settings, tmp_path: Path) -> None:
-    upstream = Upstream(answer(layer_fixture("rediam_empty.xml")))
+    upstream = Upstream(answer(layer_fixture("igme_geode_sea.json")))
     async with serve(settings, upstream, tmp_path) as client:
-        response = await client.get(info("andalusian-groundwater-bodies", -3.6, 40.15, 10))
+        response = await client.get(info("geode-geology", -4.5, 36.4, 13))
     assert response.status_code == 200
     assert response.json()["features"] == []
-    # REDIAM has no CORS: the tap goes through the API all the same.
-    assert upstream.requests[0].url.host == "www.juntadeandalucia.es"
 
 
 async def test_a_layer_without_web_mercator_is_asked_in_a_crs_it_offers(

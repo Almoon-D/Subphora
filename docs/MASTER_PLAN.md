@@ -71,23 +71,24 @@ reduce the uncertainty.
 
 **Data sources** (each verified live in session 01, recorded in `docs/knowledge/`):
 Catastro (WMS; INSPIRE WFS for parcel geometry), SIGPAC (FEGA), IGN/CNIG (PNOA orthophoto,
-MDT02/MDT05/MDT25, CartoCiudad geocoder), IGME (MAGNA 1:50,000, 1:200,000 lithostratigraphic
+MDT02/MDT05/MDT25, CartoCiudad geocoder), IGME (MAGNA 1:50,000 and the continuous GEODE, 1:200,000 lithostratigraphic
 and permeability map, hydrogeological map, water-point database), MITECO and the basin
 authorities (groundwater bodies and status, piezometric network, rivers, public water domain,
-zona de policía, basin plans), the Junta de Andalucía (Andalusian Mediterranean basins,
-REDIAM), Copernicus (Sentinel-2, EGMS), AEMET; the structural data of the geological maps
+zona de policía, basin plans), the regional water agencies of the intra-community basins,
+Copernicus (Sentinel-2, EGMS), AEMET; the structural data of the geological maps
 (bedding dip and strike), public borehole logs with lithology, and a soil map (SoilGrids 2.0,
 decision 0013). The catalogue of every host, its terms and limits is
 `config/defaults/sources.yaml`. Foral cadastres (País Vasco, Navarra) are not
 supported yet (decision 0010), they will be implemented once subphora is finished.
 
-**Jurisdiction.** All of Spain for maps, search and the model, with the same code and the
-same quality everywhere. Legal rules are data, loaded area by area: the first are the
-Guadalquivir and the Andalusian Mediterranean basins (where field tests start); every other
-area says "rules not loaded" until added.
+**Jurisdiction.** All of Spain for maps, search, the model and the legal filter, with the
+same code and the same quality everywhere (decision 0022): every map layer covers all of
+Spain, and the legal rules are loaded for every river-basin district and every regional
+water law. Where field tests happen does not shape the product; no session prompt names a
+region. A district whose rules could not be read says "rules not loaded", with the reason.
 
 **Areas and countries** (decision 0014). An area is an ISO 3166 code: country (ES) > region,
-the autonomous community (ES-AN) > province (ES-Z). Water management is a parallel
+the autonomous community (ES-CT) > province (ES-B). Water management is a parallel
 hierarchy, because basins cross regions: river-basin district (ES050) > groundwater body.
 Every catalogued service records its coverage in these codes. Everything specific to Spain
 (reference formats, cadastre and SIGPAC rules, CRS choice, territories not supported, legal
@@ -252,13 +253,13 @@ so this view never pretends to be one.
 ### 4.5 Legal filter (session 09)
 
 From the location: the river-basin district and competent authority (a Confederación
-Hidrográfica or a regional agency, such as the Junta de Andalucía for the Andalusian
-Mediterranean basins), the groundwater body and its legal status, and the rules that apply:
-the article 54.2 regime of the Water Law (up to 7,000 m³/year) and when it needs
-authorisation, distances to existing wells and to the public water domain, the basin plan's
-limits on new abstractions, and the drilling permits. Rules are data in `config/legal/`, each
-with the official source (BOE, BOJA, basin plan), its date and the date it was checked; the
-engine evaluates them and returns "probably not allowed", "conditions apply", "no blocking
+Hidrográfica, or the regional water agency of an intra-community basin), the groundwater
+body and its legal status, and the rules that apply: the article 54.2 regime of the Water
+Law (up to 7,000 m³/year) and when it needs authorisation, regional water laws, distances to
+existing wells and to the public water domain, the basin plan's limits on new abstractions,
+and the drilling permits. Rules are data in `config/legal/`, each with the official source
+(BOE, the regional official gazette, the basin plan), its date and the date it was checked;
+the engine evaluates them and returns "probably not allowed", "conditions apply", "no blocking
 rule found" or "rules not loaded for this basin". Every output carries the disclaimer.
 
 ### 4.6 Reports (session 12)

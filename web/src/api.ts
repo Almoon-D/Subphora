@@ -50,8 +50,6 @@ export interface Overlay {
   /** Whether a tap asks the API what lies under it. */
   feature_info: boolean;
   attribution: string;
-  /** ISO 3166 codes of the areas the service covers. */
-  coverage: string[];
 }
 
 export interface MapConfig {

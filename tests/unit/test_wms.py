@@ -16,7 +16,6 @@ from subphora.sources.wms import FeatureInfoError, allowed_fields, legend_params
         (b'{"features": [{"type": "Feature"}]}', "geojson", "without properties"),
         (b"<FeatureInfoResponse/>", "geojson", "XML where GeoJSON"),
         (b"<html><body>down</body>", "esri_xml", "not XML"),
-        (b"<FeatureInfoResponse/>", "gml", "expected msGMLOutput"),
     ],
 )
 def test_an_unreadable_answer_is_refused(content: bytes, parser: str, message: str) -> None:

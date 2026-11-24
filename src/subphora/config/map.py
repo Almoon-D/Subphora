@@ -79,9 +79,8 @@ class FeatureInfo(Section):
     """How a tap reads the features of a layer, and which of their fields are shown."""
 
     info_format: str = Field(min_length=1)
-    # geojson: a GeoJSON FeatureCollection; esri_xml: ArcGIS's FeatureInfoResponse;
-    # gml: MapServer's msGMLOutput.
-    parser: Literal["geojson", "esri_xml", "gml"]
+    # geojson: a GeoJSON FeatureCollection; esri_xml: ArcGIS's FeatureInfoResponse.
+    parser: Literal["geojson", "esri_xml"]
     # The only fields shown, by the names the service gives them, in this order.
     fields: list[str] = Field(min_length=1)
 

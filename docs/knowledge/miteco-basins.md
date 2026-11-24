@@ -95,6 +95,10 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   record viewer (`…/geoportal-ws/visor-fichas/Default?nombre=…`). `(GetFeatureInfo, 2026-11-24)`
 - The answer carries each feature's full geometry: 1 KB for a piezometer, 45 KB for a
   groundwater body, 254 KB for three `DPH_Estimado` polygons. `(GetFeatureInfo, 2026-11-24)`
+- Every river-basin district is in `masas_aguasub_2027`: ES010 to ES160, Canaries (ES120 to
+  ES127), Ceuta (ES150) and Melilla (ES160) included (WFS, 2,000 features read). The same
+  17 points as in `igme.md` answer a tap everywhere except Lleida and Lorca, which lie
+  outside any mapped groundwater body (bodies do not cover all land). `(GetFeature, GetFeatureInfo, 2026-11-24)`
 - No scale range on any of these layers: they draw at every zoom. `(GetCapabilities, 2026-11-24)`
 
 ## Basin authorities

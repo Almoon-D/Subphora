@@ -125,6 +125,16 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
   which answers with CORS. Its WMS also answered a GetMap in EPSG:3857 with the same
   image, although its capabilities omit it: not relied upon. Its GetFeatureInfo works in
   EPSG:4258 (latitude, longitude order). `(export, GetMap, GetFeatureInfo, 2026-11-24)`
+- **Coverage across Spain** (a tap at one point per region, zoom 13: Lugo, Oviedo, Vitoria,
+  Tafalla, Lleida, Zaragoza, Valladolid, Alcalá, Daimiel, Mérida, Requena, Lorca, Granada,
+  Mallorca, Gran Canaria, Tenerife, Melilla): the 1:200,000 lithostratigraphic, permeability
+  and hydrogeological maps and GEODE answer everywhere; **MAGNA has no lithology polygon in
+  parts of the Canaries** (La Orotava, La Laguna and Los Cristianos on Tenerife, a point on
+  Fuerteventura; its sheet index covers them). GEODE (`IGME_Geode_50`, WMS layer `1`
+  "Recintos geología", scale range 1:283,482, `application/geo+json` with "Descripción Unidad
+  Geológica", "Edad Inferior", "Edad Superior", "Código zona GEODE") covers every point
+  probed, Tenerife included; its legend is a strip of symbol codes, like MAGNA's.
+  `(GetFeatureInfo, REST identify, 2026-11-24)`
 - `BasesDatos/IGME_QAFI_v4/MapServer/WMSServer` answers "ArcGIS Server Error": the faults
   database has no WMS; MAGNA's "Contactos y fallas" layer draws the mapped faults.
   `(GetCapabilities, 2026-11-24)`

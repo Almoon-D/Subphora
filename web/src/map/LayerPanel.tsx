@@ -61,7 +61,6 @@ function OverlayControl({
   onChange: (change: Partial<LayerState>) => void;
 }) {
   const title = lookup(`layer.${overlay.id}`, overlay.id);
-  const regional = overlay.coverage.filter((code) => code.includes("-"));
   return (
     <li className="layer" data-layer={overlay.id}>
       <label className="toggle">
@@ -74,9 +73,6 @@ function OverlayControl({
         />
         {title}
       </label>
-      {regional.length > 0 && (
-        <p className="note">{t("layers.coverage", { areas: regional.map((c) => lookup(`area.${c}`, c)).join(", ") })}</p>
-      )}
       {state.visible && (
         <>
           <Opacity

@@ -51,8 +51,8 @@ class Settings(Section):
         """Each map layer is a catalogued layer, drawable as configured.
 
         The base maps and the cadastre are drawn by the browser from the service, so their
-        services need EPSG:3857 and CORS. An overlay may lack either: the API's proxy draws
-        it, and one without EPSG:3857 names an ArcGIS export that has it.
+        services need EPSG:3857 and CORS. An overlay whose service lacks either names an
+        ArcGIS export of the same map service, which the API's proxy draws.
         """
         direct = [
             (f"map.base_maps.{base.id}", base.service, base.layer, "wmts")
@@ -66,13 +66,16 @@ class Settings(Section):
         for overlay in self.map.overlays.layers:
             key = f"map.overlays.{overlay.id}"
             service = self._catalogued(key, overlay.service, "wms", overlay.layer)
-            if service.web_mercator and overlay.export is not None:
-                raise ValueError(f"{key}: {service.id} offers EPSG:3857; no export is needed")
-            if not service.web_mercator:
-                if not service.crs:
-                    raise ValueError(f"{key}: {service.id} lists no CRS to ask its features in")
+            drawable = bool(service.web_mercator and service.cors)
+            if drawable and overlay.export is not None:
+                raise ValueError(f"{key}: {service.id} has CORS and EPSG:3857; no export is needed")
+            if not service.web_mercator and not service.crs:
+                raise ValueError(f"{key}: {service.id} lists no CRS to ask its features in")
+            if not drawable:
                 if overlay.export is None:
-                    raise ValueError(f"{key}: {service.id} lacks EPSG:3857 and has no export")
+                    raise ValueError(
+                        f"{key}: {service.id} lacks CORS or EPSG:3857 and has no export"
+                    )
                 export = self._catalogued(key, overlay.export.service, "rest")
                 if export.host != service.host:
                     raise ValueError(f"{key}: the export must be on {service.host}")

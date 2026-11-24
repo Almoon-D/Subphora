@@ -1,6 +1,6 @@
 # 0021 — Official layers: one catalogue, a tile proxy only where needed, taps through the API
 
-- Date: 2026-11-24 · Status: accepted · MASTER_PLAN §4.1, hard rules 4 and 6
+- Date: 2026-11-24 · Status: accepted; its REDIAM layers removed by 0022 · MASTER_PLAN §4.1, hard rules 4 and 6
 - Context: session 03 draws 17 official WMS layers; 14 offer CORS and EPSG:3857, REDIAM's
   two lack CORS and IGME's lithostratigraphic map lacks EPSG:3857. Taps must never show
   protected data, and the services answer in three formats (GeoJSON, ArcGIS XML, MapServer GML).

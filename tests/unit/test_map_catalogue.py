@@ -141,6 +141,19 @@ def test_a_base_map_without_cors_is_refused(config_dir: Path) -> None:
         load_settings(config_dir)
 
 
+def test_a_layer_without_web_mercator_needs_a_crs_for_its_taps(config_dir: Path) -> None:
+    path = config_dir / "defaults" / "sources.yaml"
+    text = path.read_text(encoding="utf-8")
+    start = text.index("- id: igme-lithostrat-wms")
+    end = text.index("- id: igme-hydrogeo-wms")
+    block = text[start:end].replace(
+        "crs: [EPSG:4258, EPSG:4326, EPSG:25829, EPSG:25830, EPSG:25831]", "crs: []"
+    )
+    path.write_text(text[:start] + block + text[end:], encoding="utf-8")
+    with pytest.raises(ValueError, match="lists no CRS"):
+        load_settings(config_dir)
+
+
 def test_layers_switched_on_at_start_are_marked_visible(config_dir: Path) -> None:
     edit_map(config_dir, lambda d: d["overlays"].update(visible_at_start=["rivers"]))
     config = map_config(load_settings(config_dir))

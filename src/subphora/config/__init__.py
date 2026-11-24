@@ -69,6 +69,8 @@ class Settings(Section):
             if service.web_mercator and overlay.export is not None:
                 raise ValueError(f"{key}: {service.id} offers EPSG:3857; no export is needed")
             if not service.web_mercator:
+                if not service.crs:
+                    raise ValueError(f"{key}: {service.id} lists no CRS to ask its features in")
                 if overlay.export is None:
                     raise ValueError(f"{key}: {service.id} lacks EPSG:3857 and has no export")
                 export = self._catalogued(key, overlay.export.service, "rest")

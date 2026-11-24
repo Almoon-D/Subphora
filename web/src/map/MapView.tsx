@@ -108,6 +108,9 @@ function applyLayers(map: MaplibreMap, config: MapConfig, layers: MapLayers): vo
     map.setLayoutProperty(overlayId(overlay.id), "visibility", visibility(state?.visible === true));
     map.setPaintProperty(overlayId(overlay.id), "raster-opacity", state?.opacity ?? overlay.opacity);
   }
+  if (map.getLayer(CADASTRE)) {
+    map.setPaintProperty(CADASTRE, "raster-opacity", layers.cadastre.opacity);
+  }
 }
 
 function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification {
@@ -227,8 +230,17 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
       return;
     }
     applyLayers(map, config, layers);
-    setCadastreReached(refreshCadastre(map, config.cadastre, layers));
   }, [layers, loaded, config]);
+
+  // Only switching the cadastre on or off asks Catastro for an image; opacity does not.
+  const cadastreOn = layers.cadastre.visible;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
+      return;
+    }
+    setCadastreReached(refreshCadastre(map, config.cadastre, layersRef.current));
+  }, [cadastreOn, loaded, config]);
 
   useEffect(() => {
     const map = mapRef.current;

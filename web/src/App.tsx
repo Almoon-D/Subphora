@@ -59,7 +59,7 @@ export function App() {
   const [layers, setLayers] = useState<MapLayers | null>(null);
   const [zoom, setZoom] = useState(0);
   const [tapped, setTapped] = useState<Position | null>(null);
-  const [tap, setTap] = useState<Tap>({ state: "none" });
+  const [tap, setTap] = useState<Tap>({ state: "idle" });
   // Only the answers to the latest tap are shown.
   const tapCount = useRef(0);
 
@@ -83,7 +83,7 @@ export function App() {
     const asked = queryableOverlays(config, layers, tapZoom);
     const count = ++tapCount.current;
     if (asked.length === 0) {
-      setTap({ state: "none" });
+      setTap({ state: "nothing" });
       return;
     }
     setTap({ state: "loading" });

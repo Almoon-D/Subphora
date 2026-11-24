@@ -162,7 +162,8 @@ iPhone (decision 0004). Two modes:
 
 Base maps: PNOA orthophoto (default) and IGN maps; no Google maps (decision 0020). Official layers come from their WMS/WMTS services directly,
 or through the server's caching proxy where a service lacks CORS or EPSG:3857 (session 01
-records which).
+records which); a tap on the map asks the server what the switched-on layers hold there,
+and it shows only the fields the layer catalogue allows (decision 0021).
 
 ### 4.2 Server (`src/subphora/`)
 

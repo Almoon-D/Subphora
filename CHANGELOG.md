@@ -7,6 +7,21 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.3.0] - 2026-11-24
+
+- A layer panel beside the map: groundwater bodies, their status and those declared at
+  risk, public water domain, rivers, springs, piezometers and IGME water points; MAGNA
+  geology, faults and the dip of the rock layers, the 1:200,000 lithostratigraphic,
+  permeability and hydrogeological maps; SoilGrids clay and the Andalusian soil map.
+- Each layer switches on and off, has its own opacity, its legend (or a note where the
+  service has none), its source, and says from which zoom it is drawn.
+- The base map switches between the PNOA orthophoto, the IGN map and the IGN map in grey.
+- Tapping the map lists what the switched-on layers hold at that point (a groundwater
+  body's status, a well's depth, a rock unit, a bed's dip), with source and date; only
+  the fields each layer's list allows are ever shown.
+- Layers whose services a browser cannot use directly are fetched and cached by
+  Subphora's server, politely.
+
 ## [0.2.1] - 2026-11-24
 
 - Google Maps is out of the plan: the base maps are the PNOA orthophoto and the IGN maps,

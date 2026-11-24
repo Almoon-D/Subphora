@@ -86,6 +86,7 @@ function tileRequests(mocks: Mocks, overlay: Overlay): string[] {
 }
 
 const map = (page: Page) => page.locator(".map");
+const cadastreImages = (mocks: Mocks) => mocks.urls.filter((url) => url.startsWith("https://ovc.catastro.meh.es/")).length;
 const attribution = (page: Page) => page.locator(".maplibregl-ctrl-attrib");
 
 test("every water and geology layer switches on over the parcel", async ({ page }) => {
@@ -122,9 +123,15 @@ test("a layer's opacity and legend", async ({ page }) => {
   await showParcel(page);
   const item = page.locator('[data-layer="groundwater-status"]');
   await item.getByRole("checkbox").check();
+  await expect.poll(() => cadastreImages(mocks)).toBeGreaterThan(0);
+  const images = cadastreImages(mocks);
   await item.getByRole("slider", { name: /Opacidad/ }).fill("30");
   await expect(map(page)).toHaveAttribute("data-overlays", "groundwater-status:0.3");
   await expect(item.getByText("30 %")).toBeVisible();
+  // Changing a layer asks Catastro for nothing: only moving the map does.
+  await page.getByRole("slider", { name: "Opacidad: Parcelas catastrales" }).fill("50");
+  await page.waitForTimeout(600);
+  expect(cadastreImages(mocks)).toBe(images);
 
   await item.getByText("Leyenda", { exact: true }).click();
   const legend = item.getByRole("img", { name: /Leyenda de Estado cuantitativo/ });
@@ -219,6 +226,8 @@ test("a tap shows what the switched-on layers hold there", async ({ page }) => {
 test("a tap with no layer switched on asks nothing", async ({ page }) => {
   const mocks = await mockEverything(page);
   await showParcel(page);
+  // Before any tap the panel is not shown.
+  await expect(page.getByRole("region", { name: "En el punto tocado" })).toHaveCount(0);
   await map(page).click();
   await expect(page.getByText("Activa una capa con consulta")).toBeVisible();
   expect(mocks.infoRequests).toEqual([]);

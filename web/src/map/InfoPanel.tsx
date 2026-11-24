@@ -3,8 +3,10 @@
 import type { InfoResult } from "../api.ts";
 import { formatDate, lookup, t } from "../i18n/index.ts";
 
+/** Idle: no tap yet (the panel is not shown); nothing: a tap with no layer to ask. */
 export type Tap =
-  | { state: "none" }
+  | { state: "idle" }
+  | { state: "nothing" }
   | { state: "loading" }
   | { state: "done"; results: InfoResult[] };
 
@@ -54,10 +56,13 @@ function Result({ result }: { result: InfoResult }) {
 }
 
 export function InfoPanel({ tap }: { tap: Tap }) {
+  if (tap.state === "idle") {
+    return null;
+  }
   return (
     <section className="info" aria-labelledby="info-heading" aria-live="polite">
       <h2 id="info-heading">{t("info.heading")}</h2>
-      {tap.state === "none" && <p className="note">{t("info.none")}</p>}
+      {tap.state === "nothing" && <p className="note">{t("info.none")}</p>}
       {tap.state === "loading" && <p>{t("info.loading")}</p>}
       {tap.state === "done" && (
         <ul>

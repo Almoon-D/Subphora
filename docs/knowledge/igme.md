@@ -3,7 +3,7 @@
 Host `mapas.igme.es` (ArcGIS Server: `…/gis/services/<folder>/<service>/MapServer/WMSServer`
 for WMS, `…/gis/rest/services/<folder>/<service>/MapServer/<layer>/query` for queries).
 Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
-`igme-lithostrat-wms`, `igme-hydrogeo-wms`, `igme-rest`. Findings observed on 2026-11-24.
+`igme-lithostrat-wms`, `igme-hydrogeo-wms`, `igme-water-points-wms`, `igme-rest`. Findings observed on 2026-11-24.
 
 ## The host
 
@@ -94,6 +94,40 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
 - Some water authorities publish hydrogeological presentations per groundwater body with a
   3D model section (the Junta de Andalucía, 2024). They are documents, not data: session 08
   may cite one for an area, never use it as an input.
+
+## Drawing, legends and feature info (WMS)
+
+- Every ArcGIS layer has a scale range (`MaxScaleDenominator`), below which it draws
+  nothing: MAGNA lithology, contacts and faults 1:283,482 (zoom 11 with 256-pixel tiles),
+  structural measurements 1:94,494 (zoom 13), the 1:200,000 permeability, hydrogeological
+  and lithostratigraphic maps 1:472,470 (zoom 11), the water points 1:23,624 (zoom 15).
+  `(GetCapabilities, 2026-11-24)`
+- Water points as a map: WMS `BasesDatos/IGME_PuntosAgua/MapServer/WMSServer`, layers `0`
+  "Puntos Acuíferos II" (with `Procedencia`) and `1` "Puntos Acuíferos I", EPSG:3857, CORS.
+  `(GetCapabilities, 2026-11-24)`
+- GetFeatureInfo formats: MAGNA and the water points offer `application/geo+json` (fields
+  under their aliases: "descripción litológica", "Dirección de buzamiento", "Ángulo de
+  buzamiento", "Profundidad m"…); the 1:200,000 maps offer `text/xml` (ArcGIS
+  `FeatureInfoResponse`, one `FIELDS` element per feature, the fields as attributes:
+  `Permeabilidad`, `Código`, `Descripción`, `Descripciónlitológica`, `Era`…). Asked for
+  `text/xml`, MAGNA answers HTTP 200 with a `ServiceExceptionReport` "InvalidXslTemplate".
+  `(GetFeatureInfo, 2026-11-24)`
+- A MAGNA bedding measurement read by tap: sheet 610, "Estratificación", dip direction
+  178°, dip 10° (the same values as the REST query). `(GetFeatureInfo, 2026-11-24)`
+- Legends: MAGNA's are lists of symbol codes without words (REST `legend`: 254 lithology
+  colours labelled "1", "2"…; GetLegendGraphic a strip cut at 4,096 pixels): unusable as a
+  legend; a tap reads the unit instead. The 1:200,000 maps name static legend images in
+  their capabilities (`https://mapas.igme.es/servicios/WMS/Legends/…png`): permeability
+  760×530, hydrogeology 893×166, lithostratigraphy 3,648×4,423 (800 KB).
+  `(GetLegendGraphic, GET /MapServer/legend?f=json, 2026-11-24)`
+- The lithostratigraphic map (no EPSG:3857 in its WMS) is drawn in Web Mercator by its
+  ArcGIS REST export (`…/IGME_Litoestratigrafico_200/MapServer/export?bbox=…&bboxSR=3857&imageSR=3857&format=png32&transparent=true&layers=show:0&f=image`),
+  which answers with CORS. Its WMS also answered a GetMap in EPSG:3857 with the same
+  image, although its capabilities omit it: not relied upon. Its GetFeatureInfo works in
+  EPSG:4258 (latitude, longitude order). `(export, GetMap, GetFeatureInfo, 2026-11-24)`
+- `BasesDatos/IGME_QAFI_v4/MapServer/WMSServer` answers "ArcGIS Server Error": the faults
+  database has no WMS; MAGNA's "Contactos y fallas" layer draws the mapped faults.
+  `(GetCapabilities, 2026-11-24)`
 
 ## Licence
 

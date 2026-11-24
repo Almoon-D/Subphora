@@ -1,0 +1,41 @@
+{
+ "type":"FeatureCollection",
+ "features":[ 
+{
+"type": "Feature", "id" : "RedPiezometrica.fid-68893b54_1a20ea93f4d_-42a2", "capaid": "RedPiezometrica",
+ "objectid": 204,
+ "geometry": {"type":"Point","coordinates":[-381998.472217,4758073.09282]},
+ "properties": {
+		"Piezómetro": "https://gis.miteco.gob.es/geoportal-ws/visor-fichas/Default?nombre=PIEZOMETROSSINNIVELES&claves=pie_numpie&valores=3622",
+		
+			"Demarcación Hidrográfica": "Guadiana",
+		
+			"Cód. Piezómetro": "04.04.207",
+		
+			"Cód. Europeo": "ES040ESBT000404207",
+		
+			"Nombre": "-",
+		
+			"Coordenada X (ETRS89)": "462,765",
+		
+			"Coordenada Y (ETRS89)": "4,345,016",
+		
+			"Cota terreno (msnm)": "619.458010",
+		
+			"Profundidad obra (m)": "77",
+		
+			"MASb sobre la que se sitúa el piezómetro": "Mancha Occidental I",
+		
+			"MASb controlada": "Mancha Occidental I",
+		
+			"Unidad Hidrogeológica": "Mancha Occidental",
+		
+			"Provincia": "Ciudad Real",
+		
+			"Municipio": "Villarta de San Juan",
+		
+			"Condición": "Activo"
+ }
+}
+]
+}

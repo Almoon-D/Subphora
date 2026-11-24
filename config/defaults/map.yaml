@@ -1,22 +1,38 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
-# The map the front end draws, served to it by GET /api/map. Each layer names a catalogued
-# service (sources.yaml) that offers EPSG:3857 and CORS: the browser calls it directly, with
-# the attribution the catalogue records.
+# The map the front end draws, served to it by GET /api/map: base maps, the cadastre and the
+# official layers. Each layer names a catalogued service (sources.yaml), whose attribution
+# the map shows.
 
 # The view before any search: all of Spain's mainland (MapLibre zoom levels).
 initial_view: {longitude: -3.7, latitude: 40.0, zoom: 5}
 # Space kept around a parcel when the map zooms to it, in screen pixels.
 parcel_padding_px: 60
 
-# The base map: PNOA orthophoto tiles (WMTS, GoogleMapsCompatible).
-base:
-  service: ign-pnoa-wmts
-  layer: OI.OrthoimageCoverage
-  format: image/jpeg
-  tile_matrix_set: GoogleMapsCompatible
-  tile_size: 256
-  # The deepest zoom requested; MapLibre enlarges the last level beyond it.
-  max_zoom: 19
+# The base maps, one shown at a time; the first is the default. WMTS tiles in the
+# GoogleMapsCompatible (Web Mercator) matrix set, drawn by the browser directly.
+base_maps:
+  - id: pnoa
+    service: ign-pnoa-wmts
+    layer: OI.OrthoimageCoverage
+    format: image/jpeg
+    tile_matrix_set: GoogleMapsCompatible
+    tile_size: 256
+    # The deepest zoom requested; MapLibre enlarges the last level beyond it.
+    max_zoom: 19
+  - id: ign-base
+    service: ign-base-wmts
+    layer: IGNBaseTodo
+    format: image/png
+    tile_matrix_set: GoogleMapsCompatible
+    tile_size: 256
+    max_zoom: 19
+  - id: ign-base-grey
+    service: ign-base-wmts
+    layer: IGNBase-gris
+    format: image/png
+    tile_matrix_set: GoogleMapsCompatible
+    tile_size: 256
+    max_zoom: 19
 
 # The cadastral overlay. Catastro forbids tiled requests (docs/knowledge/catastro.md), so
 # it is one image per view, requested again after the map stops moving.
@@ -31,3 +47,222 @@ cadastre:
   refresh_delay_ms: 400
   # The longest side of the requested image, in pixels.
   max_image_px: 2048
+  # Shown when the map opens; the panel switches it.
+  visible: true
+  opacity: 1.0
+
+# The official water, geology and soil layers (WMS), in the panel's groups and drawing
+# order (later layers are drawn on top). A layer whose service has CORS and EPSG:3857 is
+# drawn by the browser from the service; any other goes through the API's tile proxy.
+#
+# Per layer: min_zoom is the first zoom at which the service draws it (ArcGIS layers carry
+# a scale range: 1:283,482 is zoom 11, 1:94,494 zoom 13, 1:23,624 zoom 15); legend is the
+# service's GetLegendGraphic (wms), the legend image its capabilities name (url) or none
+# (MAGNA's legends are lists of symbol codes); info is how a tap reads the features under
+# it (GetFeatureInfo in info_format, read by parser) and the only fields shown, by the names
+# the service gives them: anything else, protected data included, is never shown.
+overlays:
+  groups: [water, geology, soil]
+  tile_size: 256
+  # The deepest zoom requested; MapLibre enlarges the last level beyond it.
+  max_zoom: 18
+  # A tap asks for the features in an image this many pixels wide, centred on the tap, at
+  # the map's scale: the tolerance a point or line symbol needs to be hit.
+  info_image_px: 21
+  # At most this many features per layer and tap.
+  info_feature_count: 5
+  # The layers switched on when the map opens.
+  visible_at_start: []
+  layers:
+    - id: groundwater-bodies
+      group: water
+      service: miteco-gw-bodies
+      layer: masas_aguasub_2027
+      opacity: 0.5
+      min_zoom: 5
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Código masa de agua", "Nombre masa de agua", "Nombre Demarcación Hidrográfica", "Superficie (km2)", "Formación geológica", "Horizontes"]
+    - id: groundwater-status
+      group: water
+      service: miteco-gw-status-wms
+      layer: estado_masas_aguasub_2027
+      opacity: 0.5
+      min_zoom: 5
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Cód. Masa de agua", "Nombre masa de agua", "Demarcación Hidrográfica", "Estado cuantitativo", "Estado químico", "Información"]
+    - id: groundwater-at-risk
+      group: water
+      service: miteco-gw-at-risk
+      layer: masas_aguasub_riesgo_2027
+      opacity: 0.5
+      min_zoom: 5
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Código de masa", "Nombre masa de agua", "Organismo cuenca", "Tipo de riesgo", "Declaración de riesgo", "Fecha declaración", "Link base legal declaración"]
+    - id: andalusian-groundwater-bodies
+      group: water
+      service: rediam-water-bodies
+      layer: masas_subt_polig_and
+      opacity: 0.5
+      min_zoom: 7
+      legend: {kind: wms}
+      info:
+        info_format: application/vnd.ogc.gml
+        parser: gml
+        fields: [CodMasa, NomMasa, NomDemarc, Area, FormGeo]
+    - id: public-water-domain
+      group: water
+      service: miteco-public-water-domain
+      layer: DPH_Estimado
+      opacity: 0.6
+      min_zoom: 10
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Tipo Zona", "Zona", "Documento", "Organismo", "Información"]
+    - id: rivers
+      group: water
+      service: miteco-rivers
+      layer: redhidrografica_2027
+      opacity: 0.9
+      min_zoom: 8
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Nombre", "Código de masa de agua"]
+    - id: springs
+      group: water
+      service: miteco-springs
+      layer: manantiales
+      opacity: 1.0
+      min_zoom: 9
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Cód. Manantial", "Nombre", "Demarcación hidrográfica", "Condición", "Cota (msnm)", "Nombre MASb controlada", "Municipio", "Manantial"]
+    - id: piezometers
+      group: water
+      service: miteco-piezometers
+      layer: RedPiezometrica
+      opacity: 1.0
+      min_zoom: 9
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["Cód. Piezómetro", "Cód. Europeo", "Demarcación Hidrográfica", "Cota terreno (msnm)", "Profundidad obra (m)", "MASb controlada", "Condición", "Piezómetro"]
+    - id: water-points
+      group: water
+      service: igme-water-points-wms
+      layer: "0"
+      opacity: 1.0
+      min_zoom: 15
+      legend: {kind: wms}
+      info:
+        info_format: application/geo+json
+        parser: geojson
+        # Not the reference flow: a 0 there means unknown, not dry (docs/knowledge/igme.md).
+        fields: ["Id", "Naturaleza", "Profundidad m", "Cota msnm", "Fecha obra", "Uso", "Unidad Hidrogeologica", "Sistema Acuifero", "Municipio"]
+    - id: magna-lithology
+      group: geology
+      service: igme-magna-wms
+      layer: "0"
+      opacity: 0.6
+      min_zoom: 11
+      legend: {kind: none}
+      info:
+        info_format: application/geo+json
+        parser: geojson
+        fields: ["nº de hoja", "unidad cartográfica", "descripción litológica"]
+    - id: lithostratigraphy
+      group: geology
+      service: igme-lithostrat-wms
+      layer: "0"
+      opacity: 0.6
+      min_zoom: 11
+      legend: {kind: url, url: "https://mapas.igme.es/servicios/WMS/Legends/IGME_Litoestratigrafico200_litoestratigrafia.png"}
+      # Its WMS offers no EPSG:3857: the proxy draws it from the same map service's ArcGIS
+      # export, which does.
+      export:
+        service: igme-rest
+        path: /Cartografia_Tematica/IGME_Litoestratigrafico_200/MapServer/export
+        layers: "show:0"
+      info:
+        info_format: text/xml
+        parser: esri_xml
+        fields: ["Descripciónlitológica", "Permeabilidad", "Era", "Sistema", "Serie", "Piso"]
+    - id: permeability
+      group: geology
+      service: igme-permeability-wms
+      layer: "0"
+      opacity: 0.6
+      min_zoom: 11
+      legend: {kind: url, url: "https://mapas.igme.es/servicios/WMS/Legends/IGME_Permeabilidad200.png"}
+      info:
+        info_format: text/xml
+        parser: esri_xml
+        fields: ["Permeabilidad", "Código", "Descripción"]
+    - id: hydrogeology
+      group: geology
+      service: igme-hydrogeo-wms
+      layer: "0"
+      opacity: 0.6
+      min_zoom: 11
+      legend: {kind: url, url: "https://mapas.igme.es/servicios/WMS/Legends/IGME_Hidrogeologico200.png"}
+      info:
+        info_format: text/xml
+        parser: esri_xml
+        fields: ["Código", "Descripción"]
+    - id: magna-faults
+      group: geology
+      service: igme-magna-wms
+      layer: "2"
+      opacity: 1.0
+      min_zoom: 11
+      legend: {kind: none}
+      info:
+        info_format: application/geo+json
+        parser: geojson
+        fields: ["nº de hoja", "Descripción"]
+    - id: magna-dip
+      group: geology
+      service: igme-magna-wms
+      layer: "6"
+      opacity: 1.0
+      min_zoom: 13
+      legend: {kind: none}
+      info:
+        info_format: application/geo+json
+        parser: geojson
+        fields: ["nº de hoja", "Descripción", "Dirección de buzamiento", "Ángulo de buzamiento"]
+    - id: soil-clay
+      group: soil
+      service: soilgrids-wms
+      layer: clay_0-5cm_mean
+      opacity: 0.6
+      min_zoom: 5
+      legend: {kind: wms}
+      # Its GetFeatureInfo answers no value (docs/knowledge/soil.md): no tap.
+      info: null
+    - id: andalusian-soils
+      group: soil
+      service: rediam-soils
+      layer: unidades_edaficas
+      opacity: 0.6
+      min_zoom: 7
+      legend: {kind: wms}
+      info:
+        info_format: application/vnd.ogc.gml
+        parser: gml
+        fields: [Codigo_unidad, Descripcion]

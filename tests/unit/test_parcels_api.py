@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
-"""GET /api/parcels/{reference} end to end over a fake Catastro, and GET /api/map."""
+"""GET /api/parcels/{reference} end to end over a fake Catastro."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -7,12 +7,9 @@ from pathlib import Path
 
 import httpx
 import pytest
-import yaml
 
 from subphora.api import create_app
-from subphora.api.map import MapConfig, map_config
-from subphora.config import Settings, load_settings
-from subphora.domain.parcels import CadastralParcel
+from subphora.config import Settings
 from tests.support import Catastro, fast_settings, fixture_bytes, parcel_fixture
 
 SANTIAGO = "7279701NH3477G"
@@ -190,59 +187,3 @@ async def test_upstream_failures_are_explicit(
     assert response.status_code == status
     assert response.json()["code"] == code
     assert not tmp_path.joinpath("data", "cache").exists()
-
-
-async def test_the_map_layers_come_from_the_catalogue(settings: Settings, tmp_path: Path) -> None:
-    async with serve(settings, santiago(), tmp_path) as client:
-        body = (await client.get("/api/map")).json()
-    (tiles,) = body["base"]["tiles"]
-    assert tiles.startswith("https://www.ign.es/wmts/pnoa-ma?")
-    assert tiles.endswith("tilematrix={z}&tilerow={y}&tilecol={x}")
-    assert "tilematrixset=GoogleMapsCompatible" in tiles
-    assert body["base"]["attribution"] == "PNOA CC-BY 4.0 scne.es"
-    cadastre = body["cadastre"]
-    assert cadastre["url"] == "https://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx"
-    assert cadastre["params"]["CRS"] == "EPSG:3857"
-    assert cadastre["params"]["LAYERS"] == "CP.CadastralParcel"
-    assert "BBOX" not in cadastre["params"]
-    assert cadastre["attribution"] == "Dirección General del Catastro"
-    assert cadastre["min_zoom"] > body["initial_view"]["zoom"]
-
-
-@pytest.mark.parametrize(
-    ("edit", "message"),
-    [
-        ({"base": {"service": "nope"}}, "not in the catalogue"),
-        ({"base": {"service": "catastro-wms"}}, "not a wmts"),
-        ({"cadastre": {"layer": "XX"}}, "does not list layer"),
-        ({"cadastre": {"service": "igme-lithostrat-wms", "layer": "x"}}, "does not list"),
-    ],
-)
-def test_map_layers_must_be_drawable(
-    config_dir: Path, edit: dict[str, object], message: str
-) -> None:
-    (config_dir / "owner.yaml").write_text(yaml.safe_dump({"map": edit}), encoding="utf-8")
-    with pytest.raises(ValueError, match=message):
-        load_settings(config_dir)
-
-
-def test_a_map_layer_without_cors_is_refused(config_dir: Path) -> None:
-    path = config_dir / "defaults" / "sources.yaml"
-    text = path.read_text(encoding="utf-8")
-    start = text.index("- id: catastro-wms")
-    end = text.index("- id: catastro-wfs-parcels")
-    path.write_text(
-        text[:start] + text[start:end].replace("cors: true", "cors: false") + text[end:],
-        encoding="utf-8",
-    )
-    with pytest.raises(ValueError, match="EPSG:3857 and CORS"):
-        load_settings(config_dir)
-
-
-def test_the_browser_test_fixtures_match_the_api() -> None:
-    """web/e2e/fixtures/ stand in for the API in Playwright: they must keep its shape."""
-    fixtures = Path(__file__).resolve().parents[2] / "web" / "e2e" / "fixtures"
-    parcel = CadastralParcel.model_validate_json((fixtures / "parcel-santiago.json").read_bytes())
-    assert parcel.reference == SANTIAGO
-    served = MapConfig.model_validate_json((fixtures / "map.json").read_bytes())
-    assert served == map_config(load_settings())

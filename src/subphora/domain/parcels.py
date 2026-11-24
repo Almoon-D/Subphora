@@ -4,9 +4,10 @@
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import AwareDatetime, Field
+from pydantic import Field
 
 from subphora.domain import DomainModel
+from subphora.domain.provenance import Provenance
 
 # GeoJSON positions are (longitude, latitude) in EPSG:4326 (RFC 7946).
 type Position = tuple[float, float]
@@ -44,15 +45,6 @@ class LocalPoint(DomainModel):
     crs: str
     x: float
     y: float
-
-
-class Provenance(DomainModel):
-    """Where a piece of data came from and when it was fetched from its publisher."""
-
-    service_id: str
-    publisher: str
-    attribution: str
-    retrieved_at: AwareDatetime
 
 
 class CadastralParcel(DomainModel):

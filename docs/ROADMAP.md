@@ -8,7 +8,8 @@
 | 01 | `docs/sessions/done/01-verify-sources.md` | Opus 5.5, high | done |
 | 02 | `docs/sessions/done/02-first-slice.md` | Opus 5.5, high | done |
 | 03 | `docs/sessions/done/03-official-layers.md` | Opus 5.5, high | done |
-| 03b | `docs/sessions/03b-regional-detail.md` | Opus 5.5, high | next |
+| 03b | `docs/sessions/done/03b-regional-detail.md` | Opus 5.5, high | done |
+| 03ba | `docs/sessions/03ba-regional-evidence.md` | Opus 5.5, high | next |
 | 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
@@ -52,6 +53,16 @@
   centre is a JavaScript app). Queued by 01; session 06.
 - VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
   cloud; read it before session 15 uses EGMS. Queued by 01.
+- VERIFY-LIVE(regional-hosts-unreached): the spatial data services of Aragón, Asturias,
+  Castilla y León, Castilla-La Mancha, Extremadura, Galicia, Murcia, La Rioja and Ceuta, the
+  ACA and five basin authorities did not answer from the cloud (resets, TLS failures, a
+  Cloudflare challenge); find their geology, soil and water endpoints from a browser in
+  Spain and survey them under decision 0023 (`docs/knowledge/regional-layers.md`). Queued
+  by 03b; session 03ba or the owner.
+- VERIFY-LIVE(national-editions): GEODE, the IGME water points, permeability and
+  lithostratigraphy and the MITECO springs, piezometers and public water domain state no
+  edition, so no regional layer can qualify over them (decision 0024). Queued by 03b;
+  session 03ba.
 - VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
   until the owner's key exists (session 15). Queued by 01.
 
@@ -88,8 +99,16 @@
   puts the whole API behind the owner's access control before it is exposed. (03)
 - SoilGrids gives no value on a tap; the parcel view (session 06) reads clay and sand from
   its WCS at the parcel, everywhere in Spain alike. (03)
-- Regional layers wait for session 03b, which surveys every region and adds those that
-  qualify under decision 0023. (03)
+- Regional layers: three qualify and are drawn (03b); the services the survey could not
+  judge yet are session 03ba's. (03, 03b)
+- The Navarra soil map covers only the municipalities surveyed so far (IDENA's index
+  layer): elsewhere in Navarra the regional layer draws nothing, SoilGrids shows beneath,
+  and a tap says the regional map has nothing there. (03b)
+- A regional layer is drawn over the national one at the theme's opacity, so where the
+  regional is partly transparent both show; a later session may hide the national layer
+  inside the area once it is sure the regional one covers it. (03b)
+- The file cache keeps each area's rounded boundary (up to ~1 MB) for 30 days: the size cap
+  of session 13 covers it too. (03b)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -97,6 +116,21 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 03b — Regional detail over the national layers (2026-11-24, version 0.4.0)
+
+- Landed: the survey of every community, Ceuta, Melilla and basin authority, with a
+  verdict per theme (`docs/knowledge/regional-layers.md`); the rule as data and checked when
+  the settings load (`regional.yaml`); official boundaries from the IGN and MITECO on one
+  grid (`/api/areas/{id}`); regional tiles clipped in the browser; taps regional first with
+  the national fallback, naming the source, scale and date; the GetMap proxy and GML parser
+  back for REDIAM; decision 0024. Qualify: Navarra soils 1:25,000, Catalonia
+  hydrogeology 1:25,000, Andalusian bodies under preventive control.
+- Deferred: the services with evidence missing (verdict E) to 03ba.
+- Live (`make dev`): one tap per community, Ceuta and Melilla on soils, hydrogeology and
+  bodies at risk; the regional layer answers in Navarra, Catalonia and Dalías, the national
+  one elsewhere; ICGC clipped at the Aragón border.
+- VERIFY-LIVE: regional-hosts-unreached, national-editions.
 
 ### 03 — Owner ruling: regional detail, national baseline (2026-11-24, version 0.3.2)
 

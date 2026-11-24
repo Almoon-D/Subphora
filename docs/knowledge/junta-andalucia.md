@@ -16,6 +16,14 @@ ids: `rediam-water-bodies` (here) and `rediam-soils` (see `soil.md`). Findings o
   directly; the server's proxy (session 03) must. `(GetCapabilities with Origin, 2026-11-24)`
 - `REDIAM_redes_control_andalucia_phc_2022_27` (a name found in REDIAM bulletins) returns an
   HTML page, not capabilities: the name is wrong or retired. `(GetCapabilities, 2026-11-24)`
+- GetFeatureInfo formats: `text/html`, `application/vnd.ogc.gml`, `text/plain`. The GML
+  is MapServer's `msGMLOutput`: per layer a `<layer>_feature` element whose children are
+  the column names (`CodMasa`, `NomMasa`, `NomDemarc`, `Area`, `FormGeo`… for the
+  groundwater bodies; `Codigo_unidad`, `Descripcion` for the soil units). Outside
+  Andalusia the answer is an empty `msGMLOutput`. `(GetFeatureInfo, 2026-11-24)`
+- GetLegendGraphic works with `SLD_VERSION=1.1.0` (MapServer requires it in WMS 1.3.0);
+  the soil legend is 715×1,605 pixels. GetMap 256-pixel tiles in EPSG:3857 work through
+  the server (session 03's proxy). `(GetLegendGraphic, GetMap, 2026-11-24)`
 - IDEAndalucía services (`https://www.ideandalucia.es/services/…`, e.g. `toporaster10`)
   answer with CORS `*`. Not catalogued: nothing needs them yet. `(GetCapabilities, 2026-11-24)`
 

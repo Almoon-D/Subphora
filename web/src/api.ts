@@ -24,16 +24,41 @@ export interface Parcel {
   sources: Provenance[];
 }
 
+export interface BaseMap {
+  id: string;
+  service_id: string;
+  tiles: string[];
+  tile_size: number;
+  max_zoom: number;
+  attribution: string;
+}
+
+/** An official layer: tiles from its service, or the API's relative proxy route. */
+export interface Overlay {
+  id: string;
+  group: string;
+  service_id: string;
+  tiles: string[];
+  proxied: boolean;
+  tile_size: number;
+  min_zoom: number;
+  max_zoom: number;
+  opacity: number;
+  visible: boolean;
+  /** Null: the service has no legend a person can read. */
+  legend_url: string | null;
+  /** Whether a tap asks the API what lies under it. */
+  feature_info: boolean;
+  attribution: string;
+  /** ISO 3166 codes of the areas the service covers. */
+  coverage: string[];
+}
+
 export interface MapConfig {
   initial_view: { longitude: number; latitude: number; zoom: number };
   parcel_padding_px: number;
-  base: {
-    service_id: string;
-    tiles: string[];
-    tile_size: number;
-    max_zoom: number;
-    attribution: string;
-  };
+  /** The first is the default. */
+  base_maps: BaseMap[];
   cadastre: {
     service_id: string;
     url: string;
@@ -42,7 +67,18 @@ export interface MapConfig {
     refresh_delay_ms: number;
     max_image_px: number;
     attribution: string;
+    visible: boolean;
+    opacity: number;
   };
+  overlay_groups: string[];
+  overlays: Overlay[];
+}
+
+/** The allowed fields of one layer's features under a tapped point. */
+export interface FeatureInfo {
+  layer_id: string;
+  features: { fields: { name: string; value: string }[] }[];
+  source: Provenance;
 }
 
 /** Why a lookup failed: the server's codes, then the two the browser adds. */
@@ -93,4 +129,45 @@ export async function fetchMapConfig(fetchFn: Fetch = fetch): Promise<MapConfig>
     throw new Error(`GET /api/map answered ${String(response.status)}`);
   }
   return (await response.json()) as MapConfig;
+}
+
+/** Why a tap on a layer got no answer: the server's codes, then the two the browser adds. */
+export const INFO_FAILURES = ["upstream_timeout", "upstream_error", "network", "unexpected"] as const;
+
+export type InfoFailure = (typeof INFO_FAILURES)[number];
+
+export type InfoResult =
+  | { ok: true; layerId: string; info: FeatureInfo }
+  | { ok: false; layerId: string; failure: InfoFailure };
+
+function isInfoFailure(code: unknown): code is InfoFailure {
+  return typeof code === "string" && (INFO_FAILURES as readonly string[]).includes(code);
+}
+
+/** What the layer has at (lon, lat), asked at the map's zoom. Never throws. */
+export async function fetchFeatureInfo(
+  layerId: string,
+  lon: number,
+  lat: number,
+  zoom: number,
+  fetchFn: Fetch = fetch,
+): Promise<InfoResult> {
+  const query = new URLSearchParams({ lon: lon.toFixed(6), lat: lat.toFixed(6), zoom: zoom.toFixed(2) });
+  let response: Response;
+  try {
+    response = await fetchFn(`/api/layers/${encodeURIComponent(layerId)}/info?${query.toString()}`);
+  } catch {
+    return { ok: false, layerId, failure: "network" };
+  }
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, layerId, failure: "unexpected" };
+  }
+  if (response.ok) {
+    return { ok: true, layerId, info: body as FeatureInfo };
+  }
+  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
+  return { ok: false, layerId, failure: isInfoFailure(code) ? code : "unexpected" };
 }

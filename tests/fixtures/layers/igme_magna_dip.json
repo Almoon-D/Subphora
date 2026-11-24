@@ -1,0 +1,21 @@
+
+  {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "nº de hoja": "610",
+          "identificador": "700909",
+          "Descripción": "Estratificación",
+          "Dirección de buzamiento": "178",
+          "Ángulo de buzamiento": "10",
+          "Shape": "Polilínea",
+          "OBJECTID": "133457"
+        },
+        "layerName": "Medidas estructurales MAGNA50"	
+      }
+    ]
+  }
+  

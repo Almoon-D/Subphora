@@ -2,7 +2,7 @@
 
 Hosts `maps.isric.org` (SoilGrids), `www.juntadeandalucia.es` (REDIAM soil map),
 `esdac.jrc.ec.europa.eu` (European Soil Database). Catalogue ids: `soilgrids-wcs`,
-`rediam-soils`, `esdb`. Findings observed on 2026-11-24.
+`soilgrids-wms`, `rediam-soils`, `esdb`. Findings observed on 2026-11-24.
 
 ## Options
 
@@ -15,6 +15,12 @@ Hosts `maps.isric.org` (SoilGrids), `www.juntadeandalucia.es` (REDIAM soil map),
 - SoilGrids WCS: `https://maps.isric.org/mapserv?map=/map/<property>.map` (e.g. `clay.map`),
   WCS 2.0.1, coverages `clay_0-5cm_mean`, `clay_0-5cm_Q0.05`, `clay_0-5cm_Q0.5`,
   `clay_0-5cm_Q0.95`, … (30 per property); CORS `*`. `(GetCapabilities, 2026-11-24)`
+- SoilGrids WMS at the same URL (`…mapserv?map=/map/clay.map`, `SERVICE=WMS`): 31 layers
+  (`clay_0-5cm_mean`, the quantiles, `clay_0-5cm_uncertainty`…), EPSG:3857, CORS `*`,
+  GetLegendGraphic per layer; GetMap answers an opaque RGB PNG. Its GetFeatureInfo answers
+  **no value** at a point in Spain (an empty feature in EPSG:4326, "Search returned no
+  results" in EPSG:3857): values are read from the WCS, not by tapping the map.
+  `(GetCapabilities, GetMap, GetFeatureInfo, 2026-11-24)`
 - The SoilGrids REST point API `https://rest.isric.org/soilgrids/v2.0/properties/query`
   answered **503** ("Service Temporarily Unavailable"). Do not depend on it; the WCS works.
   `(GET /properties/query, 2026-11-24)`

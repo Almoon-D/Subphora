@@ -346,6 +346,23 @@ services:
     knowledge: docs/knowledge/igme.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
 
+  - id: igme-water-points-wms
+    name: IGME water-point inventory (WMS)
+    publisher: Instituto Geológico y Minero de España (IGME-CSIC)
+    kind: wms
+    coverage: [ES]
+    base_url: https://mapas.igme.es/gis/services/BasesDatos/IGME_PuntosAgua/MapServer/WMSServer
+    # WMS name 0: "Puntos Acuíferos II", the water points with their origin.
+    layers: ["0"]
+    crs: [EPSG:3857, EPSG:4258, EPSG:4326, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: true
+    licence: "IGME generic licence (2022): free reuse, commercial or not, with attribution"
+    attribution: "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)"
+    terms_url: https://info.igme.es/media/Pdfs/LicUsoIGME_GENERICA_2022.pdf
+    knowledge: docs/knowledge/igme.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
   - id: igme-rest
     name: IGME map services (ArcGIS REST queries)
     publisher: Instituto Geológico y Minero de España (IGME-CSIC)
@@ -462,6 +479,54 @@ services:
     coverage: [ES]
     base_url: https://gis.miteco.gob.es/geoserver/agua/demarhidro_2027/wms
     layers: [demarhidro_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-gw-status-wms
+    name: Quantitative status of groundwater bodies, 2022-2027 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/estado_masas_aguasub_2027/wms
+    layers: [estado_masas_aguasub_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-rivers
+    name: River network of the basin plans 2022-2027 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/redhidrografica_2027/wms
+    layers: [redhidrografica_2027]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-springs
+    name: Spring gauging network (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/manantiales/wms
+    layers: [manantiales]
     crs: [EPSG:3857, EPSG:4258, EPSG:25830]
     web_mercator: true
     cors: true
@@ -673,6 +738,22 @@ services:
     base_url: https://maps.isric.org/mapserv?map=/map/clay.map
     layers: [clay_0-5cm_mean, clay_5-15cm_mean]
     crs: [EPSG:4326, ESRI:54052]
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0"
+    terms_url: https://www.isric.org/about/data-policy
+    knowledge: docs/knowledge/soil.md
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 31536000}
+
+  - id: soilgrids-wms
+    name: SoilGrids 250 m, clay content (WMS)
+    publisher: ISRIC World Soil Information
+    kind: wms
+    coverage: [ES]
+    base_url: https://maps.isric.org/mapserv?map=/map/clay.map
+    layers: [clay_0-5cm_mean]
+    crs: [EPSG:3857, EPSG:4326]
+    web_mercator: true
     cors: true
     licence: CC BY 4.0
     attribution: "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0"

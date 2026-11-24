@@ -21,6 +21,8 @@ app analyses.
    CartoCiudad; coordinate parsing and conversion with `pyproj`; a drawn polygon accepted as
    an area of interest. One domain type, "area of interest", whatever its origin.
 3. A short list of the areas selected in this browser session, to switch between them.
+   A click on the map already asks the switched-on layers what lies there (session 03,
+   `web/src/App.tsx` `onTap`): while drawing, the click belongs to the drawing.
 4. Tests: every parser's failure branches (bad formats, out-of-Spain coordinates, wrong UTM
    zone), mocked SIGPAC and CartoCiudad responses, and the drawing flow in Playwright.
 

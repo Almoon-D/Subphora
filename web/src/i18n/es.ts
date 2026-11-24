@@ -2,7 +2,7 @@
 // The Spanish catalogue: every string the page shows. `{name}` is replaced by `t`.
 export const es = {
   "app.title": "Subphora",
-  "app.tagline": "Parcela catastral sobre la ortofoto PNOA",
+  "app.tagline": "Mapa de la parcela y de las capas oficiales",
   "app.loading": "Cargando el mapa…",
   "app.mapUnavailable": "No se ha podido cargar la configuración del mapa. Comprueba que el servidor de Subphora está en marcha.",
 
@@ -29,6 +29,69 @@ export const es = {
   "parcel.sources": "Fuente: {sources}, consultado el {date}.",
 
   "map.cadastreHidden": "Acerca el mapa para ver las parcelas catastrales.",
+
+  "layers.heading": "Capas",
+  "layers.base": "Mapa base",
+  "layers.cadastre": "Catastro",
+  "layers.opacity": "Opacidad: {title}",
+  "layers.opacityValue": "{value} %",
+  "layers.fromZoom": "Visible desde el zoom {zoom}: acerca el mapa.",
+  "layers.coverage": "Solo en: {areas}.",
+  "layers.legend": "Leyenda",
+  "layers.legendAlt": "Leyenda de {title}",
+  "layers.legendOpen": "Abrir la leyenda a tamaño completo",
+  "layers.noLegend": "El servicio no publica una leyenda legible; toca el mapa para leer cada unidad.",
+  "layers.source": "Fuente: {attribution}",
+  "layers.noInfo": "Sin consulta al tocar: el servicio no devuelve valores.",
+
+  "base.pnoa": "Ortofoto PNOA",
+  "base.ign-base": "Mapa IGN",
+  "base.ign-base-grey": "Mapa IGN en gris",
+
+  "group.water": "Agua",
+  "group.geology": "Geología",
+  "group.soil": "Suelos",
+
+  "layer.cadastre": "Parcelas catastrales",
+  "layer.groundwater-bodies": "Masas de agua subterránea (2022-2027)",
+  "layer.groundwater-status": "Estado cuantitativo de las masas subterráneas",
+  "layer.groundwater-at-risk": "Masas subterráneas declaradas en riesgo",
+  "layer.andalusian-groundwater-bodies": "Masas de agua subterránea de Andalucía (REDIAM)",
+  "layer.public-water-domain": "Dominio público hidráulico cartográfico y zonas asociadas",
+  "layer.rivers": "Ríos",
+  "layer.springs": "Manantiales (red de control)",
+  "layer.piezometers": "Piezómetros (red oficial)",
+  "layer.water-points": "Puntos de agua del IGME (pozos, sondeos, manantiales)",
+  "layer.magna-lithology": "Geología MAGNA 1:50.000",
+  "layer.lithostratigraphy": "Mapa litoestratigráfico 1:200.000",
+  "layer.permeability": "Permeabilidad 1:200.000",
+  "layer.hydrogeology": "Mapa hidrogeológico 1:200.000",
+  "layer.magna-faults": "Contactos y fallas (MAGNA)",
+  "layer.magna-dip": "Buzamiento y dirección de las capas (MAGNA)",
+  "layer.soil-clay": "Arcilla del suelo, 0-5 cm (SoilGrids, celdas de 250 m)",
+  "layer.andalusian-soils": "Mapa de suelos de Andalucía 1:400.000",
+
+  "area.ES-AN": "Andalucía",
+
+  "field.CodMasa": "Código de masa",
+  "field.NomMasa": "Nombre de la masa",
+  "field.NomDemarc": "Demarcación",
+  "field.Area": "Superficie (km²)",
+  "field.FormGeo": "Formación geológica",
+  "field.Codigo_unidad": "Unidad edáfica",
+  "field.Descripcion": "Descripción",
+  "field.Descripciónlitológica": "Descripción litológica",
+  "field.nº de hoja": "Hoja MAGNA",
+
+  "info.heading": "En el punto tocado",
+  "info.loading": "Consultando las capas…",
+  "info.none": "Activa una capa con consulta (y acerca el mapa hasta su zoom) para ver qué hay en el punto tocado.",
+  "info.empty": "Nada de esta capa en este punto.",
+  "info.source": "Fuente: {attribution}, consultado el {date}.",
+  "info.error.upstream_timeout": "El servicio no ha respondido a tiempo.",
+  "info.error.upstream_error": "El servicio ha respondido con un error.",
+  "info.error.network": "No se puede conectar con el servidor de Subphora.",
+  "info.error.unexpected": "El servidor ha dado una respuesta inesperada.",
 } as const;
 
 export type MessageKey = keyof typeof es;

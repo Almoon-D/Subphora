@@ -7,8 +7,8 @@
 | 00 | `docs/sessions/done/00-plan.md` | Opus 5.5 | done |
 | 01 | `docs/sessions/done/01-verify-sources.md` | Opus 5.5, high | done |
 | 02 | `docs/sessions/done/02-first-slice.md` | Opus 5.5, high | done |
-| 03 | `docs/sessions/03-official-layers.md` | Opus 5.5, high | next |
-| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
+| 03 | `docs/sessions/done/03-official-layers.md` | Opus 5.5, high | done |
+| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | next |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
 | 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
@@ -78,6 +78,12 @@
   owner ruling). (02)
 - A parcel larger than the view at zoom 15 (big rustic ones) shows no cadastral layer until
   the owner zooms in; the hint says so. (02)
+- The lithostratigraphic legend is a 3,648×4,423 image (800 KB) shown scaled in the panel
+  with a link to full size; a better legend (by unit, from the tap) can come with the
+  parcel view (session 06). (03)
+- A proxied layer's tiles wait for the host's politeness (REDIAM: 2 at a time, 0.5 s
+  apart), so a first view of an Andalusian layer fills in over a few seconds; the cache
+  makes the next one immediate. (03)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -85,6 +91,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 03 — Official water and geology layers (2026-11-24, version 0.3.0)
+
+- Landed: the layer catalogue in `map.yaml` (3 base maps, the cadastre, 17 water, geology
+  and soil layers) served by `/api/map`; `/api/layers/{id}/tiles` (proxy for REDIAM and the
+  lithostratigraphic map, via its ArcGIS export) and `/api/layers/{id}/info` (GetFeatureInfo
+  in GeoJSON, ArcGIS XML or MapServer GML, field allowlist); the panel with toggles,
+  opacity, legends, zoom and coverage notes, sources; the base-map switch; tap results;
+  5 catalogue entries (MITECO status WMS, rivers, springs; IGME water points; SoilGrids
+  WMS); decision 0021.
+- Live (`make dev`): every layer drawn and tapped over real services; MAGNA dip read by tap.
+  `DPH_Estimado` draws "Zona de Policía" polygons where the SNCZI has studied the river (the
+  prompt said no service draws it); SoilGrids' GetFeatureInfo answers no value; MAGNA's
+  legends are symbol codes.
+- Prompt edits: 04 (a map click already belongs to the tap; drawing must take it).
+- VERIFY-LIVE: none new.
 
 ### 02 — Owner rulings: TypeScript 7.1, no Google Maps (2026-11-24, version 0.2.1)
 

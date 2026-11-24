@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0021](0021-layer-catalogue-proxy-and-taps.md) | Official layers: one catalogue, a tile proxy only where needed, taps through the API | accepted |
 | [0020](0020-no-google-maps.md) | No Google Maps: PNOA and the IGN maps are the base maps | accepted |
 | [0019](0019-typescript-7-1-for-eslint.md) | TypeScript 7.1 for ESLint as soon as it is stable; no TypeScript 6 | accepted |
 | [0018](0018-parcel-lookup-route.md) | Parcel lookup: WFS in EPSG:4326, places from the non-protected data service | accepted |

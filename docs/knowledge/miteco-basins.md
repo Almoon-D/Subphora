@@ -1,8 +1,9 @@
 # MITECO and the basin authorities
 
 Host `gis.miteco.gob.es` (GeoServer: `https://gis.miteco.gob.es/geoserver/agua/<service>/wms`,
-WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-status`,
-`miteco-gw-at-risk`, `miteco-piezometers`, `miteco-public-water-domain`,
+WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-status`
+(WFS), `miteco-gw-status-wms`, `miteco-gw-at-risk`, `miteco-piezometers`,
+`miteco-public-water-domain`, `miteco-rivers`, `miteco-springs`,
 `miteco-river-basin-districts`. Findings observed on 2026-11-24.
 
 ## The service directory
@@ -66,13 +67,35 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
   (`ZI_Laminas_ZFP` preferential-flow zone, `Zi_laminas_q10/q50/q100/q500`) and vector
   tiles `https://wmts.mapama.gob.es/sig/tiles/DPHCartografico/{z}/{x}/{y}` (not catalogued).
   `(GET agua.html, 2026-11-24)`
-- No service draws the **zona de policía** itself. By law it is a 100 m band measured
-  horizontally from the channel (TRLA art. 6.1.b; RDPH art. 9), widened where the
-  preferential-flow zone is wider: session 09 derives it as a buffer of the DPH line plus
-  the `ZI_Laminas_ZFP` polygons, and says so (see `legal-groundwater.md`).
+- `DPH_Estimado` draws, **for the stretches the SNCZI has studied**, three kinds of
+  polygon told apart by `Tipo Zona`: "DPH Cartográfico", "Zona de Servidumbre" and **"Zona
+  de Policía"** (its legend lists the three; a tap on the Azuer near Manzanares returns one
+  of each, study "Sistema Nacional de Cartografía de Zonas Inundables", 2023). Elsewhere no
+  service draws the zona de policía. By law it is a 100 m band measured horizontally from
+  the channel (TRLA art. 6.1.b; RDPH art. 9), widened where the preferential-flow zone is
+  wider: where `DPH_Estimado` has no polygon, session 09 derives it as a buffer of the
+  channel plus the `ZI_Laminas_ZFP` polygons, and says which it used (see
+  `legal-groundwater.md`). `(GetFeatureInfo, GetLegendGraphic, 2026-11-24)`
+- `redhidrografica_2027` (rivers of the plans, lines with `Nombre` and the water-body code)
+  and `manantiales` (the spring gauging network, "Red Hidrométrica de Manantiales": code,
+  name, district, condition, elevation, controlled groundwater body, municipality, a link
+  to its record) are WMS with EPSG:3857 and CORS `*`. `(GetCapabilities, 2026-11-24)`
 - Recharge and climate grids of the hydrological evaluation (`rechid_recarga`,
   `rechid_precipitacion`…), drainage directions `MDD25` and accumulation `Sup25x25` (25 m)
   are also served. `(GET agua.html, 2026-11-24)`
+
+## Feature info (GetFeatureInfo)
+
+- Every MITECO WMS answers GetFeatureInfo as GeoJSON (`INFO_FORMAT=application/json`), its
+  properties named by **readable Spanish aliases**, not the column names: "Nombre masa de
+  agua", "Estado cuantitativo", "Cód. Piezómetro", "Profundidad obra (m)"… The column names
+  of the WFS (`nom_masa`, `est_cu_desc`) do not appear. `(GetFeatureInfo, 2026-11-24)`
+- Numbers come as text in English format ("2,004.27", "619.458010"); dates of the at-risk
+  declarations as "Dec 22, 2014, 12:00:00 AM". Several services add a link to MITECO's
+  record viewer (`…/geoportal-ws/visor-fichas/Default?nombre=…`). `(GetFeatureInfo, 2026-11-24)`
+- The answer carries each feature's full geometry: 1 KB for a piezometer, 45 KB for a
+  groundwater body, 254 KB for three `DPH_Estimado` polygons. `(GetFeatureInfo, 2026-11-24)`
+- No scale range on any of these layers: they draw at every zoom. `(GetCapabilities, 2026-11-24)`
 
 ## Basin authorities
 

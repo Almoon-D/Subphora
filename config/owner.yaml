@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 # Owner overrides: only the keys that differ from config/defaults/. Example:
 # core:
 #   log_level: DEBUG

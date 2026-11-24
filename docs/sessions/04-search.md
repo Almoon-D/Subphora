@@ -32,3 +32,5 @@ app analyses.
 
 - `make check` is green and in `make dev` each search type and a drawn polygon land on the map
   as the selected area.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

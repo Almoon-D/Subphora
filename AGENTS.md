@@ -70,7 +70,7 @@ enforces it. The session that first touches a rule's area adds its enforcement a
    disclaimer; "not evaluated" and "rules not loaded" are explicit states, never a blank.
 3. **No measurement without the safety checklist.** Any code that starts a current-injecting
    measurement or imports its readings refuses unless a passed checklist record is attached.
-   No instrument code exists before session 15 decides one.
+   No instrument code exists before session 16 decides one.
 4. **Official APIs and terms only; no secrets in the repository.** The HTTP client calls only
    hosts in the source catalogue (`config/defaults/sources.yaml`), each with its terms recorded
    in `docs/knowledge/`; anything else is refused. Google imagery is never cached or stored
@@ -86,9 +86,14 @@ enforces it. The session that first touches a rule's area adds its enforcement a
 
 - **Current toolchains.** The newest stable Python (one place: `.python-version`, mirrored in
   `requires-python`), the newest uv (`make setup` updates it) and dependencies at their
-  newest compatible release. A project that needs another language or runtime (Node,
-  Rust, a database, a Docker base image) takes its newest stable or LTS release, pins it in
-  one file, and adds its ecosystem to `.github/dependabot.yml` in the same PR.
+  newest release, even before the ecosystem fully catches up (decision 0011). Another
+  language or runtime (Node, a database, a Docker base image) takes its newest release (Node
+  27 here, then 28), pins it in one file, and adds its ecosystem to
+  `.github/dependabot.yml` in the same PR. A dependency with no release for the newest
+  toolchain is a stop condition reported in the PR, not a silent downgrade.
+- **Copyright notice.** Every file that can hold a comment has
+  `Copyright (c) 2026 Almoon-D. All rights reserved.` as its first or last line;
+  `tests/unit/test_copyright.py` enforces it and holds the exemption list.
 - **Nothing hardcoded.** Values live in `config/` (expert defaults in `config/defaults/`,
   owner overrides in `config/owner.yaml`). Every key has a consumer; no magic numbers on a
   critical path.
@@ -202,9 +207,9 @@ make prompt S=00           # the prompt for session 00 (or 01, maintenance…)
 uv run subphora --help
 ```
 
-
-Copyright (c) 2027 Almoon-D. All rights reserved.
 ## Layout
 
 `src/subphora/` per `docs/MASTER_PLAN.md` → Layout · `config/` · `tests/` · `docs/` ·
 `scripts/`.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -10,3 +10,5 @@
   the phone); Svelte or plain TypeScript (less tooling for the field UI); PostGIS (one more
   server to run and back up for a handful of users).
 - Risk: iOS may evict storage of an unused PWA: field data is synced and exportable.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

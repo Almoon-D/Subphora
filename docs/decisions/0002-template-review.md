@@ -9,3 +9,5 @@
 - Rejected: dropping pytest-xdist (≈1 s slower on a tiny suite, a third faster on a grown
   one); trimming AGENTS.md to ~600 words (≈2k tokens a session, small next to the work);
   title-only squash messages (owner's choice: title and description).
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -7,7 +7,8 @@ Model and effort: Opus 5.5, high.
 The map shows the official layers as a switchable panel with opacity and legend: water
 (groundwater bodies and status, water points, piezometers, rivers, springs, public water
 domain and zona de policía), geology (MAGNA 1:50,000, permeability 1:200,000,
-hydrogeological map, faults), and the base maps (PNOA, IGN, and Google when a key is set).
+hydrogeological map, faults, the dip and strike of rock layers where session 01 found them in
+digital form), the soil map chosen in session 01, and the base maps (PNOA, IGN, and Google when a key is set).
 
 ## Read
 
@@ -33,9 +34,11 @@ hydrogeological map, faults), and the base maps (PNOA, IGN, and Google when a ke
 
 ## DO NOT BUILD
 
-- Other search types; the model; the legal filter; satellite or climate layers (session 14).
+- Other search types; the model; the legal filter; satellite or climate layers (session 15).
 
 ## Done when
 
 - `make check` is green and in `make dev` the owner can switch every water and geology layer
   on the parcel from session 02, change opacity, read the legend and tap a feature.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

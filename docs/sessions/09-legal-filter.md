@@ -1,4 +1,4 @@
-# Session 08 — Legal filter
+# Session 09 — Legal filter
 
 Model and effort: Opus 5.5, high.
 
@@ -11,7 +11,7 @@ with sources, dates and the "guidance, not legal advice" disclaimer.
 
 ## Read
 
-- `docs/MASTER_PLAN.md` § 4.4.
+- `docs/MASTER_PLAN.md` § 4.5.
 - `docs/knowledge/legal-groundwater.md` and the MITECO and basin files.
 
 ## Build
@@ -36,3 +36,5 @@ with sources, dates and the "guidance, not legal advice" disclaimer.
 
 - `make check` is green and in `make dev` the owner's test area shows the authority, body
   status, applicable rules and verdict with sources and dates.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

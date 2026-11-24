@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 [build-system]
 requires = ["hatchling>=1.33"]
 build-backend = "hatchling.build"
@@ -5,7 +6,7 @@ build-backend = "hatchling.build"
 [project]
 name = "subphora"
 version = "0.0.0"
-description = "Estimates where groundwater is most likely to be found anywhere in Spain, from public data and field evidence, with its uncertainty and legal status, for a family farming company."
+description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"
 requires-python = ">=3.15,<3.16"
@@ -36,6 +37,10 @@ dev = [
     "ruff>=0.14",
     "types-PyYAML>=6.0.12",
 ]
+
+# The notice every file carries (decision 0011); tests/unit/test_copyright.py enforces it.
+[tool.subphora]
+copyright_notice = "Copyright (c) 2026 Almoon-D. All rights reserved."
 
 [tool.uv]
 python-preference = "only-managed"

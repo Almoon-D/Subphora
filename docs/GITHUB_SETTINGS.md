@@ -169,3 +169,5 @@ Los minutos de Actions son gratis y aparecen opciones que en privado no existen:
   también en PRs de solo documentación, así que no bloquea nada que deba pasar.
 - *Advanced Security*: **CodeQL analysis → Set up → Default** si el proyecto tiene código
   propio; **Private vulnerability reporting** solo si tiene usuarios que puedan avisarte.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

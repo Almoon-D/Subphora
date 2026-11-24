@@ -1,4 +1,4 @@
-# Session 11 — Per-parcel report and professional pack
+# Session 12 — Per-parcel report and professional pack
 
 Model and effort: Opus 5.5, medium.
 
@@ -9,7 +9,7 @@ and a ZIP with the underlying layers and tables.
 
 ## Read
 
-- `docs/MASTER_PLAN.md` § 4.5, § 3 (Licences).
+- `docs/MASTER_PLAN.md` § 4.6, § 3 (Licences).
 
 ## Build
 
@@ -29,3 +29,5 @@ and a ZIP with the underlying layers and tables.
 ## Done when
 
 - `make check` is green and in `make dev` the owner downloads the PDF and the ZIP for an area.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

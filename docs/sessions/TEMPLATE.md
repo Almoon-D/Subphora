@@ -23,3 +23,5 @@ Model and effort: Opus 5.5, high.
 ## Done when
 
 - `make check` is green and <an observable behaviour: a command the owner can run>.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

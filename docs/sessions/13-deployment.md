@@ -1,4 +1,4 @@
-# Session 12 — Deployment: version 1 on the phone
+# Session 13 — Deployment: version 1 on the phone
 
 Model and effort: Opus 5.5, high.
 
@@ -9,7 +9,7 @@ and installs on a phone: the owner completes the version-1 flow in the field.
 
 ## Read
 
-- `docs/MASTER_PLAN.md` § 4.8, § 3 (Hosting, Privacy).
+- `docs/MASTER_PLAN.md` § 4.9, § 3 (Hosting, Privacy).
 - `docs/decisions/` 0007.
 
 ## Build
@@ -34,3 +34,5 @@ and installs on a phone: the owner completes the version-1 flow in the field.
 
 - `make check` is green and the owner, following the guide, has the app on their host and
   installs it on their phone (VERIFY-LIVE until the owner confirms).
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

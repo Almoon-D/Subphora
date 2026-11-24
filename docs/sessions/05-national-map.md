@@ -25,9 +25,11 @@ can zoom from Spain to an estate and tap any point for the index, confidence and
    inputs politely to `data/`, computes index and confidence grids, and writes raster tiles
    (PMTiles) for display. CPU work in a process pool. Run it in this session for the
    provinces of Málaga and Sevilla; the owner runs `--all` on a machine with enough disk.
-4. The front end shows the index and the confidence layer (legend says "index", not
+4. The slope, drainage and wetness-index grids are also published as map layers with legends
+   (the owner asked to see them, not only to have them in the model).
+5. The front end shows the index and the confidence layer (legend says "index", not
    "probability"), and tap-to-explain on the national grid.
-5. Tests: scoring and confidence on synthetic grids (all inputs, some missing, none),
+6. Tests: scoring and confidence on synthetic grids (all inputs, some missing, none),
    renormalisation, the "index" label, the build command on a tiny synthetic region, and
    failure of a download.
 
@@ -39,3 +41,5 @@ can zoom from Spain to an estate and tap any point for the index, confidence and
 
 - `make check` is green, `subphora national build --region <Málaga>` produces tiles, and in
   `make dev` the map shows the index and confidence over that region with tap-to-explain.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

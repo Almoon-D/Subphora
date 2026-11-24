@@ -10,10 +10,12 @@
   (0004); no LLM in the product (0006); the professional export pack joins the report, and
   the sensor dashboard waits for a level logger.
 - Changed by the owner: the model comes before the legal filter ("first know whether there is
-  water"), with legal status shown as "not evaluated" until session 08; hosting is any cheap
+  water"), with legal status shown as "not evaluated" until session 09; hosting is any cheap
   machine, free, paid or bought (0007); the national map covers all of Spain and zooms to the
-  parcel (0006); deployment comes after the report (session 12).
+  parcel (0006); deployment comes after the report (session 13).
 - Deferred: all hardware (manual level meter, OhmPi path, hired surveys and a
-  value-of-information calculator, discarded methods, RTK) until session 15 (0008).
+  value-of-information calculator, discarded methods, RTK) until session 16 (0008).
 - Rejected: a recurring suggestion to have a hydrogeologist review the model. The owner
   decides that alone; the app and the sessions do not raise it again.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

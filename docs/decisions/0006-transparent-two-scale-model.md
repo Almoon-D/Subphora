@@ -9,3 +9,5 @@
   learning only past a threshold of labelled wells and only if it validates better.
 - Rejected: an LLM to produce or explain the map (unneeded, not reproducible, a privacy risk);
   a black-box model first (too few labelled wells); per-parcel only (owner wants Spain).
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

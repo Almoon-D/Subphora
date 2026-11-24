@@ -1,4 +1,4 @@
-# Session 13 — Well registry and learning from the field
+# Session 14 — Well registry and learning from the field
 
 Model and effort: Opus 5.5, high.
 
@@ -31,3 +31,5 @@ productive) and drilled-well results, and the potential map updates locally from
 
 - `make check` is green and a logged well changes the nearby probabilities visibly in the
   updated layer.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

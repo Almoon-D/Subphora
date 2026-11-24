@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """Settings: expert defaults in ``config/defaults/``, owner overrides in ``config/owner.yaml``.
 
 Values live in YAML, mechanics in code. A key the schema does not declare is an error, so a

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 # Claude Code SessionStart hook (.claude/settings.json), on start and on resume: in a cloud
 # session, bring uv and Python to their newest releases and install the locked environment
 # (~15 s) before the agent starts. `uv run --locked` would build the environment anyway;

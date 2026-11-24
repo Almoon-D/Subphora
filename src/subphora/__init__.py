@@ -1,7 +1,8 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
 """Subphora.
 
-Estimates where groundwater is most likely to be found anywhere in Spain, from public data and
-field evidence, with its uncertainty and legal status, for a family farming company.
+Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and
+whether drilling is allowed.
 """
 
 from importlib.metadata import version

@@ -8,3 +8,5 @@
 - Rejected: AGPL-3.0 (only useful if the code were shared).
 - Note: reusing GPL software (such as OhmPi or pyGIMLi tools) privately, without
   distributing it, stays compatible; any future distribution needs a new decision.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

@@ -40,3 +40,5 @@ Turn the owner's idea into a plan that later sessions can build without asking a
 - The report (AGENTS.md → End-of-session protocol) gives the plan in Spanish — the goal, the
   hard limits and every session with what the owner will see at its end — and the prompt
   for session 01.
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

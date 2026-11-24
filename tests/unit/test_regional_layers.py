@@ -867,3 +867,22 @@ async def test_one_point_per_autonomous_community(
             else:
                 assert response.json()["answered_by"]["layer_id"] == theme
                 assert response.json()["fallbacks"] == []
+
+
+async def test_the_proxy_draws_a_regional_layer_only_up_to_its_own_last_zoom(
+    config_dir: Path, tmp_path: Path
+) -> None:
+    edit_regional(
+        config_dir,
+        lambda d: regional_layer(d, "andalusia-preventive-control").update(max_zoom=12),
+    )
+    settings = fast_settings(config_dir)
+    png = layer_fixture("igme_lithostrat_export.png")
+    upstream = Upstream(**{"www.juntadeandalucia.es": png})
+    async with serve(settings, upstream, tmp_path) as client:
+        last = await client.get("/api/layers/andalusia-preventive-control/tiles/12/2016/1617")
+        beyond = await client.get("/api/layers/andalusia-preventive-control/tiles/13/4032/3234")
+    assert last.status_code == 200
+    assert beyond.status_code == 422
+    assert beyond.json()["code"] == "outside_zoom_range"
+    assert len(upstream.requests) == 1

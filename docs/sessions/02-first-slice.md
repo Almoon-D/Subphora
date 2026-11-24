@@ -11,7 +11,7 @@ up the front end, the API and the way they talk, end to end.
 ## Read
 
 - `docs/MASTER_PLAN.md` §§ 3, 4.1, 4.2, 5.
-- `docs/decisions/` 0004, 0010 and 0012 (the Google route).
+- `docs/decisions/` 0004, 0010, 0012 (the Google route) and 0014 (Spain-wide, country modules).
 - `docs/knowledge/`: Catastro, IGN/CNIG (CORS and EPSG:3857 findings for both).
 
 ## Build
@@ -28,8 +28,11 @@ up the front end, the API and the way they talk, end to end.
    client and the Catastro INSPIRE WFS. Validate the reference (length, control characters)
    before calling out; a foral territory returns the "not supported yet" message (0010);
    not found, malformed and upstream failure are distinct, explicit errors. Responses cached
-   in `data/cache/` with the lifetime from the catalogue. Create `domain/` models, `geo/`
-   (CRS choice by location: 25829/25830/25831, 4083 in the Canaries), `store/` (file cache),
+   in `data/cache/` with the lifetime from the catalogue. Everything specific to Spain goes
+   in `countries/es/` (decision 0014): the cadastral reference format and control letters,
+   the foral-territory check (ISO 3166-2 ES-NC, ES-PV), and the CRS choice by location
+   (25829/25830/25831, 4083 in the Canaries; the WFS answers 4083 requests in 4326, so read
+   the response's `srsName`). Create `domain/` models, `countries/`, `geo/`, `store/` (file cache),
    `services/` and `api/`, each with its import-linter contract.
 4. No tile proxy: session 01 found CORS and EPSG:3857 on both PNOA (WMTS,
    GoogleMapsCompatible) and the Catastro WMS. The Catastro WMS terms forbid tiled requests,

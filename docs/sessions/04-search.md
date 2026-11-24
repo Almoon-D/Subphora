@@ -17,7 +17,7 @@ app analyses.
 ## Build
 
 1. One search box that recognises the input type, with explicit choice when ambiguous.
-2. API: SIGPAC enclosure or parcel → geometry; address and municipality → location via
+2. API (Spanish formats in `countries/es/`, decision 0014): SIGPAC enclosure or parcel → geometry; address and municipality → location via
    CartoCiudad; coordinate parsing and conversion with `pyproj`; a drawn polygon accepted as
    an area of interest. One domain type, "area of interest", whatever its origin.
 3. A short list of the areas selected in this browser session, to switch between them.

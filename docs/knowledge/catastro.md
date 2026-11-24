@@ -47,6 +47,14 @@ session with the `subphora/0.1.0` User-Agent.
   service reprojects across UTM zones (a parcel in Santiago de Compostela, zone 29, came back
   in 25830 and 25829). With `EPSG::4326` and `EPSG::4258` the coordinates are in
   **latitude, longitude** order. `(GetFeature GetParcel, 2026-11-24)`
+- **Canaries:** `srsname=EPSG::4083` (REGCAN95 / UTM 28N) is not honoured: a parcel in
+  Tinajo (Lanzarote) came back in EPSG:4326 with `srsName` saying so. The client must read
+  the `srsName` of the response and reproject with `pyproj`, never assume the requested CRS.
+  `(GetFeature GetParcel refcat=35029A03200314, 2026-11-24)`
+- **Foral territories:** `Consulta_RCCOOR` at points in Pamplona and Bilbao answers error 16
+  "PARA ESAS COORDENADAS NO HAY REFERENCIA DISPONIBLE": Navarra and the Basque Country are
+  outside the national cadastre (decision 0010; `coverage_excludes` in the catalogue).
+  `(Consulta_RCCOOR, 2026-11-24)`
 - Response: GML 3.2, `cp:CadastralParcel` with `areaValue` (m²), `beginLifespanVersion`,
   `label`, `nationalCadastralReference`, `referencePoint` and a `MultiSurface` geometry. A
   comment states the geometry's precision is nominally that of the capture scale
@@ -72,11 +80,11 @@ session with the `subphora/0.1.0` User-Agent.
 
 ## Public references used in fixtures
 
-| Reference | Place | Use | Area |
+| Reference | Place | Use | Area of the parcel |
 |---|---|---|---|
-| 2488901UF6928N0001GT | Parque Dolménico, Antequera (the dolmens, a public UNESCO site) | Cultural | 77,822 m² |
-| 29015A16700021 (0000TL) | Polígono 167, parcela 21, paraje Torcal, Antequera (rustic) | Agrario | 17,526,520 m² |
-| 7279701NH3477G0001SJ | Praza do Obradoiro, Santiago de Compostela | — | — |
+| 7279701NH3477G0001SJ | Praza do Obradoiro 3, Santiago de Compostela (UTM zone 29) | Religioso | 13,352 m² |
+| 0910001QD3101S0001LR | the Roman theatre, Mérida | Espectáculos | 43,337 m² |
+| 35029A03200314 (0000HL) | Polígono 32, parcela 314, Volcán Montaña Tinga, Tinajo, Lanzarote (rustic) | Agrario | 23,614,448 m² |
 
 `(Consulta_DNPRC, Consulta_RCCOOR, 2026-11-24)`
 
@@ -85,7 +93,8 @@ session with the `subphora/0.1.0` User-Agent.
 - A rustic reference: province (2) + municipality (3) + sector (1 letter) + polygon (3) +
   parcel (5) = 14; an urban one: 7 digits + 7 alphanumerics (sheet) = 14. The full reference
   adds 4 digits for the property (cargo) and 2 control letters = 20.
-- Control letters, verified on the four references above against the service:
+- Control letters, verified against the service on the three references above and on two
+  more rustic and urban ones:
   weights `[13, 15, 12, 5, 4, 17, 9, 21, 3, 7, 1]` over 11 characters; the first letter
   from characters 1–7 plus the cargo, the second from characters 8–14 plus the cargo.
   Digits count their value; letters A–N count 1–14, Ñ 15, O–Z 16–27 (the full value,

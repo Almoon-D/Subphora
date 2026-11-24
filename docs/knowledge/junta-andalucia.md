@@ -25,11 +25,10 @@ ids: `rediam-water-bodies` (here) and `rediam-soils` (see `soil.md`). Findings o
   (Cuencas Mediterráneas Andaluzas, Guadalete-Barbate, Tinto-Odiel-Piedras). Its plan for
   2022-2027 was approved by Real Decreto 689/2023; the normative content was published in
   BOJA no. 199 of 17 October 2023 (details in `legal-groundwater.md`).
-- The plan's Apéndice 15 lists ES060MSBT060.033 Llanos de Antequera-Vega de Archidona and
-  ES060MSBT060.034 Fuente de Piedra among the bodies "identified at risk of not reaching good
-  status and subject to preventive control" (art. 54 of the Andalusian Water Law).
-  `(BOJA 199/2023, 2026-11-24)`
-- A hydrogeological presentation of Llanos de Antequera with a 3D geological model (2024):
-  `https://juntadeandalucia.es/sites/default/files/inline-files/2024/09/Presentacion_hidrogeo_ES060MSBT060_033_Llanos.pdf`.
+- The plan's Apéndice 15 lists 34 of the district's groundwater bodies as "identified at
+  risk of not reaching good status and subject to preventive control" (art. 54 of the
+  Andalusian Water Law). Session 09 loads the list as data. `(BOJA 199/2023, 2026-11-24)`
+- The Junta publishes hydrogeological presentations per groundwater body (2024), some with a
+  3D geological model section: documents, not data.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

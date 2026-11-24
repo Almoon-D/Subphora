@@ -110,9 +110,8 @@ verdict. Nothing here is legal advice. Read on 2026-11-24.
     **Uncertain:** the article gives no distance for bodies in poor status (there the
     authorisation of art. 53.1 decides). `(Orden 9/10/2023 art. 53.5, 2026-11-24)`
   - Art. 39: bodies in Apéndice 15 are under **preventive control**; any abstraction there
-    needs a prior report of compatibility with the plan. **Apéndice 15 lists
-    ES060MSBT060.033 Llanos de Antequera-Vega de Archidona and ES060MSBT060.034 Fuente de
-    Piedra.** Art. 40: the procedure to declare a body at risk. `(Orden 9/10/2023 arts. 39–40, Apéndice 15, 2026-11-24)`
+    needs a prior report of compatibility with the plan; Apéndice 15 lists 34 bodies.
+    Art. 40: the procedure to declare a body at risk. `(Orden 9/10/2023 arts. 39–40, Apéndice 15, 2026-11-24)`
   - Art. 47: documentation for groundwater abstractions (location on the cadastral map and
     orthophoto at 1:5,000, borehole and casing profiles, water level and date, pump).
     `(Orden 9/10/2023 art. 47, 2026-11-24)`
@@ -124,14 +123,5 @@ verdict. Nothing here is legal advice. Read on 2026-11-24.
   drilling project and the regional mining authority's authorisation) and municipal
   planning licences. Session 09 reads them at the source before turning them into rules;
   until then the app says "drilling permits: not evaluated".
-
-## For the owner's estates (as read today)
-
-- Antequera, in ES060 (Junta de Andalucía): the Llanos de Antequera body is in poor
-  quantitative and chemical status and under preventive control, so even a ≤ 7,000 m³/year
-  well there needs the Junta's authorisation and a compatibility report; Fuente de Piedra is
-  provisionally declared overexploited (2005). Parts of the municipality may drain to the
-  Guadalquivir instead: the authority follows the location.
-- Sevilla, in ES050 (CHG): depends on the body's status at the parcel; session 09 evaluates it.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

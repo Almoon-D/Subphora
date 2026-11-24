@@ -40,6 +40,13 @@ def test_no_key_value_lives_in_the_catalogue() -> None:
     assert not re.search(r"eyJ[0-9A-Za-z_-]+\.[0-9A-Za-z_-]+\.", text)
 
 
+def test_the_foral_territories_are_outside_the_national_cadastre() -> None:
+    sources = load_settings().sources
+    for entry in sources.services:
+        if entry.id.startswith("catastro"):
+            assert set(entry.coverage_excludes) == {"ES-NC", "ES-PV"}
+
+
 def test_an_unknown_id_is_a_key_error() -> None:
     with pytest.raises(KeyError):
         load_settings().sources.service("nope")
@@ -61,6 +68,10 @@ def test_an_unknown_id_is_a_key_error() -> None:
         ({"kind": "rest", "web_mercator": None}, "sample request"),
         ({"politeness": {"max_concurrent": 0, "min_interval_s": 0, "cache_lifetime_s": 0}}, "0"),
         ({"surprise": 1}, "surprise"),
+        ({"coverage": []}, "at least one area"),
+        ({"coverage": ["Spain"]}, "ISO 3166"),
+        ({"coverage_excludes": ["es-pv"]}, "ISO 3166"),
+        ({"coverage": ["ES", "ES-PV"], "coverage_excludes": ["ES-PV"]}, "both covered"),
     ],
 )
 def test_an_inconsistent_service_is_refused(overrides: dict[str, object], message: str) -> None:

@@ -8,9 +8,12 @@ says why (0003).
 ## 1. Goal
 
 Subphora estimates where groundwater is most likely to be found, anywhere in Spain, from
-public data and field evidence, and says how sure it is. It is for the owner and a few
+public data and field evidence, and says how sure it is. It is a product for landowners,
+farmers and the people who advise them, anywhere in Spain, and is built so that other
+countries can be added later (decision 0014). Its first users are the owner and a few
 non-technical people of a family farming company (dry farmland, olive groves and almond
-orchards on estates around Antequera, Málaga, and in Sevilla).
+orchards); their land is the test area, which lives in private configuration and never in
+the repository. Nothing in the code or the design favours one area of Spain.
 
 For a location (a cadastral reference, a SIGPAC reference, an address, a municipality,
 coordinates, or a point or polygon drawn on the map) the app shows:
@@ -78,9 +81,18 @@ decision 0013). The catalogue of every host, its terms and limits is
 `config/defaults/sources.yaml`. Foral cadastres (País Vasco, Navarra) are not
 supported yet (decision 0010), they will be implemented once subphora is finished.
 
-**Jurisdiction.** All of Spain for maps and the model; legal rules first for the basins that
-cover the owner's estates (Guadalquivir; Andalusian Mediterranean basins), each other basin
-marked "rules not loaded" until added.
+**Jurisdiction.** All of Spain for maps, search and the model, with the same code and the
+same quality everywhere. Legal rules are data, loaded area by area: the first are the
+Guadalquivir and the Andalusian Mediterranean basins (where field tests start); every other
+area says "rules not loaded" until added.
+
+**Areas and countries** (decision 0014). An area is an ISO 3166 code: country (ES) > region,
+the autonomous community (ES-AN) > province (ES-Z). Water management is a parallel
+hierarchy, because basins cross regions: river-basin district (ES050) > groundwater body.
+Every catalogued service records its coverage in these codes. Everything specific to Spain
+(reference formats, cadastre and SIGPAC rules, CRS choice, territories not supported, legal
+rules) lives in a country module, so another country is a new module and new data, not a
+change to the model, the API or the front end.
 
 **Coordinates.** ETRS89 / UTM zones 29, 30 and 31 (EPSG:25829, 25830, 25831) on the mainland
 and Balearics, chosen by the parcel's location; REGCAN95 / UTM 28N (EPSG:4083) in the
@@ -93,9 +105,10 @@ requires (Catastro, IGN/CNIG, IGME, MITECO, Copernicus, Google). Every external 
 rate limit and cache lifetime in `config/`; the HTTP client sends a generic `subphora/<version>`
 User-Agent and no personal contact data.
 
-**Privacy.** The owner's parcels, wells, field notes, photos, voice memos and tracks are
-private: stored only on the owner's devices and server, never committed (`data/` is
-git-ignored), never in fixtures (tests use public or synthetic parcels), never sent to an LLM.
+**Privacy.** The owner's test area, parcels, wells, field notes, photos, voice memos and
+tracks are private: stored only on the owner's devices and server, never committed (`data/`
+is git-ignored), never in fixtures (tests use public or synthetic parcels spread across
+Spain), never sent to an LLM.
 
 **Runtime.** Each part in the language best suited to it: Python for the backend and data
 processing (its geospatial and geophysics libraries have no equal), TypeScript for the front
@@ -163,6 +176,7 @@ A FastAPI application (`subphora serve`) and a CLI (`subphora …`), in layers:
 | `domain/` | frozen models: references, estimates, explanations, legal status, observations | nothing of ours |
 | `config/` | settings schema and loader | `domain` |
 | `sources/` | one async client per external service; catalogue, rate limits, cache, attribution | `domain`, `config` |
+| `countries/` | one module per country (`es/` first): area codes, reference formats, CRS rules, territories not supported | `domain`, `config` |
 | `geo/` | CRS choice, reprojection, clipping, raster and vector operations, terrain derivatives | `domain`, `config` |
 | `model/` | criteria, scoring, confidence, explanation, candidates, validation, calibration, depth, cost | `domain`, `config`, `geo` |
 | `legal/` | authority lookup and rule evaluation from rules held as data | `domain`, `config` |
@@ -296,6 +310,7 @@ src/subphora/
   domain/     frozen models, imports nothing else of ours
   config/     settings schema and loader
   sources/    external-service clients and the source catalogue          (01)
+  countries/  country modules: es/ (references, areas, CRS rules)        (02)
   geo/        CRS, reprojection, clipping, terrain derivatives           (02, 05)
   model/      water-potential model, validation, depth, cost, section    (05, 07, 08)
   legal/      legal filter                                               (09)

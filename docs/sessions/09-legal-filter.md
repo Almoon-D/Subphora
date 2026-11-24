@@ -18,8 +18,8 @@ with sources, dates and the "guidance, not legal advice" disclaimer.
 
 1. Re-check the legal knowledge file's sources live (dates move; basin plans are revised) and
    update it.
-2. `legal/`: rules as data in `config/legal/` (one file per basin plus national and
-   Andalusian rules), each with its source, article, date and date checked; an engine that
+2. `legal/`: rules as data in `config/legal/es/`, keyed by area code (ES for national rules,
+   ES-AN for Andalusian ones, the district code such as ES050 for a basin plan; decision 0014), each with its source, article, date and date checked; an engine that
    evaluates them for a location (authority, body status, distances to wells and the public
    water domain); its import-linter contract.
 3. The legal panel shown first for an area, and the legal status on every candidate,
@@ -29,8 +29,8 @@ with sources, dates and the "guidance, not legal advice" disclaimer.
 
 ## DO NOT BUILD
 
-- Rules for basins outside the owner's (Guadalquivir, Andalusian Mediterranean) beyond what
-  the national rules cover; any form-filling or filing with an authority.
+- Rules for basins other than the Guadalquivir and the Andalusian Mediterranean basins (the
+  first two loaded) beyond what the national rules cover; any form-filling or filing with an authority.
 
 ## Done when
 

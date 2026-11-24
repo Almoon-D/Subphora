@@ -40,8 +40,8 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
   `HOJA`, `ID`, `NOMBRE` (the measurement type: "Estratificación", "Estratificación
   invertida", "Esquistosidad…", "Diaclasado"…), `DIRECCION` (strike direction, degrees),
   `BUZAMIENTO` (dip, degrees). 251,654 measurements; the distinct-sheet query stops at its
-  1,000-row limit, so at least 1,000 of the 1,114 sheets carry them. Near Antequera,
-  sheet 1023: "Estratificación", direction 49°, dip 30°.
+  1,000-row limit, so at least 1,000 of the 1,114 sheets carry them. Example, sheet 1023:
+  "Estratificación", direction 49°, dip 30°.
   `(GET /IGME_MAGNA_50/MapServer/5/query, 2026-11-24)`
 - GEODE layer 3 "Buzamientos" (points) is drawn but its query is refused ("Requested
   operation is not supported by this service"). `(GET /IGME_Geode_50/MapServer/3/query, 2026-11-24)`
@@ -89,12 +89,11 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
 
 ## 3D geological models
 
-- No downloadable IGME 3D model was found for Antequera or the Guadalquivir. IGME runs a 3D
-  modelling programme and is harmonising its models (FAIR); none is served on `mapas.igme.es`.
-- The Junta de Andalucía published (September 2024) a presentation on the groundwater body
-  ES060MSBT060.033 Llanos de Antequera-Vega de Archidona with a 3D geological model
-  section: `https://juntadeandalucia.es/sites/default/files/inline-files/2024/09/Presentacion_hidrogeo_ES060MSBT060_033_Llanos.pdf`.
-  It is a document, not data; session 08 can cite it.
+- No downloadable 3D geological model was found. IGME runs a 3D modelling programme and is
+  harmonising its models (FAIR); none is served on `mapas.igme.es`.
+- Some water authorities publish hydrogeological presentations per groundwater body with a
+  3D model section (the Junta de Andalucía, 2024). They are documents, not data: session 08
+  may cite one for an area, never use it as an input.
 
 ## Licence
 

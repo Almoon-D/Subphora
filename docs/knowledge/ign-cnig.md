@@ -9,8 +9,8 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
 - WMTS `https://www.ign.es/wmts/pnoa-ma`: layer `OI.OrthoimageCoverage`; tile matrix sets
   `GoogleMapsCompatible`, `EPSG:3857`, `EPSG:4326`, `EPSG:4258`, `EPSG:25828`–`25831`,
   `InspireCRS84Quad`; JPEG and PNG. `(GetCapabilities, 2026-11-24)`
-- A KVP GetTile (`tilematrixset=GoogleMapsCompatible&tilematrix=12&tilerow=1594&tilecol=1996`,
-  over Antequera) returns a 14 KB JPEG with `Access-Control-Allow-Origin: *` and
+- A KVP GetTile (`tilematrixset=GoogleMapsCompatible&tilematrix=12&tilerow=1525&tilecol=2037`,
+  over Zaragoza) returns a JPEG with `Access-Control-Allow-Origin: *` and
   `Cache-Control: max-age=31536000`. MapLibre can use it directly; no proxy needed.
   `(GetTile, 2026-11-24)`
 - WMS `https://www.ign.es/wms-inspire/pnoa-ma`: layers `OI.OrthoimageCoverage`,
@@ -33,8 +33,8 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   served; 2 m is not** (MDT02 is a download only). `(GetCapabilities, 2026-11-24)`
 - `Elevacion25830_5` covers x −19,452.5 … 1,140,352.5, y 3,901,197.5 … 4,865,682.5 (EPSG:25830)
   at 5 m: mainland Spain and the Balearics in one coverage. `(DescribeCoverage, 2026-11-24)`
-- A GetCoverage of a 500 m square (`subset=x(362000,362500)&subset=y(4098000,4098500)`,
-  `format=image/tiff`) returns a 1.2 KB GeoTIFF. The national grid (session 05) and the
+- A GetCoverage of a 500 m square (`subset=x(676500,677000)&subset=y(4613000,4613500)`,
+  near Zaragoza, `format=image/tiff`) returns a small GeoTIFF. The national grid (session 05) and the
   parcel grid (06) can read the terrain from this WCS by windows instead of downloading
   sheets. `(GetCoverage, 2026-11-24)`
 - WMS `https://servicios.idee.es/wms-inspire/mdt`: layers `EL.ElevationGridCoverage`,
@@ -47,9 +47,9 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
 
 ## CartoCiudad geocoder
 
-- `https://www.cartociudad.es/geocoder/api/geocoder/candidates?q=Antequera&limit=1` returns
+- `https://www.cartociudad.es/geocoder/api/geocoder/candidates?q=Zaragoza&limit=1` returns
   JSON (`candidatesJsonp` the same as JSONP): `id`, `province`, `provinceCode`, `muni`,
-  `muniCode` (29015), `type` (`poblacion`, `Municipio`, `callejero`…), `address`, `lat`,
+  `muniCode` (50297), `type` (`poblacion`, `Municipio`, `callejero`…), `address`, `lat`,
   `lng`, `refCatastral`. For a place-name candidate `lat`/`lng` are 0.0: a second call
   (`find`) resolves it. CORS `*`. `(GET /candidates, 2026-11-24)`
 

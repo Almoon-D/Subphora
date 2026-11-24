@@ -55,6 +55,8 @@
   session 01 verifies them before code depends on them. (00)
 - Node 27 reaches end of life in mid-2027: move to Node 28 when it is released (April 2027),
   in the maintenance session or the session running then (0011). (00)
+- Commercial use: settle the MAGNA WMS, Catastro, Google and multi-customer questions of
+  decision 0014 in a decision before anything is sold. (01)
 - Legal: the mining-safety rules for water boreholes and municipal licences were not read;
   session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
 - The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
@@ -67,6 +69,16 @@
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
 
+### 01 — Owner ruling: Spain-wide product, country modules (2026-11-24, version 0.1.1)
+
+- Landed: decision 0014; catalogue `coverage`/`coverage_excludes` in ISO 3166 codes, shown
+  by `sources list`; probe samples and fixtures moved to public places across Spain; test
+  area removed from MASTER_PLAN, knowledge files and prompts; `countries/es/` planned for
+  session 02 (prompts 02, 04, 05, 09, 11, 16 edited for it).
+- Live: `sources check` 89 ok, 0 failed, 2 not checked; Catastro has no reference in Navarra
+  or the Basque Country (error 16); its WFS answers EPSG:4083 requests in EPSG:4326.
+- Open for the owner: the terms that change when the product is sold (decision 0014).
+
 ### 01 — Verify data sources, terms and legal rules (2026-11-24, version 0.1.0)
 
 - Landed: `config/defaults/sources.yaml` (32 services, 15 hosts) with its schema;
@@ -76,8 +88,8 @@
 - Live: `sources check` 89 ok, 0 failed, 2 not checked (keys) from the cloud. Catastro
   forbids tiled WMS requests, rejects curl's User-Agent and resets ~1 in 3 connections;
   REDIAM lacks CORS; IGME's 1:200,000 lithostratigraphic WMS lacks EPSG:3857; MAGNA dip is
-  digital (251,654 measurements); IGN WCS serves MDT05/MDT25, not MDT02; Llanos de Antequera
-  is in poor status and under preventive control (54.2 wells need authorisation).
+  digital (251,654 measurements); IGN WCS serves MDT05/MDT25, not MDT02; in the Andalusian
+  Mediterranean plan, 54.2 wells in bodies under preventive control need authorisation.
 - Prompt edits (facts only): 02 (no tile proxy; Catastro as one untiled image), 03 (proxy
   for REDIAM and the lithostratigraphic map, soil per 0013, no zona de policía service),
   06 (MDT02 fallback), 07 (piezometric levels first), 11 (no cadastral tiles in packs);

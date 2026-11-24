@@ -7,6 +7,14 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.1.1] - 2026-11-24
+
+- Subphora is now planned as a product for all of Spain, ready for more countries later:
+  places are identified by standard country, region and province codes.
+- `subphora sources list` shows which part of Spain each service covers; the national
+  cadastre is marked as not covering Navarra and the Basque Country.
+- The live checks and test data now use public places all over Spain instead of one area.
+
 ## [0.1.0] - 2026-11-24
 
 - `uv run subphora sources check` checks every public data service live (Catastro, SIGPAC,

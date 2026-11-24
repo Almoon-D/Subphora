@@ -21,6 +21,8 @@ KINDS_WITH_CAPABILITIES: frozenset[str] = KINDS_WITH_CRS | {"wcs", "ogc_api"}
 
 _ID = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 _ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+# ISO 3166-1 alpha-2 (a country: ES) or ISO 3166-2 (a region or province: ES-AN, ES-Z).
+_AREA = re.compile(r"^[A-Z]{2}(-[A-Z0-9]{1,3})?$")
 
 
 def host_of(url: str) -> str:
@@ -82,6 +84,9 @@ class Service(Section):
     name: str
     publisher: str
     kind: ServiceKind
+    # The areas the service covers and the areas inside them it does not, as ISO 3166 codes.
+    coverage: list[str]
+    coverage_excludes: list[str] = Field(default_factory=list)
     base_url: str
     # Layers, feature types, coverages or collections of interest; the capabilities probe
     # checks that each one is offered.
@@ -112,6 +117,13 @@ class Service(Section):
             raise ValueError(f"service id {self.id!r} must be lower-case words joined by '-'")
         host_of(self.base_url)
         host_of(self.terms_url)
+        if not self.coverage:
+            raise ValueError(f"{self.id}: coverage names at least one area")
+        bad = [a for a in self.coverage + self.coverage_excludes if not _AREA.match(a)]
+        if bad:
+            raise ValueError(f"{self.id}: {bad} are not ISO 3166 area codes (ES, ES-AN)")
+        if set(self.coverage) & set(self.coverage_excludes):
+            raise ValueError(f"{self.id}: an area cannot be both covered and excluded")
         if not self.knowledge.startswith("docs/knowledge/") or not self.knowledge.endswith(".md"):
             raise ValueError(f"{self.id}: knowledge must be a docs/knowledge/*.md file")
         if self.needs_key != (self.key_env is not None):

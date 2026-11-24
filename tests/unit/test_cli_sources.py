@@ -31,6 +31,8 @@ def test_list_prints_every_service(capsys: pytest.CaptureFixture[str]) -> None:
     for entry in load_settings().sources.services:  # the real one, unpatched here
         assert entry.id in out
     assert "never cached" in out  # Google
+    assert "covers: ES except ES-NC, ES-PV" in out  # Catastro
+    assert "covers: ES-AN" in out  # REDIAM
     assert "key from $GOOGLE_MAPS_API_KEY" in out
 
 

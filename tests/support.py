@@ -23,6 +23,7 @@ def service(**overrides: Any) -> dict[str, Any]:
         "name": "Test WMS",
         "publisher": "Test publisher",
         "kind": "wms",
+        "coverage": ["ES"],
         "base_url": "https://wms.example.org/wms",
         "layers": ["CP.CadastralParcel"],
         "crs": ["EPSG:3857"],

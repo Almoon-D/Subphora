@@ -69,8 +69,12 @@ def _catalogue_table(settings: Settings) -> str:
         limits = service.politeness
         cache = "never cached" if limits.cache_lifetime_s == 0 else f"{limits.cache_lifetime_s} s"
         key = f", key from ${service.key_env}" if service.key_env else ""
+        area = ", ".join(service.coverage)
+        if service.coverage_excludes:
+            area += " except " + ", ".join(service.coverage_excludes)
         lines.append(
             f"{service.id} ({service.kind}) {service.host}{key}\n"
+            f"  covers: {area}\n"
             f"  {service.name} — {service.publisher}\n"
             f"  licence: {service.licence} ({service.terms_url})\n"
             f"  attribution: {service.attribution}\n"

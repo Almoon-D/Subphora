@@ -2,10 +2,10 @@
 """A file cache of upstream responses, one directory per catalogued service.
 
 Each entry is the response body and a small JSON sidecar with the time it was fetched.
-The lifetime comes from the source catalogue; a lifetime of 0 means never cache (Google,
-hard rule 4), so such entries are neither read nor written. Writes are atomic (a temporary
-file renamed into place), so a crash never leaves a half-written entry. The methods block:
-async callers run them in a thread.
+The lifetime comes from the source catalogue; a lifetime of 0 means never cache (a service
+whose terms forbid storing its data), so such entries are neither read nor written. Writes
+are atomic (a temporary file renamed into place), so a crash never leaves a half-written
+entry. The methods block: async callers run them in a thread.
 """
 
 import hashlib

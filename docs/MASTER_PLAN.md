@@ -56,8 +56,8 @@ reduce the uncertainty.
 - No LLM or other generative AI in the product. The model is a transparent weighted overlay,
   later calibrated statistically (decision 0006). Field data is never sent to an LLM.
 - No native mobile apps: one progressive web app for PC, Android and iPhone (0004).
-- No scraping and no use of a service against its terms. Google imagery is never cached
-  or used offline.
+- No scraping and no use of a service against its terms. No Google Maps (decision 0020).
+  Data whose terms forbid storing it is never cached or used offline.
 - No paid service, paid API or recurring cost without the owner's approval in a decision.
 - No unprompted recommendations to hire a hydrogeologist or other professional. The
   professional export pack (session 12) exists for when the owner chooses to use one.
@@ -66,9 +66,7 @@ reduce the uncertainty.
 
 ## 3. Constraints
 
-**Budget.** Public open data first, free tiers, zero recurring spend by default. Google Maps
-only with the owner's key and hard daily quota caps per API (a budget alert alone is not a
-cap). Any paid service or API, however cheap, needs the owner's approval in a decision first
+**Budget.** Public open data first, free tiers, zero recurring spend by default. Any paid service or API, however cheap, needs the owner's approval in a decision first
 (0011).
 
 **Data sources** (each verified live in session 01, recorded in `docs/knowledge/`):
@@ -103,7 +101,7 @@ Canaries; Web Mercator (EPSG:3857) only for display tiles; the national grid in 
 hand-written coordinate maths.
 
 **Licences and politeness.** Every layer and report carries the attribution its licence
-requires (Catastro, IGN/CNIG, IGME, MITECO, Copernicus, Google). Every external host has a
+requires (Catastro, IGN/CNIG, IGME, MITECO, Copernicus). Every external host has a
 rate limit and cache lifetime in `config/`; the HTTP client sends a generic `subphora/<version>`
 User-Agent and no personal contact data.
 
@@ -144,10 +142,7 @@ owner picks in session 13 (decision 0007). Until then it runs locally (`make dev
  │ IndexedDB: field data,   │           │ model/  legal/  geo/         │         │ basins, FEGA  │
  │   offline packs, outbox  │           │ sources/ polite cached client│         │ Copernicus    │
  │ service worker (offline) │           │ store/  SQLite + file cache  │         │ AEMET         │
- └────────────┬─────────────┘           └──────────────┬───────────────┘         └───────────────┘
-              │ Google tiles (browser, owner's key, capped, never cached)        ┌───────────────┐
-              └──────────────────────────────────────────────────────────────────► Google Maps   │
-                                                                                  └───────────────┘
+ └──────────────────────────┘           └──────────────────────────────┘         └───────────────┘
  batch: `subphora national build` → national potential grid → raster tiles (PMTiles) served by api
 ```
 
@@ -165,8 +160,7 @@ iPhone (decision 0004). Two modes:
   IndexedDB is the device's source of truth: every observation is written there before the
   UI confirms it, and an outbox syncs it later with an idempotency key (§4.7).
 
-Base maps: PNOA orthophoto (default) and IGN maps; Google satellite and road only when a key
-is configured (decision 0005). Official layers come from their WMS/WMTS services directly,
+Base maps: PNOA orthophoto (default) and IGN maps; no Google maps (decision 0020). Official layers come from their WMS/WMTS services directly,
 or through the server's caching proxy where a service lacks CORS or EPSG:3857 (session 01
 records which).
 
@@ -286,8 +280,7 @@ tables (CSV).
 - **Offline packs (11):** for the selected parcels and a buffer, the PNOA tiles, our
   potential and confidence layers, and the parcel geometry (Catastro's terms forbid tiled
   requests and massive downloads, so no cadastral tiles), at zooms in `config/`,
-  stored by the service worker with persistent storage requested. Google layers are never in
-  a pack.
+   stored by the service worker with persistent storage requested.
 - **Data safety:** a manual export of all unsynced data to a file, and a visible count of
   unsynced records.
 
@@ -338,7 +331,7 @@ Each session ends in something the owner can see or run. The table with status i
 |---|---|---|
 | 01 | Verify data sources, terms and legal rules | `subphora sources check` prints the status of every service; a knowledge file per source |
 | 02 | First end-to-end slice | `make dev`: type a cadastral reference, see the parcel on PNOA with the cadastral layer |
-| 03 | Official layers | Water, geology (with dip symbols) and soil layers, optional Google base map, opacity and legend |
+| 03 | Official layers | Water, geology (with dip symbols) and soil layers, IGN base maps, opacity and legend |
 | 04 | More ways to search | SIGPAC, coordinates, municipality, address, drawn point or polygon |
 | 05 | National potential map v0 | All of Spain coloured by potential index, with its confidence layer and the slope, drainage and wetness layers |
 | 06 | Parcel detail | High-resolution parcel map, tap-to-explain, ranked candidates, parcel comparison |

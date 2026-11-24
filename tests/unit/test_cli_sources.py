@@ -30,10 +30,9 @@ def test_list_prints_every_service(capsys: pytest.CaptureFixture[str]) -> None:
     out = capsys.readouterr().out
     for entry in load_settings().sources.services:  # the real one, unpatched here
         assert entry.id in out
-    assert "never cached" in out  # Google
     assert "covers: ES except ES-NC, ES-PV" in out  # Catastro
     assert "covers: ES-AN" in out  # REDIAM
-    assert "key from $GOOGLE_MAPS_API_KEY" in out
+    assert "key from $AEMET_API_KEY" in out
 
 
 def test_check_of_an_unknown_id_is_a_usage_error(capsys: pytest.CaptureFixture[str]) -> None:
@@ -73,5 +72,5 @@ def test_a_service_needing_a_key_does_not_fail_the_check(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     with respx.mock(assert_all_called=False):
-        assert main(["sources", "check", "--only", "google-map-tiles"]) == 0
+        assert main(["sources", "check", "--only", "aemet-opendata"]) == 0
     assert "not checked" in capsys.readouterr().out

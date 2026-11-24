@@ -1,6 +1,6 @@
 # 0005 — Google base maps: optional, capped, never offline
 
-- Date: 2026-11-24 · Status: accepted · MASTER_PLAN §3, §4.1
+- Date: 2026-11-24 · Status: superseded by 0020 · MASTER_PLAN §3, §4.1
 - Context: the owner wants Google satellite and road; Google's terms limit rendering,
   attribution and storage of its tiles.
 - Decision: PNOA is the default base map and the app works fully without a Google key. With the

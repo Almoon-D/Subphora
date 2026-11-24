@@ -27,15 +27,9 @@ def test_every_catalogued_service_has_its_knowledge_file() -> None:
         )
 
 
-def test_google_tiles_are_never_cached() -> None:
-    google = load_settings().sources.service("google-map-tiles")
-    assert google.politeness.cache_lifetime_s == 0
-    assert google.needs_key
-
-
 def test_no_key_value_lives_in_the_catalogue() -> None:
     text = (ROOT / "config" / "defaults" / "sources.yaml").read_text(encoding="utf-8")
-    # Google keys start with AIza; JWTs (AEMET) have three base64url parts.
+    # Google-style keys start with AIza; JWTs (AEMET) have three base64url parts.
     assert not re.search(r"AIza[0-9A-Za-z_-]{20,}", text)
     assert not re.search(r"eyJ[0-9A-Za-z_-]+\.[0-9A-Za-z_-]+\.", text)
 

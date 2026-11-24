@@ -7,6 +7,13 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.2.1] - 2026-11-24
+
+- Google Maps is out of the plan: the base maps are the PNOA orthophoto and the IGN maps,
+  free and without any card or key. Subphora no longer lists Google among its services.
+- TypeScript 7.1 will replace the TypeScript 6 parser of the code checks as soon as it is
+  released.
+
 ## [0.2.0] - 2026-11-24
 
 - `make dev` starts Subphora in the browser: type a cadastral reference and the parcel

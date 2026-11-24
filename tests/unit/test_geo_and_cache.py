@@ -76,9 +76,9 @@ def test_a_stored_entry_is_read_back_until_it_expires(tmp_path: Path) -> None:
 
 def test_lifetime_zero_never_reads_or_writes(tmp_path: Path) -> None:
     cache = FileCache(tmp_path, Clock(NOW))
-    cache.put("google-map-tiles", "k", b"tile", NOW, lifetime_s=0)
+    cache.put("never-stored", "k", b"tile", NOW, lifetime_s=0)
     assert list(tmp_path.iterdir()) == []
-    assert cache.get("google-map-tiles", "k", lifetime_s=0) is None
+    assert cache.get("never-stored", "k", lifetime_s=0) is None
 
 
 def test_keys_do_not_collide(tmp_path: Path) -> None:

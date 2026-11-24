@@ -22,7 +22,10 @@ rock layers from MAGNA's digital structural measurements), the soil maps of deci
 
 1. A layer catalogue in `config/` (service, layer, legend source, default opacity, minimum
    zoom, attribution) consumed by the API and served to the front end; the front end builds
-   the panel from it.
+   the panel from it. Extend session 02's `config/defaults/map.yaml` and `GET /api/map`
+   (`src/subphora/api/map.py`) rather than adding a parallel one: today it holds the PNOA
+   base and the cadastral overlay (one WMS image per view), and `Settings` refuses a layer
+   without EPSG:3857 and CORS, which a proxied layer must be allowed to lack.
 2. The layer panel: grouped (base, cadastre, water, geology), toggles, opacity sliders,
    legends (the service's own GetLegendGraphic where it exists), attribution always visible.
 3. Tap on a layer feature → its attributes (WMS GetFeatureInfo or WFS), through the API where

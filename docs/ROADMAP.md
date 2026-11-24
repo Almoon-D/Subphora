@@ -6,8 +6,8 @@
 |---|---|---|---|
 | 00 | `docs/sessions/done/00-plan.md` | Opus 5.5 | done |
 | 01 | `docs/sessions/done/01-verify-sources.md` | Opus 5.5, high | done |
-| 02 | `docs/sessions/02-first-slice.md` | Opus 5.5, high | next |
-| 03 | `docs/sessions/03-official-layers.md` | Opus 5.5, high | planned |
+| 02 | `docs/sessions/done/02-first-slice.md` | Opus 5.5, high | done |
+| 03 | `docs/sessions/03-official-layers.md` | Opus 5.5, high | next |
 | 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | planned |
 | 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
@@ -60,14 +60,21 @@
 
 - Every external endpoint, licence, price and legal rule in the plan was written from memory:
   session 01 verifies them before code depends on them. (00)
-- Node 27 reaches end of life in mid-2027: move to Node 28 when it is released (April 2027),
-  in the maintenance session or the session running then (0011). (00)
+- Node 27's stable release is due in April 2027 (only alphas exist): move `.nvmrc` to 27
+  then, in the maintenance session or the session running then (0011, 0016). (00, 02)
 - Commercial use: no sale before the owner has tested the finished project on his land
   (decision 0015); whom to contact then is kept in `docs/commercial-use.md`. (01)
 - Legal: the mining-safety rules for water boreholes and municipal licences were not read;
   session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
 - The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
   from the cloud; the catalogue uses `sigpac-hubcloud.es`. (01)
+- Starlette 1.10 deprecates its TestClient over `httpx` in favour of `httpx2` (pydantic's
+  fork); API tests use httpx's ASGI transport instead. The maintenance session decides
+  whether the client moves to `httpx2`. (02)
+- `typescript` stays on 6.0 only as typescript-eslint's parser; drop it once
+  typescript-eslint reads TypeScript 7 (decision 0016). (02)
+- A parcel larger than the view at zoom 15 (big rustic ones) shows no cadastral layer until
+  the owner zooms in; the hint says so. (02)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -75,6 +82,19 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 02 — First end-to-end slice: a cadastral reference on the map (2026-11-24, version 0.2.0)
+
+- Landed: `subphora serve` (FastAPI) with `GET /api/parcels/{reference}` and `GET /api/map`;
+  `countries/es/` (reference format, control letters checked on 7 real references, provinces
+  to ISO 3166-2, CRS by location), `geo/`, `store/` (file cache), `services/`, `api/` under
+  one layers contract; `web/` (Vite 8, React 19.3, MapLibre 6.19, TypeScript 7) with PNOA,
+  Catastro as one image per view, the outline, Spanish catalogue; `make dev`; web checks in
+  `make check` and CI; decisions 0016 (Node 26, TypeScript 7/6), 0017 (CI minutes), 0018.
+- Live: Mérida, Santiago, Atocha and Tinajo (16 holes, EPSG:4083) found and drawn from
+  `make dev`; Navarra refused before any call; Node 27 is alpha only; MapLibre 6 needs its
+  worker URL set under Vite; its image sources take no attribution.
+- Prompt edit: 03 (extend `map.yaml` and `/api/map`). AGENTS.md and MASTER_PLAN §3: Node 26.
 
 ### 01 — All basin authorities and regional water agencies (2026-11-24, version 0.1.2)
 

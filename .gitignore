@@ -32,3 +32,9 @@ data/
 .vscode/
 .DS_Store
 .import_linter_cache/
+
+# Front end (web/)
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/

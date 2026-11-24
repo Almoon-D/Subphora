@@ -64,6 +64,9 @@ session with the `subphora/0.1.0` User-Agent.
   text "No se ha encontrado la parcela 29015A16799999 para el huso 25830". A malformed
   reference: the same, text "Invalid length of REFCAT parameter". The client must read the
   body, not the status. `(GetFeature GetParcel, 2026-11-24)`
+- With `srsname=EPSG::4326` positions come with 6 decimals (about 10 cm), latitude first;
+  Tinajo's parcel is one `PolygonPatch` with 16 `interior` rings. `(GetFeature GetParcel,
+  2026-11-24)`
 - A bounding-box GetFeature works (`typenames=cp:CadastralParcel&srsname=EPSG::25830&bbox=…`).
   `(GetFeature bbox, 2026-11-24)`
 
@@ -74,6 +77,11 @@ session with the `subphora/0.1.0` User-Agent.
   value**. JSON variants: `COVCCallejero.svc/json/Consulta_DNPRC?RefCat=` (data of a property
   by reference: use, built area, year, locality), `COVCCoordenadas.svc/json/Consulta_RCCOOR?CoorX=&CoorY=&SRS=EPSG:4326`
   (reference at a point). SOAP and WSDL also exist. `(Consulta_DNPRC, Consulta_RCCOOR, 2026-11-24)`
+- `Consulta_DNPRC` with a 14-character reference: one property comes back as
+  `consulta_dnprcResult.bico.bi`, several (Estación Puerta de Atocha, 1532704VK4713C) as
+  `lrcdnp.rcdnp[]`; each carries `dt.nm` (municipality), `dt.np` (province) and
+  `dt.loine.cp` (INE province code: 15, 06, 35, 28…). A missing reference answers HTTP 200
+  with `lerr[].cod` "5" ("NO EXISTE NINGÚN INMUEBLE…"). `(Consulta_DNPRC, 2026-11-24)`
 - Owner and value data are only in the authenticated services of the Sede Electrónica
   (electronic certificate, "datos protegidos"). Subphora never calls them (hard rule 6); no
   catalogued route returns them.
@@ -93,8 +101,8 @@ session with the `subphora/0.1.0` User-Agent.
 - A rustic reference: province (2) + municipality (3) + sector (1 letter) + polygon (3) +
   parcel (5) = 14; an urban one: 7 digits + 7 alphanumerics (sheet) = 14. The full reference
   adds 4 digits for the property (cargo) and 2 control letters = 20.
-- Control letters, verified against the service on the three references above and on two
-  more rustic and urban ones:
+- Control letters, verified against the service on seven references (the three above,
+  Torre Picasso, the Basílica del Pilar and two properties of Atocha station):
   weights `[13, 15, 12, 5, 4, 17, 9, 21, 3, 7, 1]` over 11 characters; the first letter
   from characters 1–7 plus the cargo, the second from characters 8–14 plus the cargo.
   Digits count their value; letters A–N count 1–14, Ñ 15, O–Z 16–27 (the full value,

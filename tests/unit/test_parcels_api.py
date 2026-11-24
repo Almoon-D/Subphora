@@ -10,7 +10,9 @@ import pytest
 import yaml
 
 from subphora.api import create_app
+from subphora.api.map import MapConfig, map_config
 from subphora.config import Settings, load_settings
+from subphora.domain.parcels import CadastralParcel
 from tests.support import Catastro, fast_settings, fixture_bytes, parcel_fixture
 
 SANTIAGO = "7279701NH3477G"
@@ -235,3 +237,12 @@ def test_a_map_layer_without_cors_is_refused(config_dir: Path) -> None:
     )
     with pytest.raises(ValueError, match="EPSG:3857 and CORS"):
         load_settings(config_dir)
+
+
+def test_the_browser_test_fixtures_match_the_api() -> None:
+    """web/e2e/fixtures/ stand in for the API in Playwright: they must keep its shape."""
+    fixtures = Path(__file__).resolve().parents[2] / "web" / "e2e" / "fixtures"
+    parcel = CadastralParcel.model_validate_json((fixtures / "parcel-santiago.json").read_bytes())
+    assert parcel.reference == SANTIAGO
+    served = MapConfig.model_validate_json((fixtures / "map.json").read_bytes())
+    assert served == map_config(load_settings())

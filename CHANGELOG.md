@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.2.0] - 2026-11-24
+
+- `make dev` starts Subphora in the browser: type a cadastral reference and the parcel
+  appears outlined on the PNOA orthophoto, with Catastro's parcel map on top when zoomed in.
+- The parcel card shows the municipality, province, cadastral area and the reference point
+  in the parcel's own UTM zone (or REGCAN95 in the Canaries), with its source and date.
+- References are checked before anything is asked of Catastro, including the two control
+  letters of a 20-character reference; Navarra and the Basque Country get a clear "not
+  supported yet".
+- Every failure has its own message in Spanish: malformed, not found, territory not
+  supported, Catastro slow or failing, server unreachable.
+- Catastro's answers are kept for a week in `data/cache/`, so a parcel opens again at once.
+- `make check` and CI now also check the front end, including browser tests.
+
 ## [0.1.2] - 2026-11-24
 
 - Every water authority in Spain is now surveyed: the river-basin confederations and the

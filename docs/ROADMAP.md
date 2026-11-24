@@ -71,8 +71,9 @@
 - Starlette 1.10 deprecates its TestClient over `httpx` in favour of `httpx2` (pydantic's
   fork); API tests use httpx's ASGI transport instead. The maintenance session decides
   whether the client moves to `httpx2`. (02)
-- `typescript` stays on 6.0 only as typescript-eslint's parser; drop it once
-  typescript-eslint reads TypeScript 7 (decision 0016). (02)
+- TypeScript 7.1 (late, due 2026-11-24): the first session that starts after it is stable
+  moves the compiler and ESLint's parser to it and drops `typescript` 6.0 (decision 0019,
+  owner ruling). (02)
 - A parcel larger than the view at zoom 15 (big rustic ones) shows no cadastral layer until
   the owner zooms in; the hint says so. (02)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:

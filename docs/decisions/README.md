@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0019](0019-typescript-7-1-for-eslint.md) | TypeScript 7.1 for ESLint as soon as it is stable; no TypeScript 6 | accepted |
 | [0018](0018-parcel-lookup-route.md) | Parcel lookup: WFS in EPSG:4326, places from the non-protected data service | accepted |
 | [0017](0017-web-checks-in-ci.md) | The front end's checks run in CI (~75 min a month) | accepted |
 | [0016](0016-node-26-and-typescript-7.md) | Node 26 until Node 27 is stable; TypeScript 7 checks, 6 parses for ESLint | accepted |

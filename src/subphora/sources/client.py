@@ -26,10 +26,10 @@ type Params = Mapping[str, str | list[str]]
 
 
 class HostNotAllowedError(Exception):
-    """A request to a host outside the source catalogue (hard rule 4)."""
+    """A request to a host outside the source catalogue, or not over https (hard rule 4)."""
 
-    def __init__(self, host: str) -> None:
-        super().__init__(f"host {host!r} is not in the source catalogue")
+    def __init__(self, host: str, reason: str = "is not in the source catalogue") -> None:
+        super().__init__(f"host {host!r} {reason}")
         self.host = host
 
 
@@ -120,12 +120,14 @@ class CatalogueClient:
         return self._http.headers["User-Agent"]
 
     async def _refuse_unknown_host(self, request: httpx.Request) -> None:
-        # Runs before every hop, so a redirect to another host is refused too.
-        self.ensure_allowed(request.url.host)
+        # Runs before every hop, so a redirect to another host or to http is refused too.
+        self.ensure_allowed(request.url)
 
-    def ensure_allowed(self, host: str) -> None:
-        if host.lower() not in self._allowed:
-            raise HostNotAllowedError(host)
+    def ensure_allowed(self, url: httpx.URL) -> None:
+        if url.host.lower() not in self._allowed:
+            raise HostNotAllowedError(url.host)
+        if url.scheme != "https":
+            raise HostNotAllowedError(url.host, f"is catalogued for https only, not {url.scheme}")
 
     async def get(
         self,
@@ -134,9 +136,9 @@ class CatalogueClient:
         headers: Mapping[str, str] | None = None,
     ) -> FetchedResponse:
         """GET ``url``; raises HostNotAllowedError or SourceError."""
-        host = httpx.URL(url).host
-        self.ensure_allowed(host)
-        limiter = self._limiters[host.lower()]
+        parsed = httpx.URL(url)
+        self.ensure_allowed(parsed)
+        limiter = self._limiters[parsed.host.lower()]
         attempts = self._settings.retries + 1
         for attempt in range(1, attempts + 1):
             try:

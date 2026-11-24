@@ -33,6 +33,18 @@ async def test_a_redirect_to_another_host_is_refused() -> None:
         assert not evil.called
 
 
+async def test_plain_http_is_refused_even_on_a_catalogued_host() -> None:
+    with respx.mock(assert_all_called=False) as mock:
+        mock.get(URL).respond(302, headers={"Location": "http://wms.example.org/wms"})
+        plain = mock.get("http://wms.example.org/wms")
+        async with CatalogueClient(catalogue(service()), "1.2.3") as client:
+            with pytest.raises(HostNotAllowedError, match="https only"):
+                await client.get("http://wms.example.org/wms")
+            with pytest.raises(HostNotAllowedError, match="https only"):
+                await client.get(URL)
+        assert not plain.called
+
+
 async def test_a_redirect_within_the_catalogue_is_followed() -> None:
     with respx.mock as mock:
         mock.get(URL).respond(301, headers={"Location": "https://wms.example.org/new"})

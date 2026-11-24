@@ -1,11 +1,13 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
 """WMS and ArcGIS map requests, and the parsers of the feature information they answer.
 
-Observed behaviour (docs/knowledge/igme.md, miteco-basins.md, junta-andalucia.md, soil.md):
-- GeoServer (MITECO) answers GetFeatureInfo as GeoJSON (``application/json``), its fields
-  named by readable aliases; ArcGIS (IGME) as GeoJSON (``application/geo+json``, MAGNA and
-  the water points) or its own XML (``text/xml``: ``FIELDS`` elements whose attributes are
-  the fields).
+Observed behaviour (docs/knowledge/igme.md, miteco-basins.md, junta-andalucia.md, soil.md,
+regional-layers.md):
+- GeoServer (MITECO, IDENA) answers GetFeatureInfo as GeoJSON (``application/json``);
+  ArcGIS (IGME, ICGC) as GeoJSON (``application/geo+json``, MAGNA and the water points) or
+  its own XML (``text/xml``: ``FIELDS`` elements whose attributes are the fields);
+  MapServer (REDIAM) as ``msGMLOutput``: per layer a ``<layer>_feature`` element whose
+  children are the fields, an empty ``msGMLOutput`` where there is nothing.
 - A service that cannot answer still says HTTP 200, with an exception report in the body:
   the body decides.
 - WMS 1.3.0 takes BBOX in the CRS's own axis order (latitude first for EPSG:4326 and 4258).
@@ -16,13 +18,14 @@ import xml.etree.ElementTree as ET
 from collections.abc import Sequence
 from typing import Literal
 
-type InfoParser = Literal["geojson", "esri_xml"]
+type InfoParser = Literal["geojson", "esri_xml", "gml"]
 type Box = tuple[float, float, float, float]
 type Attributes = dict[str, str]
 
 WEB_MERCATOR = "EPSG:3857"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _EXCEPTION_ROOTS = frozenset({"ServiceExceptionReport", "ExceptionReport"})
+_GML_NAMESPACE = "http://www.opengis.net/gml"
 
 
 class FeatureInfoError(ValueError):
@@ -31,6 +34,23 @@ class FeatureInfoError(ValueError):
 
 def _bbox(box: Box) -> str:
     return ",".join(f"{value:.6f}" for value in box)
+
+
+def getmap_params(layer: str, style: str, size_px: int, box: Box) -> dict[str, str]:
+    """A transparent PNG of ``box`` (EPSG:3857 metres), ``size_px`` square."""
+    return {
+        "SERVICE": "WMS",
+        "VERSION": "1.3.0",
+        "REQUEST": "GetMap",
+        "LAYERS": layer,
+        "STYLES": style,
+        "CRS": WEB_MERCATOR,
+        "BBOX": _bbox(box),
+        "WIDTH": str(size_px),
+        "HEIGHT": str(size_px),
+        "FORMAT": "image/png",
+        "TRANSPARENT": "true",
+    }
 
 
 def export_params(layers: str, size_px: int, box: Box) -> dict[str, str]:
@@ -107,6 +127,8 @@ def parse_feature_info(content: bytes, parser: InfoParser) -> list[Attributes]:
             return [
                 dict(element.attrib) for element in _xml(content) if _local(element.tag) == "FIELDS"
             ]
+        case "gml":
+            return _parse_gml(content)
 
 
 def allowed_fields(
@@ -160,3 +182,22 @@ def _parse_geojson(content: bytes) -> list[Attributes]:
             }
         )
     return parsed
+
+
+def _parse_gml(content: bytes) -> list[Attributes]:
+    root = _xml(content)
+    if _local(root.tag) != "msGMLOutput":
+        raise FeatureInfoError(f"expected msGMLOutput, got {_local(root.tag)}")
+    features = []
+    for layer in root:
+        for feature in layer:
+            if not _local(feature.tag).endswith("_feature"):
+                continue
+            features.append(
+                {
+                    _local(child.tag): (child.text or "")
+                    for child in feature
+                    if not child.tag.startswith("{" + _GML_NAMESPACE + "}")
+                }
+            )
+    return features

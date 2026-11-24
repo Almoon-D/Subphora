@@ -5,10 +5,12 @@
   municipality, province), or an error whose ``code`` says why there is none.
 - ``GET /api/map``: the base maps, the cadastral overlay and the official layers the front
   end draws, built from the catalogues so that no host or attribution is written in it.
-- ``GET /api/layers/{id}/tiles/{z}/{x}/{y}``: a PNG tile of an official layer the browser
-  cannot draw from its service (no CORS or no EPSG:3857).
-- ``GET /api/layers/{id}/info?lon=&lat=&zoom=``: the allowed fields of the layer's
-  features under a tapped point.
+- ``GET /api/layers/{id}/tiles/{z}/{x}/{y}``: a PNG tile of an official layer, national or
+  regional, the browser cannot draw from its service (no CORS or no EPSG:3857).
+- ``GET /api/layers/{id}/info?lon=&lat=&zoom=``: the allowed fields of a map theme's
+  features under a tapped point, from the regional layer whose area holds it or the
+  national one, saying which answered.
+- ``GET /api/areas/{id}``: the official boundary a regional layer is drawn inside.
 """
 
 import logging
@@ -24,9 +26,11 @@ from fastapi.responses import JSONResponse
 from subphora import __version__
 from subphora.api.map import MapConfig, map_config
 from subphora.config import REPO_ROOT, Settings
+from subphora.domain.areas import AreaBoundary
 from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
 from subphora.domain.parcels import CadastralParcel, LookupFailure, ParcelLookupError
 from subphora.geo import MAX_TILE_ZOOM
+from subphora.services.areas import AreaService
 from subphora.services.layers import LayerService
 from subphora.services.parcels import ParcelService
 from subphora.sources import CatalogueClient
@@ -45,6 +49,7 @@ _STATUS = {
 }
 _LAYER_STATUS = {
     LayerFailure.UNKNOWN_LAYER: 404,
+    LayerFailure.UNKNOWN_AREA: 404,
     LayerFailure.NOT_PROXIED: 404,
     LayerFailure.NO_FEATURE_INFO: 404,
     LayerFailure.INVALID_TILE: 400,
@@ -71,7 +76,8 @@ def create_app(
         async with CatalogueClient(settings.sources, __version__, transport) as client:
             cache = FileCache(settings.store.cache_path(root))
             app.state.parcels = ParcelService(client, settings.sources, cache)
-            app.state.layers = LayerService(client, settings, cache)
+            app.state.areas = AreaService(client, settings, cache)
+            app.state.layers = LayerService(client, settings, cache, app.state.areas)
             yield
 
     app = FastAPI(title="Subphora", version=__version__, lifespan=lifespan)
@@ -131,5 +137,14 @@ def create_app(
     ) -> LayerFeatureInfo:
         layers: LayerService = request.app.state.layers
         return await layers.info(layer_id, lon, lat, zoom)
+
+    @app.get("/api/areas/{area_id}")
+    async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:
+        areas: AreaService = request.app.state.areas
+        boundary = await areas.boundary(area_id)
+        # The browser may keep it as long as the server's cache does.
+        lifetime = settings.sources.service(boundary.source.service_id).politeness
+        response.headers["Cache-Control"] = f"public, max-age={lifetime.cache_lifetime_s}"
+        return boundary
 
     return app

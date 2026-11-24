@@ -89,6 +89,16 @@ def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
     assert magna.legend_url is None  # MAGNA's legends are lists of symbol codes
 
 
+def test_a_layer_without_cors_is_drawn_by_the_proxy_from_its_own_getmap(config_dir: Path) -> None:
+    edit_map(
+        config_dir,
+        lambda d: overlay(d, "rivers").update(service="rediam-soils", layer="unidades_edaficas"),
+    )
+    rivers = next(o for o in map_config(load_settings(config_dir)).overlays if o.id == "rivers")
+    assert rivers.proxied
+    assert rivers.tiles == ("/api/layers/rivers/tiles/{z}/{x}/{y}",)
+
+
 @pytest.mark.parametrize(
     ("change", "message"),
     [
@@ -101,7 +111,7 @@ def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
         (lambda d: overlay(d, "lithostratigraphy").pop("export"), "no export"),
         (
             lambda d: overlay(d, "rivers").update(export=overlay(d, "lithostratigraphy")["export"]),
-            "has CORS and EPSG:3857; no export is needed",
+            "offers EPSG:3857; no export is needed",
         ),
         (
             lambda d: overlay(d, "lithostratigraphy")["export"].update(service="igme-magna-wms"),
@@ -116,13 +126,6 @@ def test_a_layer_without_cors_or_web_mercator_goes_through_the_proxy() -> None:
             "legend must be on mapas.igme.es",
         ),
         (lambda d: overlay(d, "permeability")["legend"].pop("url"), "exactly when its kind"),
-        # A service without CORS (REDIAM) cannot be drawn by the browser and has no export.
-        (
-            lambda d: overlay(d, "rivers").update(
-                service="rediam-soils", layer="unidades_edaficas"
-            ),
-            "lacks CORS or EPSG:3857 and has no export",
-        ),
         (lambda d: overlay(d, "rivers").update(group="weather"), "not in groups"),
         (lambda d: overlay(d, "rivers").update(id="springs"), "duplicate overlay ids"),
         (lambda d: overlay(d, "rivers").update(min_zoom=20), "above max_zoom"),

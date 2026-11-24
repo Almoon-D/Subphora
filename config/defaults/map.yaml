@@ -52,12 +52,17 @@ cadastre:
   opacity: 1.0
 
 # The official water, geology and soil layers (WMS), in the panel's groups and drawing
-# order (later layers are drawn on top). Every one covers all of Spain, so the map is the
-# same wherever it is opened (decision 0022). A layer whose service has CORS and EPSG:3857
-# is drawn by the browser from the service; any other names an ArcGIS export, which the
-# API's tile proxy draws.
+# order (later layers are drawn on top): one panel entry per theme. Every one covers all of
+# Spain, so the map is the same wherever it is opened (decision 0022); where a region or
+# basin authority publishes a layer that qualifies (decision 0023), regional.yaml draws it
+# inside its area over the national one. A layer whose service has CORS and EPSG:3857 is
+# drawn by the browser from the service; one without CORS by the API's tile proxy; one
+# without EPSG:3857 names an ArcGIS export, which the proxy draws.
 #
-# Per layer: min_zoom is the first zoom at which the service draws it (ArcGIS layers carry
+# Per layer: detail is the publisher's stated scale (scale_denominator) or grid cell
+# (cell_m) and edition year, each left out when not stated (evidence in the layer's
+# knowledge file); a tap shows it, and regional layers (regional.yaml) are compared with it.
+# min_zoom is the first zoom at which the service draws it (ArcGIS layers carry
 # a scale range: 1:283,482 is zoom 11, 1:94,494 zoom 13, 1:23,624 zoom 15); legend is the
 # service's GetLegendGraphic (wms), the legend image its capabilities name (url) or none
 # (the MAGNA and GEODE legends are lists of symbol codes); info is how a tap reads the
@@ -79,6 +84,7 @@ overlays:
   layers:
     - id: groundwater-bodies
       group: water
+      detail: {edition: 2023}
       service: miteco-gw-bodies
       layer: masas_aguasub_2027
       opacity: 0.5
@@ -90,6 +96,7 @@ overlays:
         fields: ["Código masa de agua", "Nombre masa de agua", "Nombre Demarcación Hidrográfica", "Superficie (km2)", "Formación geológica", "Horizontes"]
     - id: groundwater-status
       group: water
+      detail: {edition: 2023}
       service: miteco-gw-status-wms
       layer: estado_masas_aguasub_2027
       opacity: 0.5
@@ -101,6 +108,7 @@ overlays:
         fields: ["Cód. Masa de agua", "Nombre masa de agua", "Demarcación Hidrográfica", "Estado cuantitativo", "Estado químico", "Información"]
     - id: groundwater-at-risk
       group: water
+      detail: {edition: 2023}
       service: miteco-gw-at-risk
       layer: masas_aguasub_riesgo_2027
       opacity: 0.5
@@ -112,6 +120,7 @@ overlays:
         fields: ["Código de masa", "Nombre masa de agua", "Organismo cuenca", "Tipo de riesgo", "Declaración de riesgo", "Fecha declaración", "Link base legal declaración"]
     - id: public-water-domain
       group: water
+      detail: {}
       service: miteco-public-water-domain
       layer: DPH_Estimado
       opacity: 0.6
@@ -123,6 +132,7 @@ overlays:
         fields: ["Tipo Zona", "Zona", "Documento", "Organismo", "Información"]
     - id: rivers
       group: water
+      detail: {edition: 2023}
       service: miteco-rivers
       layer: redhidrografica_2027
       opacity: 0.9
@@ -134,6 +144,7 @@ overlays:
         fields: ["Nombre", "Código de masa de agua"]
     - id: springs
       group: water
+      detail: {}
       service: miteco-springs
       layer: manantiales
       opacity: 1.0
@@ -145,6 +156,7 @@ overlays:
         fields: ["Cód. Manantial", "Nombre", "Demarcación hidrográfica", "Condición", "Cota (msnm)", "Nombre MASb controlada", "Municipio", "Manantial"]
     - id: piezometers
       group: water
+      detail: {}
       service: miteco-piezometers
       layer: RedPiezometrica
       opacity: 1.0
@@ -156,6 +168,7 @@ overlays:
         fields: ["Cód. Piezómetro", "Cód. Europeo", "Demarcación Hidrográfica", "Cota terreno (msnm)", "Profundidad obra (m)", "MASb controlada", "Condición", "Piezómetro"]
     - id: water-points
       group: water
+      detail: {}
       service: igme-water-points-wms
       layer: "0"
       opacity: 1.0
@@ -168,6 +181,7 @@ overlays:
         fields: ["Id", "Naturaleza", "Profundidad m", "Cota msnm", "Fecha obra", "Uso", "Unidad Hidrogeologica", "Sistema Acuifero", "Municipio"]
     - id: geode-geology
       group: geology
+      detail: {scale_denominator: 50000}
       service: igme-geode-wms
       layer: "1"
       opacity: 0.6
@@ -180,6 +194,7 @@ overlays:
         fields: ["Descripción Unidad Geológica", "Código de Unidad Geológica", "Edad Inferior", "Edad Superior", "Código zona GEODE"]
     - id: magna-lithology
       group: geology
+      detail: {scale_denominator: 50000}
       service: igme-magna-wms
       layer: "0"
       opacity: 0.6
@@ -191,6 +206,7 @@ overlays:
         fields: ["nº de hoja", "unidad cartográfica", "descripción litológica"]
     - id: lithostratigraphy
       group: geology
+      detail: {scale_denominator: 200000}
       service: igme-lithostrat-wms
       layer: "0"
       opacity: 0.6
@@ -208,6 +224,7 @@ overlays:
         fields: ["Descripciónlitológica", "Permeabilidad", "Era", "Sistema", "Serie", "Piso"]
     - id: permeability
       group: geology
+      detail: {scale_denominator: 200000}
       service: igme-permeability-wms
       layer: "0"
       opacity: 0.6
@@ -219,6 +236,7 @@ overlays:
         fields: ["Permeabilidad", "Código", "Descripción"]
     - id: hydrogeology
       group: geology
+      detail: {scale_denominator: 200000, edition: 2010}
       service: igme-hydrogeo-wms
       layer: "0"
       opacity: 0.6
@@ -230,6 +248,7 @@ overlays:
         fields: ["Código", "Descripción"]
     - id: magna-faults
       group: geology
+      detail: {scale_denominator: 50000}
       service: igme-magna-wms
       layer: "2"
       opacity: 1.0
@@ -241,6 +260,7 @@ overlays:
         fields: ["nº de hoja", "Descripción"]
     - id: magna-dip
       group: geology
+      detail: {scale_denominator: 50000}
       service: igme-magna-wms
       layer: "6"
       opacity: 1.0
@@ -252,6 +272,7 @@ overlays:
         fields: ["nº de hoja", "Descripción", "Dirección de buzamiento", "Ángulo de buzamiento"]
     - id: soil-clay
       group: soil
+      detail: {cell_m: 250, edition: 2021}
       service: soilgrids-wms
       layer: clay_0-5cm_mean
       opacity: 0.6

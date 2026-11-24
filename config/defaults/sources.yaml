@@ -240,6 +240,25 @@ services:
       expect_content_type: application/json
       expect_text: '"muniCode":"50297"'
 
+  - id: ign-admin-units
+    name: Administrative units of Spain (INSPIRE WFS)
+    publisher: Instituto Geográfico Nacional (IGN)
+    kind: wfs
+    coverage: [ES]
+    base_url: https://www.ign.es/wfs-inspire/unidades-administrativas
+    layers: [au:AdministrativeUnit]
+    crs: [EPSG:4258, EPSG:4326, EPSG:3857, EPSG:25828, EPSG:25829, EPSG:25830, EPSG:25831]
+    web_mercator: true
+    cors: false
+    licence: CC BY 4.0 ign.es
+    attribution: "Unidades administrativas CC-BY 4.0 ign.es"
+    terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
+    knowledge: docs/knowledge/regional-layers.md
+    # One autonomous community at full detail is up to 15 MB of GeoJSON (Catalonia's
+    # coast): read once, rounded and cached.
+    max_response_bytes: 32000000
+    politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 2592000}
+
   - id: cnig-downloads
     name: CNIG download centre (MDT02, MDT05, MDT25 files)
     publisher: Centro Nacional de Información Geográfica (CNIG)
@@ -488,6 +507,24 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
+  - id: miteco-river-basin-districts-wfs
+    name: River-basin districts, plans 2022-2027 (WFS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wfs
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/demarhidro_2027/ows
+    layers: [agua:demarhidro_2027]
+    crs: [EPSG:4258, EPSG:4326, EPSG:3857, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: "MITECO: no restrictions on public access; reuse with the source cited"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/regional-layers.md
+    # One district's boundary is up to 1.4 MB (ES060), read once and cached.
+    max_response_bytes: 8000000
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+
   - id: miteco-gw-status-wms
     name: Quantitative status of groundwater bodies, 2022-2027 (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
@@ -646,7 +683,7 @@ services:
     kind: wms
     coverage: [ES-CT]
     base_url: https://geoserveis.icgc.cat/servei/catalunya/hidrogeologia/wms
-    layers: [unitats_hidrogeologiques, punts_aigua, piezometries_quaternaris]
+    layers: [unitats_hidrogeologiques, unitats_hidrogeologiques_tipus, punts_aigua, piezometries_quaternaris]
     crs: [EPSG:3857, EPSG:4258, EPSG:25831]
     web_mercator: true
     cors: true
@@ -707,6 +744,23 @@ services:
     attribution: "REDIAM, Junta de Andalucía"
     terms_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_agua_andalucia_phc_2022_27?request=GetCapabilities&service=WMS
     knowledge: docs/knowledge/junta-andalucia.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: rediam-preventive-control
+    name: Groundwater bodies under preventive control, Andalusian intra-community districts (WMS)
+    publisher: Junta de Andalucía, REDIAM
+    kind: wms
+    coverage: [ES-AN]
+    base_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_subt_intracomunitarias_control_prevent
+    layers: [masas_agua_subt_intracom]
+    crs: [EPSG:3857, EPSG:4258, EPSG:25830]
+    web_mercator: true
+    # No Access-Control-Allow-Origin: the API's proxy draws it.
+    cors: false
+    licence: "REDIAM: free use, citing the authors and owners of the information"
+    attribution: "REDIAM, Junta de Andalucía"
+    terms_url: https://www.juntadeandalucia.es/medioambiente/mapwms/REDIAM_masas_subt_intracomunitarias_control_prevent?request=GetCapabilities&service=WMS
+    knowledge: docs/knowledge/regional-layers.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
   - id: rediam-soils

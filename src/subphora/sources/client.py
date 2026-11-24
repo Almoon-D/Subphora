@@ -7,7 +7,8 @@
 - Per host: at most ``max_concurrent`` requests in flight and ``min_interval_s`` between
   request starts, the strictest of the services on that host.
 - Transport errors (resets, timeouts) are retried; HTTP errors are returned as they are.
-- Bodies are capped at ``max_response_bytes``: the client fetches samples, never bulk data.
+- Bodies are capped at ``max_response_bytes`` (or a service's own larger cap, for the
+  official boundaries): the client fetches samples and single features, never bulk data.
 """
 
 import asyncio
@@ -140,8 +141,10 @@ class CatalogueClient:
         url: str,
         params: Params | None = None,
         headers: Mapping[str, str] | None = None,
+        max_bytes: int | None = None,
     ) -> FetchedResponse:
-        """GET ``url``; raises HostNotAllowedError or SourceError."""
+        """GET ``url``, its body capped at ``max_bytes`` or the client's default; raises
+        HostNotAllowedError or SourceError."""
         parsed = httpx.URL(url)
         self.ensure_allowed(parsed)
         limiter = self._limiters[parsed.host.lower()]
@@ -150,7 +153,7 @@ class CatalogueClient:
             try:
                 async with limiter.slots:
                     await limiter.wait_turn()
-                    return await self._fetch(url, params, headers)
+                    return await self._fetch(url, params, headers, max_bytes)
             except httpx.TransportError as exc:
                 if attempt == attempts:
                     if isinstance(exc, httpx.TimeoutException):
@@ -160,9 +163,13 @@ class CatalogueClient:
         raise AssertionError("unreachable")  # pragma: no cover
 
     async def _fetch(
-        self, url: str, params: Params | None, headers: Mapping[str, str] | None
+        self,
+        url: str,
+        params: Params | None,
+        headers: Mapping[str, str] | None,
+        max_bytes: int | None,
     ) -> FetchedResponse:
-        limit = self._settings.max_response_bytes
+        limit = max_bytes or self._settings.max_response_bytes
         # Merge, not replace: some base URLs carry a query of their own (?map=…).
         target = httpx.URL(url).copy_merge_params(params or {})
         request = self._http.build_request("GET", target, headers=headers)

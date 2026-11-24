@@ -4,14 +4,21 @@ the source catalogue, so that no host, layer name or attribution is written in t
 
 The base maps, the cadastre and the overlays whose services have CORS and EPSG:3857 are
 drawn by the browser from the service; the other overlays come from the API's tile proxy.
+Each overlay is one map theme: its national layer, and the regional layers that detail it
+inside their areas (decision 0023), which the browser clips to the boundaries it reads
+from ``GET /api/areas/{id}``.
 """
 
 from urllib.parse import urlencode
 
 from subphora.config import Settings
 from subphora.config.map import BaseMap as BaseMapSettings
+from subphora.config.map import Legend
 from subphora.config.map import Overlay as OverlaySettings
+from subphora.config.regional import RegionalLayer as RegionalSettings
+from subphora.config.sources import Service
 from subphora.domain import DomainModel
+from subphora.domain.layers import LayerDetail
 from subphora.services.layers import is_proxied
 from subphora.sources.wms import WEB_MERCATOR, legend_params
 
@@ -50,6 +57,24 @@ class CadastreOverlay(DomainModel):
     opacity: float
 
 
+class RegionalOverlay(DomainModel):
+    """A regional layer, drawn inside its areas over its theme's national layer."""
+
+    id: str
+    service_id: str
+    publisher: str
+    tiles: tuple[str, ...]
+    proxied: bool
+    min_zoom: int
+    # The areas it is drawn and asked inside, and the box enclosing them all.
+    area_ids: tuple[str, ...]
+    bounds: tuple[float, float, float, float]
+    legend_url: str | None
+    feature_info: bool
+    attribution: str
+    detail: LayerDetail
+
+
 class Overlay(DomainModel):
     id: str
     group: str
@@ -64,9 +89,13 @@ class Overlay(DomainModel):
     visible: bool
     # None: the service has no legend a person can read.
     legend_url: str | None
-    # Whether a tap asks the API what lies under it.
+    # Whether a tap asks the API what the national layer holds (each regional layer says
+    # the same of itself, inside its bounds).
     feature_info: bool
     attribution: str
+    publisher: str
+    detail: LayerDetail
+    regional: tuple[RegionalOverlay, ...]
 
 
 class MapConfig(DomainModel):
@@ -108,52 +137,82 @@ def _base_map(settings: Settings, base: BaseMapSettings) -> BaseMap:
     )
 
 
+def _tiles(settings: Settings, service: Service, layer_id: str, layer: str, style: str) -> str:
+    if is_proxied(service):
+        return PROXY_TILES.format(layer_id=layer_id)
+    size = str(settings.map.overlays.tile_size)
+    query = urlencode(
+        {
+            "SERVICE": "WMS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetMap",
+            "LAYERS": layer,
+            "STYLES": style,
+            "CRS": WEB_MERCATOR,
+            "WIDTH": size,
+            "HEIGHT": size,
+            "FORMAT": "image/png",
+            "TRANSPARENT": "true",
+        }
+    )
+    return _with_query(service.base_url, f"{query}&BBOX={_BBOX_PLACEHOLDER}")
+
+
+def _legend(service: Service, legend: Legend, layer: str, style: str) -> str | None:
+    match legend.kind:
+        case "wms":
+            return _with_query(service.base_url, urlencode(legend_params(layer, style)))
+        case "url":
+            return legend.url
+        case "none":
+            return None
+
+
+def _regional(settings: Settings, layer: RegionalSettings) -> RegionalOverlay:
+    service = settings.sources.service(layer.service)
+    boxes = [settings.regional.area(area_id).bbox for area_id in layer.areas]
+    return RegionalOverlay(
+        id=layer.id,
+        service_id=service.id,
+        publisher=service.publisher,
+        tiles=(_tiles(settings, service, layer.id, layer.layer, layer.style),),
+        proxied=is_proxied(service),
+        min_zoom=layer.min_zoom,
+        area_ids=tuple(layer.areas),
+        bounds=(
+            min(box[0] for box in boxes),
+            min(box[1] for box in boxes),
+            max(box[2] for box in boxes),
+            max(box[3] for box in boxes),
+        ),
+        legend_url=_legend(service, layer.legend, layer.layer, layer.style),
+        feature_info=layer.info is not None,
+        attribution=service.attribution,
+        detail=layer.evidence.detail,
+    )
+
+
 def _overlay(settings: Settings, overlay: OverlaySettings) -> Overlay:
     service = settings.sources.service(overlay.service)
     overlays = settings.map.overlays
-    proxied = is_proxied(service)
-    if proxied:
-        tiles = PROXY_TILES.format(layer_id=overlay.id)
-    else:
-        size = str(overlays.tile_size)
-        query = urlencode(
-            {
-                "SERVICE": "WMS",
-                "VERSION": "1.3.0",
-                "REQUEST": "GetMap",
-                "LAYERS": overlay.layer,
-                "STYLES": overlay.style,
-                "CRS": WEB_MERCATOR,
-                "WIDTH": size,
-                "HEIGHT": size,
-                "FORMAT": "image/png",
-                "TRANSPARENT": "true",
-            }
-        )
-        tiles = _with_query(service.base_url, f"{query}&BBOX={_BBOX_PLACEHOLDER}")
-    match overlay.legend.kind:
-        case "wms":
-            legend: str | None = _with_query(
-                service.base_url, urlencode(legend_params(overlay.layer, overlay.style))
-            )
-        case "url":
-            legend = overlay.legend.url
-        case "none":
-            legend = None
+    regional = tuple(_regional(settings, layer) for layer in settings.regional.of_theme(overlay.id))
     return Overlay(
         id=overlay.id,
         group=overlay.group,
         service_id=service.id,
-        tiles=(tiles,),
-        proxied=proxied,
+        tiles=(_tiles(settings, service, overlay.id, overlay.layer, overlay.style),),
+        proxied=is_proxied(service),
         tile_size=overlays.tile_size,
         min_zoom=overlay.min_zoom,
         max_zoom=overlays.max_zoom,
         opacity=overlay.opacity,
         visible=overlay.id in overlays.visible_at_start,
-        legend_url=legend,
+        legend_url=_legend(service, overlay.legend, overlay.layer, overlay.style),
         feature_info=overlay.info is not None,
         attribution=service.attribution,
+        publisher=service.publisher,
+        detail=overlay.detail,
+        regional=regional,
     )
 
 

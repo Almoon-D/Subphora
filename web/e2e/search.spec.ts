@@ -147,3 +147,19 @@ test("a map that cannot be configured is reported", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("alert")).toContainText("No se ha podido cargar la configuración del mapa");
 });
+
+test("a failed search after a found one leaves no parcel on the map", async ({ page }) => {
+  await mockEverything(page, { status: 200, body: PARCEL });
+  await page.goto("/");
+  await search(page, REFERENCE);
+  await expect(page.getByRole("region", { name: `Parcela ${REFERENCE}` })).toBeVisible();
+
+  await page.unroute("**/api/parcels/**");
+  await page.route("**/api/parcels/**", (route) =>
+    route.fulfill({ status: 404, contentType: "application/json", body: '{"code":"parcel_not_found"}' }),
+  );
+  await search(page, "29015A16799999");
+  await expect(page.getByRole("alert")).toContainText("Catastro no tiene ninguna parcela");
+  await expect(page.getByRole("heading", { name: /Parcela/ })).toHaveCount(0);
+  await expect(page.locator(".map")).toHaveAttribute("data-parcel", "");
+});

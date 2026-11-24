@@ -143,11 +143,13 @@ export function MapView({ config, parcel }: Props) {
     if (!map || !loaded) {
       return;
     }
+    const source = map.getSource<GeoJSONSource>(PARCEL);
     if (!parcel) {
+      // A failed or new search: no outline of a parcel the card no longer shows.
+      void source?.setData({ type: "FeatureCollection", features: [] });
       return;
     }
     const data = { type: "Feature" as const, properties: {}, geometry: parcel.geometry };
-    const source = map.getSource<GeoJSONSource>(PARCEL);
     if (source) {
       void source.setData(data);
     } else {

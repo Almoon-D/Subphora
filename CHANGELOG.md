@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.5.0] - 2026-11-24
+
+- Five more regional layers on the map, each inside its official boundary: Catalonia's
+  1:25,000 soil map, the 1:25,000 geological maps of Navarra and of the Valencian
+  Community, the Guadiana basin's perimeters where no new groundwater abstraction is
+  allowed, and the Duero basin's zoning of where groundwater may be abstracted.
+- A tap on them names the source, its scale and its date; where they map nothing, the
+  national layer answers and says so.
+- Every regional service the survey had left open now has a verdict; the ones that wait on
+  a fact only a publisher or a browser can give say which, in
+  `docs/knowledge/regional-layers.md`.
+- The permeability and lithostratigraphic maps now show their edition (2009).
+- A tap no longer lists the same unit twice where two of its polygons meet.
+
 ## [0.4.0] - 2026-11-24
 
 - Regional detail on the map: inside Navarra its 1:25,000 soil map, inside Catalonia the

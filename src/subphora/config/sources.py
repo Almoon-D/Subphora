@@ -62,7 +62,7 @@ class Politeness(Section):
 
     max_concurrent: PositiveInt
     min_interval_s: float = Field(ge=0)
-    # 0 means never cache (Google: hard rule 4).
+    # 0 means never cache (a service whose terms forbid storing its data).
     cache_lifetime_s: int = Field(ge=0)
 
 

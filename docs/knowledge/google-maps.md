@@ -1,7 +1,7 @@
 # Google Maps Platform
 
-Host `tile.googleapis.com`. Catalogue id: `google-map-tiles` (needs the owner's key; never
-probed without it). The route chosen is decision 0012. Findings read from Google's public
+Host `tile.googleapis.com`. Not used: decision 0020 dropped Google Maps, and the host left
+the catalogue. Kept as the record of what was read for decision 0012. Findings read from Google's public
 documentation on 2026-11-24; nothing was called with a key.
 
 ## Map Tiles API (2D tiles)

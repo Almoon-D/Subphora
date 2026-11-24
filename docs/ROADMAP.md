@@ -51,8 +51,8 @@
   centre is a JavaScript app). Queued by 01; session 06.
 - VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
   cloud; read it before session 15 uses EGMS. Queued by 01.
-- VERIFY-LIVE(keyed-services): `aemet-opendata` and `google-map-tiles` are "not checked"
-  until the owner's keys exist (sessions 15 and 03). Queued by 01.
+- VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
+  until the owner's key exists (session 15). Queued by 01.
 
 ## Follow-ups
 
@@ -68,6 +68,8 @@
   session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
 - The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
   from the cloud; the catalogue uses `sigpac-hubcloud.es`. (01)
+- Google Maps dropped by the owner (decision 0020): no card, no key; PNOA and the IGN maps
+  are the base maps. (02)
 - Starlette 1.10 deprecates its TestClient over `httpx` in favour of `httpx2` (pydantic's
   fork); API tests use httpx's ASGI transport instead. The maintenance session decides
   whether the client moves to `httpx2`. (02)
@@ -83,6 +85,13 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 02 — Owner rulings: TypeScript 7.1, no Google Maps (2026-11-24, version 0.2.1)
+
+- Landed: decisions 0019 (TypeScript 7.1 for ESLint once stable, no TypeScript 6) and 0020
+  (no Google Maps; supersedes 0005 and 0012); `google-map-tiles` removed from the catalogue;
+  MASTER_PLAN, AGENTS.md hard rule 4, the PR template and prompts 03 and 11 reworded.
+- Prompt edits: 03 (an IGN base-map switch instead of Google), 11 (no Google exclusion).
 
 ### 02 — First end-to-end slice: a cadastral reference on the map (2026-11-24, version 0.2.0)
 

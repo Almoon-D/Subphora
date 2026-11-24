@@ -73,8 +73,8 @@ enforces it. The session that first touches a rule's area adds its enforcement a
    No instrument code exists before session 16 decides one.
 4. **Official APIs and terms only; no secrets in the repository.** The HTTP client calls only
    hosts in the source catalogue (`config/defaults/sources.yaml`), each with its terms recorded
-   in `docs/knowledge/`; anything else is refused. Google imagery is never cached or stored
-   offline. API keys come only from the environment, never from `config/` or the repository.
+   in `docs/knowledge/`; anything else is refused; data whose terms forbid storing it is
+   never cached or taken offline. API keys come only from the environment, never from `config/` or the repository.
 5. **Field data is never lost offline.** An observation is written to IndexedDB before the UI
    confirms it; the sync outbox is idempotent (client-generated ids, server upserts); records
    are append-only. Browser tests cover going offline, reloading mid-sync and retrying.

@@ -751,24 +751,3 @@ services:
       description: the inventory of climate stations
       path: /valores/climatologicos/inventarioestaciones/todasestaciones
       expect_content_type: application/json
-
-  # ── Google Maps Platform (docs/knowledge/google-maps.md, decision 0012) ──────────────
-  - id: google-map-tiles
-    name: Google Map Tiles API (2D satellite and roadmap)
-    publisher: Google
-    kind: rest
-    coverage: [ES]
-    base_url: https://tile.googleapis.com/v1
-    licence: "Google Maps Platform Terms of Service and Map Tiles API policies: no caching, no offline use, logo and attribution visible"
-    attribution: "Google Maps"
-    terms_url: https://developers.google.com/maps/documentation/tile/policies
-    knowledge: docs/knowledge/google-maps.md
-    needs_key: true
-    key_env: GOOGLE_MAPS_API_KEY
-    # Never cached or stored (decision 0005, hard rule 4).
-    politeness: {max_concurrent: 4, min_interval_s: 0.0, cache_lifetime_s: 0}
-    sample:
-      # Needs a key and a session token (POST /createSession); never probed without a key.
-      description: the zoom-0 world tile of a satellite session
-      path: /2dtiles/0/0/0
-      expect_content_type: image/

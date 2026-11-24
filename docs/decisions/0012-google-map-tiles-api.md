@@ -1,6 +1,6 @@
 # 0012 — Google base maps through the Map Tiles API in MapLibre
 
-- Date: 2026-11-24 · Status: accepted · Follows 0005 · MASTER_PLAN §3, §4.1
+- Date: 2026-11-24 · Status: superseded by 0020 · Follows 0005 · MASTER_PLAN §3, §4.1
 - Context: 0005 left the route to session 01: Map Tiles API in MapLibre, or the Maps
   JavaScript API. Session 01 read the current terms (`docs/knowledge/google-maps.md`).
 - Decision: the Map Tiles API (2D `satellite` and `roadmap`) as a MapLibre raster source.

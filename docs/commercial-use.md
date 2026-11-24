@@ -22,7 +22,6 @@ one adds a row; evidence and dates live in the knowledge file named.
 
 | Organisation | Why it matters when selling | Source | Knowledge |
 |---|---|---|---|
-| Google (Maps Platform) | Commercial use is allowed under its terms, but usage is billed per project: 100,000 free 2D map tiles a month, then about USD 0.60 per 1,000, so cost grows with customers | Map Tiles API policies and pricing | `docs/knowledge/google-maps.md` |
 
 ## Open licences: attribution only
 

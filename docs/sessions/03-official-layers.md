@@ -9,13 +9,13 @@ The map shows the official layers as a switchable panel with opacity and legend:
 domain; no service draws the zona de policía, which session 09 derives), geology (MAGNA
 1:50,000, permeability 1:200,000, hydrogeological map, faults, and the dip and strike of
 rock layers from MAGNA's digital structural measurements), the soil maps of decision 0013
-(SoilGrids; REDIAM in Andalusia), and the base maps (PNOA, IGN, and Google when a key is set).
+(SoilGrids; REDIAM in Andalusia), and the base maps (PNOA and the IGN maps; no Google, decision 0020).
 
 ## Read
 
 - `docs/MASTER_PLAN.md` §§ 3, 4.1.
-- `docs/decisions/` 0005, 0012 (Map Tiles API in MapLibre) and 0013 (soil).
-- `docs/knowledge/`: IGME, MITECO and basin authorities, Junta de Andalucía, soil, Google,
+- `docs/decisions/` 0013 (soil) and 0020 (no Google).
+- `docs/knowledge/`: IGME, MITECO and basin authorities, Junta de Andalucía, soil,
   IGN/CNIG.
 
 ## Build
@@ -32,12 +32,10 @@ rock layers from MAGNA's digital structural measurements), the soil maps of deci
    CORS requires it, never showing protected data.
    The REDIAM services (no CORS) and the IGME lithostratigraphic map (no EPSG:3857) are
    drawn through the API's proxy, within the catalogue's limits.
-4. Google satellite and road by the route chosen in session 01, only when a key is
-   configured (from the environment, served to the browser at runtime, never in the
-   repository); Google logo and attribution not obscured; no caching. Without a key the
-   option is simply absent.
+4. A base-map switch between the PNOA orthophoto and the IGN maps (`ign-base-wmts`:
+   `IGNBaseTodo`, `IGNBase-gris`), each with its attribution.
 5. Tests: catalogue validation, the feature-info proxy (success, empty, upstream failure),
-   that Google is absent without a key and never cached, and the panel in Playwright.
+   and the panel and the base-map switch in Playwright.
 
 ## DO NOT BUILD
 

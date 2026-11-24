@@ -19,11 +19,11 @@ the map works there with no coverage.
    estimate before download, progress, resume after interruption.
 2. Storage via the service worker with persistent storage requested; the list of packs, their
    size and date; delete.
-3. Google layers never included (hard rule 4); layers whose terms forbid caching excluded,
+3. Layers whose terms forbid caching excluded (hard rule 4),
    per the knowledge files. The Catastro WMS forbids tiled requests and massive downloads:
    the pack carries the parcel geometry from the WFS instead of cadastral tiles.
 4. Tests: pack size estimate, interrupted download resumed, the map served offline from the
-   pack, Google excluded, storage refusal handled.
+   pack, a no-caching layer excluded, storage refusal handled.
 
 ## DO NOT BUILD
 

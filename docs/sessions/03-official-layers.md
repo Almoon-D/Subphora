@@ -6,15 +6,17 @@ Model and effort: Opus 5.5, high.
 
 The map shows the official layers as a switchable panel with opacity and legend: water
 (groundwater bodies and status, water points, piezometers, rivers, springs, public water
-domain and zona de policía), geology (MAGNA 1:50,000, permeability 1:200,000,
-hydrogeological map, faults, the dip and strike of rock layers where session 01 found them in
-digital form), the soil map chosen in session 01, and the base maps (PNOA, IGN, and Google when a key is set).
+domain; no service draws the zona de policía, which session 09 derives), geology (MAGNA
+1:50,000, permeability 1:200,000, hydrogeological map, faults, and the dip and strike of
+rock layers from MAGNA's digital structural measurements), the soil maps of decision 0013
+(SoilGrids; REDIAM in Andalusia), and the base maps (PNOA, IGN, and Google when a key is set).
 
 ## Read
 
 - `docs/MASTER_PLAN.md` §§ 3, 4.1.
-- `docs/decisions/` 0005 and the Google-route decision from session 01.
-- `docs/knowledge/`: IGME, MITECO and basin authorities, Google, IGN/CNIG.
+- `docs/decisions/` 0005, 0012 (Map Tiles API in MapLibre) and 0013 (soil).
+- `docs/knowledge/`: IGME, MITECO and basin authorities, Junta de Andalucía, soil, Google,
+  IGN/CNIG.
 
 ## Build
 
@@ -25,6 +27,8 @@ digital form), the soil map chosen in session 01, and the base maps (PNOA, IGN, 
    legends (the service's own GetLegendGraphic where it exists), attribution always visible.
 3. Tap on a layer feature → its attributes (WMS GetFeatureInfo or WFS), through the API where
    CORS requires it, never showing protected data.
+   The REDIAM services (no CORS) and the IGME lithostratigraphic map (no EPSG:3857) are
+   drawn through the API's proxy, within the catalogue's limits.
 4. Google satellite and road by the route chosen in session 01, only when a key is
    configured (from the environment, served to the browser at runtime, never in the
    repository); Google logo and attribution not obscured; no caching. Without a key the

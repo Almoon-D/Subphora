@@ -573,6 +573,7 @@ services:
     # Never cached or stored (decision 0005, hard rule 4).
     politeness: {max_concurrent: 4, min_interval_s: 0.0, cache_lifetime_s: 0}
     sample:
-      description: a session token for the satellite map type
-      path: /createSession
-      expect_content_type: application/json
+      # Needs a key and a session token (POST /createSession); never probed without a key.
+      description: the zoom-0 world tile of a satellite session
+      path: /2dtiles/0/0/0
+      expect_content_type: image/

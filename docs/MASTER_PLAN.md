@@ -73,8 +73,9 @@ and permeability map, hydrogeological map, water-point database), MITECO and the
 authorities (groundwater bodies and status, piezometric network, rivers, public water domain,
 zona de policía, basin plans), the Junta de Andalucía (Andalusian Mediterranean basins,
 REDIAM), Copernicus (Sentinel-2, EGMS), AEMET; the structural data of the geological maps
-(bedding dip and strike), public borehole logs with lithology, and a soil map (session 01
-chooses the source). Foral cadastres (País Vasco, Navarra) are not
+(bedding dip and strike), public borehole logs with lithology, and a soil map (SoilGrids 2.0,
+decision 0013). The catalogue of every host, its terms and limits is
+`config/defaults/sources.yaml`. Foral cadastres (País Vasco, Navarra) are not
 supported yet (decision 0010), they will be implemented once subphora is finished.
 
 **Jurisdiction.** All of Spain for maps and the model; legal rules first for the basins that
@@ -265,8 +266,9 @@ tables (CSV).
   kind, payload and media as IndexedDB blobs). An edit is a new version, never an overwrite.
   The server accepts the same id twice as one record, so a retried sync never duplicates or
   loses data.
-- **Offline packs (11):** for the selected parcels and a buffer, the PNOA and cadastral
-  tiles, our potential and confidence layers, and the parcel geometry, at zooms in `config/`,
+- **Offline packs (11):** for the selected parcels and a buffer, the PNOA tiles, our
+  potential and confidence layers, and the parcel geometry (Catastro's terms forbid tiled
+  requests and massive downloads, so no cadastral tiles), at zooms in `config/`,
   stored by the service worker with persistent storage requested. Google layers are never in
   a pack.
 - **Data safety:** a manual export of all unsynced data to a file, and a visible count of

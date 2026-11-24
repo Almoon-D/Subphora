@@ -72,8 +72,9 @@ def _catalogue_table(settings: Settings) -> str:
         lines.append(
             f"{service.id} ({service.kind}) {service.host}{key}\n"
             f"  {service.name} — {service.publisher}\n"
-            f"  licence: {service.licence}\n"
+            f"  licence: {service.licence} ({service.terms_url})\n"
             f"  attribution: {service.attribution}\n"
+            f"  layers: {', '.join(service.layers) or '-'}; CRS: {', '.join(service.crs) or '-'}\n"
             f"  limits: {limits.max_concurrent} at a time, {limits.min_interval_s} s apart; "
             f"cache {cache}\n"
             f"  knowledge: {service.knowledge}"

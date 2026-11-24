@@ -4,8 +4,8 @@ Model and effort: Opus 5.5, high.
 
 ## Goal
 
-Before going to an estate, the owner downloads a pack for the selected parcels (PNOA and
-cadastral tiles, our index and confidence layers, the parcel geometry, the candidates) and
+Before going to an estate, the owner downloads a pack for the selected parcels (PNOA tiles,
+our index and confidence layers, the parcel geometry, the candidates) and
 the map works there with no coverage.
 
 ## Read
@@ -20,7 +20,8 @@ the map works there with no coverage.
 2. Storage via the service worker with persistent storage requested; the list of packs, their
    size and date; delete.
 3. Google layers never included (hard rule 4); layers whose terms forbid caching excluded,
-   per the knowledge files.
+   per the knowledge files. The Catastro WMS forbids tiled requests and massive downloads:
+   the pack carries the parcel geometry from the WFS instead of cadastral tiles.
 4. Tests: pack size estimate, interrupted download resumed, the map served offline from the
    pack, Google excluded, storage refusal handled.
 

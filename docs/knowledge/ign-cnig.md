@@ -1,0 +1,67 @@
+# IGN / CNIG
+
+Hosts `www.ign.es`, `servicios.idee.es`, `www.cartociudad.es`, `centrodedescargas.cnig.es`.
+Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
+`cartociudad`, `cnig-downloads`. Findings observed on 2026-11-24.
+
+## PNOA orthophoto
+
+- WMTS `https://www.ign.es/wmts/pnoa-ma`: layer `OI.OrthoimageCoverage`; tile matrix sets
+  `GoogleMapsCompatible`, `EPSG:3857`, `EPSG:4326`, `EPSG:4258`, `EPSG:25828`–`25831`,
+  `InspireCRS84Quad`; JPEG and PNG. `(GetCapabilities, 2026-11-24)`
+- A KVP GetTile (`tilematrixset=GoogleMapsCompatible&tilematrix=12&tilerow=1594&tilecol=1996`,
+  over Antequera) returns a 14 KB JPEG with `Access-Control-Allow-Origin: *` and
+  `Cache-Control: max-age=31536000`. MapLibre can use it directly; no proxy needed.
+  `(GetTile, 2026-11-24)`
+- WMS `https://www.ign.es/wms-inspire/pnoa-ma`: layers `OI.OrthoimageCoverage`,
+  `OI.MosaicElement`, `fondo`; EPSG:3857 offered; CORS `*`. `(GetCapabilities, 2026-11-24)`
+
+## IGN base maps
+
+- WMTS `https://www.ign.es/wmts/ign-base`: layers `IGNBaseTodo`, `IGNBase-gris`,
+  `IGNBaseOrto`, `IGNBaseTodo-nofondo`, `IGNBaseSimplificado`; GoogleMapsCompatible;
+  PNG tiles with CORS `*` and a one-year cache header. `(GetCapabilities, GetTile, 2026-11-24)`
+- WMTS `https://www.ign.es/wmts/mapa-raster`: layers `MTN`, `MTN_Fondo` (the scanned
+  national topographic map); access constraint "CC BY 4.0 ign.es". Not catalogued: no
+  session needs it yet. `(GetCapabilities, 2026-11-24)`
+
+## Terrain models (MDT)
+
+- WCS 2.0.1 `https://servicios.idee.es/wcs-inspire/mdt`: coverages `Elevacion25830_{1000,500,200,25,5}`,
+  `Elevacion4083_{1000,500,200,25,5}` (Canaries), `Elevacion4258_{1000,500,200,25,5}` and
+  `Elevacion4326_{1000,500}`. The number is the cell size in metres: **5 m and 25 m are
+  served; 2 m is not** (MDT02 is a download only). `(GetCapabilities, 2026-11-24)`
+- `Elevacion25830_5` covers x −19,452.5 … 1,140,352.5, y 3,901,197.5 … 4,865,682.5 (EPSG:25830)
+  at 5 m: mainland Spain and the Balearics in one coverage. `(DescribeCoverage, 2026-11-24)`
+- A GetCoverage of a 500 m square (`subset=x(362000,362500)&subset=y(4098000,4098500)`,
+  `format=image/tiff`) returns a 1.2 KB GeoTIFF. The national grid (session 05) and the
+  parcel grid (06) can read the terrain from this WCS by windows instead of downloading
+  sheets. `(GetCoverage, 2026-11-24)`
+- WMS `https://servicios.idee.es/wms-inspire/mdt`: layers `EL.ElevationGridCoverage`,
+  `EL.ContourLine`, `EL.SpotElevation`; EPSG:3857 offered. `(GetCapabilities, 2026-11-24)`
+- The download centre `https://centrodedescargas.cnig.es/CentroDescargas/` is a JavaScript
+  application (the landing page is 5 KB of HTML); product lists and file sizes for MDT02,
+  MDT05 and MDT25 were not readable without a browser. MDT02 (second LiDAR coverage) is
+  downloaded by sheet; its coverage and the existence of a bulk route stay unverified:
+  `VERIFY-LIVE(cnig-mdt02-coverage)`. `(GET /CentroDescargas/, 2026-11-24)`
+
+## CartoCiudad geocoder
+
+- `https://www.cartociudad.es/geocoder/api/geocoder/candidates?q=Antequera&limit=1` returns
+  JSON (`candidatesJsonp` the same as JSONP): `id`, `province`, `provinceCode`, `muni`,
+  `muniCode` (29015), `type` (`poblacion`, `Municipio`, `callejero`…), `address`, `lat`,
+  `lng`, `refCatastral`. For a place-name candidate `lat`/`lng` are 0.0: a second call
+  (`find`) resolves it. CORS `*`. `(GET /candidates, 2026-11-24)`
+
+## Licence and attribution
+
+- Every IGN service above declares "CC BY 4.0 scne.es" (or "ign.es") in its capabilities.
+  `(GetCapabilities, 2026-11-24)`
+- The IGN licence conditions (`https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf`)
+  require the attribution "<product> <date> CC-BY 4.0 <producers>" visible at the foot of
+  the map, e.g. "PNOA CC-BY 4.0 scne.es"; a derived work says "Obra derivada de MDT05
+  CC-BY 4.0 scne.es". `(Condiciones_licenciaUso_IGN.pdf, 2026-11-24)`
+- CC BY 4.0 allows copying and storing: **caching PNOA and the base maps for offline packs
+  is allowed** with the attribution kept (session 11).
+
+Copyright (c) 2026 Almoon-D. All rights reserved.

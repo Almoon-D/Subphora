@@ -6,6 +6,8 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0013](0013-soilgrids-soil-source.md) | SoilGrids 2.0 as the soil source | accepted |
+| [0012](0012-google-map-tiles-api.md) | Google base maps through the Map Tiles API in MapLibre | accepted |
 | [0011](0011-owner-ruling-follow-up.md) | Owner ruling after the plan: versions, spending, copyright, subsurface | accepted |
 | [0010](0010-foral-cadastres-not-supported.md) | Foral cadastres: "not supported yet" | accepted |
 | [0009](0009-proprietary-licence.md) | Proprietary licence | accepted |

@@ -20,9 +20,12 @@ classifiers = [
 # Runtime dependencies: a lower bound and the next major as the upper bound. A tighter
 # bound gets a comment with its reason and an `ignore` in .github/dependabot.yml.
 dependencies = [
+    "fastapi>=0.165,<1",
     "httpx>=0.28.1,<1",
     "pydantic>=2.12,<3",
+    "pyproj>=3.8,<4",
     "PyYAML>=6.0.3,<7",
+    "uvicorn>=0.54,<1",
 ]
 
 [project.scripts]
@@ -108,30 +111,35 @@ fail_under = 95
 root_packages = ["subphora"]
 include_external_packages = true
 
-# Architecture rules as tests. Add one contract per boundary the design draws
-# (docs/MASTER_PLAN.md → Layout); this first one keeps the domain layer pure.
+# Architecture rules as tests: the layers of docs/MASTER_PLAN.md §4.2. A higher layer may
+# import a lower one, never the reverse; layers joined by `|` are independent siblings that
+# never import each other. A new package gets its place here in the session that creates it.
 [[tool.importlinter.contracts]]
-name = "The domain layer imports nothing else of ours"
-type = "forbidden"
-source_modules = ["subphora.domain"]
-forbidden_modules = ["subphora.config", "subphora.sources"]
-
-[[tool.importlinter.contracts]]
-name = "The config layer imports only domain"
-type = "forbidden"
-source_modules = ["subphora.config"]
-forbidden_modules = ["subphora.sources"]
-
-[[tool.importlinter.contracts]]
-name = "The sources layer imports only domain and config"
-type = "forbidden"
-source_modules = ["subphora.sources"]
-forbidden_modules = ["subphora.__main__"]
+name = "The layers of MASTER_PLAN §4.2"
+type = "layers"
+containers = ["subphora"]
+layers = [
+    "__main__",
+    "api",
+    "services",
+    "countries | geo | sources | store",
+    "config",
+    "domain",
+]
 
 # Only sources/ talks to the network (hard rule 4: one client, catalogued hosts only).
 [[tool.importlinter.contracts]]
 name = "Only the sources layer imports an HTTP client"
 type = "forbidden"
-source_modules = ["subphora.domain", "subphora.config", "subphora.__main__"]
+source_modules = [
+    "subphora.domain",
+    "subphora.config",
+    "subphora.countries",
+    "subphora.geo",
+    "subphora.store",
+    "subphora.services",
+    "subphora.api",
+    "subphora.__main__",
+]
 forbidden_modules = ["httpx", "httpcore", "http"]
 allow_indirect_imports = true

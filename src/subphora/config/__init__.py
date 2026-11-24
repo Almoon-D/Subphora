@@ -6,16 +6,31 @@ typo can never be silently ignored.
 """
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 import yaml
+from pydantic import model_validator
 
 from subphora.config.base import Section
-from subphora.config.sources import SourcesSettings
+from subphora.config.map import MapSettings
+from subphora.config.server import ApiSettings, StoreSettings
+from subphora.config.sources import Service, SourcesSettings
 
-CONFIG_DIR = Path(__file__).resolve().parents[3] / "config"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CONFIG_DIR = REPO_ROOT / "config"
 
-__all__ = ["CONFIG_DIR", "CoreSettings", "Section", "Settings", "SourcesSettings", "load_settings"]
+__all__ = [
+    "CONFIG_DIR",
+    "REPO_ROOT",
+    "ApiSettings",
+    "CoreSettings",
+    "MapSettings",
+    "Section",
+    "Settings",
+    "SourcesSettings",
+    "StoreSettings",
+    "load_settings",
+]
 
 
 class CoreSettings(Section):
@@ -27,6 +42,29 @@ class CoreSettings(Section):
 class Settings(Section):
     core: CoreSettings
     sources: SourcesSettings
+    api: ApiSettings
+    store: StoreSettings
+    map: MapSettings
+
+    @model_validator(mode="after")
+    def _map_layers_are_drawable(self) -> Self:
+        """Each map layer is a catalogued layer the browser can draw directly (no proxy)."""
+        layers = (
+            ("map.base", self.map.base.service, self.map.base.layer, "wmts"),
+            ("map.cadastre", self.map.cadastre.service, self.map.cadastre.layer, "wms"),
+        )
+        for key, service_id, layer, kind in layers:
+            try:
+                service: Service = self.sources.service(service_id)
+            except KeyError:
+                raise ValueError(f"{key}: {service_id!r} is not in the catalogue") from None
+            if service.kind != kind:
+                raise ValueError(f"{key}: {service_id} is a {service.kind}, not a {kind}")
+            if layer not in service.layers:
+                raise ValueError(f"{key}: {service_id} does not list layer {layer!r}")
+            if not (service.web_mercator and service.cors):
+                raise ValueError(f"{key}: {service_id} needs EPSG:3857 and CORS to be drawn")
+        return self
 
 
 def _merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:

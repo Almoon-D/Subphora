@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The map the front end draws, served to it by GET /api/map. Each layer names a catalogued
+# service (sources.yaml) that offers EPSG:3857 and CORS: the browser calls it directly, with
+# the attribution the catalogue records.
+
+# The view before any search: all of Spain's mainland (MapLibre zoom levels).
+initial_view: {longitude: -3.7, latitude: 40.0, zoom: 5}
+# Space kept around a parcel when the map zooms to it, in screen pixels.
+parcel_padding_px: 60
+
+# The base map: PNOA orthophoto tiles (WMTS, GoogleMapsCompatible).
+base:
+  service: ign-pnoa-wmts
+  layer: OI.OrthoimageCoverage
+  format: image/jpeg
+  tile_matrix_set: GoogleMapsCompatible
+  tile_size: 256
+  # The deepest zoom requested; MapLibre enlarges the last level beyond it.
+  max_zoom: 19
+
+# The cadastral overlay. Catastro forbids tiled requests (docs/knowledge/catastro.md), so
+# it is one image per view, requested again after the map stops moving.
+cadastre:
+  service: catastro-wms
+  layer: CP.CadastralParcel
+  style: ""
+  format: image/png
+  # Below this zoom the parcels are too small to read and the image would cover a province.
+  min_zoom: 15
+  # Wait this long after the map stops moving before asking for a new image.
+  refresh_delay_ms: 400
+  # The longest side of the requested image, in pixels.
+  max_image_px: 2048

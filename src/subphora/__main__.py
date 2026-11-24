@@ -3,8 +3,10 @@
 
 import argparse
 import asyncio
+import json
 import logging
 from collections.abc import Sequence
+from typing import Any
 
 from subphora import __version__
 from subphora.config import Settings, load_settings
@@ -18,7 +20,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="subphora")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("config", help="validate the configuration and print it")
+    config = sub.add_parser("config", help="validate the configuration and print it")
+    config.add_argument("key", nargs="?", help="print only this dotted key, e.g. api.port")
+    sub.add_parser("serve", help="run the API server (host and port from config/api.yaml)")
     sources = sub.add_parser("sources", help="the catalogue of external services")
     sources_sub = sources.add_subparsers(dest="sources_command", required=True)
     check = sources_sub.add_parser(
@@ -35,12 +39,45 @@ def main(argv: Sequence[str] | None = None) -> int:
     settings = load_settings()
     logging.basicConfig(level=settings.core.log_level)
     if args.command == "config":
-        print(settings.model_dump_json(indent=2))
-        return 0
+        return _print_config(settings, args.key)
+    if args.command == "serve":
+        return _serve(settings)
     if args.sources_command == "list":
         print(_catalogue_table(settings))
         return 0
     return _sources_check(settings, args.only)
+
+
+def _print_config(settings: Settings, key: str | None) -> int:
+    if key is None:
+        print(settings.model_dump_json(indent=2))
+        return 0
+    value: Any = settings.model_dump(mode="json")
+    for part in key.split("."):
+        if not isinstance(value, dict) or part not in value:
+            print(f"unknown configuration key: {key}")
+            return EXIT_USAGE
+        value = value[part]
+    print(value if isinstance(value, str | int | float) else json.dumps(value))
+    return 0
+
+
+def _serve(settings: Settings) -> int:
+    # Imported here: the other commands do not need the web stack.
+    import uvicorn
+
+    from subphora.api import create_app
+
+    # No access log: request paths carry cadastral references, which may be the owner's
+    # private parcels (hard rule 6).
+    uvicorn.run(
+        create_app(settings),
+        host=settings.api.host,
+        port=settings.api.port,
+        access_log=False,
+        log_level=settings.core.log_level.lower(),
+    )
+    return 0
 
 
 def _sources_check(settings: Settings, only: list[str] | None) -> int:

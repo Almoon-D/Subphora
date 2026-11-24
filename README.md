@@ -1,19 +1,6 @@
-# myproject
+# subphora
 
 Una frase: qué hace y para quién.
-
-## Cómo usar esta plantilla (borra esta sección después)
-
-1. En GitHub, en la plantilla: **Use this template → Create a new repository**, público o
-   privado. Sin marcar *Include all branches*: el proyecto nuevo empieza sin historial y en
-   la versión 0.0.0.
-2. Ajustes del repositorio nuevo: la lista corta al principio de
-   [`docs/GITHUB_SETTINGS.md`](docs/GITHUB_SETTINGS.md).
-3. Abre una sesión de Claude Code (Opus 5.5) en el repositorio nuevo con este prompt:
-   `Ejecuta la sesión 00: make prompt S=00`. Te entrevista, renombra el proyecto, escribe el
-   plan y los prompts de las sesiones siguientes. Cada sesión deja preparada la siguiente.
-4. Revisa la licencia: por defecto es AGPL-3.0 (`LICENSE` y `license` en `pyproject.toml`).
-   Si el proyecto necesita otra, díselo a la sesión 00.
 
 ## Ajustes de GitHub
 
@@ -41,7 +28,7 @@ y por qué.
 ```
 make setup     # entorno + hooks
 make check     # todo lo que corre CI
-uv run myproject --help
+uv run subphora --help
 ```
 
 Copyright (c) 2027 AlmoonD. All rights reserved.

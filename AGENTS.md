@@ -1,4 +1,4 @@
-# AGENTS.md — myproject
+# AGENTS.md — subphora
 
 <!-- One paragraph: what the project is, for whom, and the stack. Example:
      "An autonomous X for one Y. Python 3.15, Pydantic v2, <main external API>." -->
@@ -70,7 +70,7 @@ plan or your prompt, stop and report it in the PR description before writing cod
   `docs/knowledge/` = observed external behaviour; `MASTER_PLAN.md` = design.
 - **Honest degradation.** Missing or immature input → explicit status. Never fabricate,
   silently interpolate or substitute an unlabelled proxy.
-- Pydantic v2 only; domain models frozen with `extra="forbid"` (`myproject.domain.DomainModel`).
+- Pydantic v2 only; domain models frozen with `extra="forbid"` (`subphora.domain.DomainModel`).
 - Timezone-aware UTC datetimes; local time through `zoneinfo`. `Decimal` wherever money is.
 - No mutable module globals. When the project does concurrent I/O: asyncio, and no blocking
   calls in the event loop. Rules that belong to one project's domain go in its
@@ -173,12 +173,12 @@ make setup                 # newest uv and Python, uv sync (cloud sessions run i
 make check                 # format, lint, types, import contracts, tests, coverage
 make test                  # pytest only
 make prompt S=00           # the prompt for session 00 (or 01, maintenance…)
-uv run myproject --help
+uv run subphora --help
 ```
 
 
 Copyright (c) 2027 Almoon-D. All rights reserved.
 ## Layout
 
-`src/myproject/` per `docs/MASTER_PLAN.md` → Layout · `config/` · `tests/` · `docs/` ·
+`src/subphora/` per `docs/MASTER_PLAN.md` → Layout · `config/` · `tests/` · `docs/` ·
 `scripts/`.

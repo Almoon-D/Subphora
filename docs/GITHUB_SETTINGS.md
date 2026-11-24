@@ -91,7 +91,7 @@ issues, útil para equipos de personas. Para un dueño con sesiones de IA pierde
 | Pages → Build and deployment | Source: *Deploy from a branch*, Branch: **None** | Así Pages queda desactivado; no publicamos una web. |
 
 **Actions → General.**
-- *Actions permissions*: **Allow <tu-usuario>, and select non-<tu-usuario>, actions and
+- *Actions permissions*: **Allow Almoon-D, and select non-Almoon-D, actions and
   reusable workflows**, con **Allow actions created by GitHub** y, en la lista,
   `astral-sh/setup-uv@*, dependabot/fetch-metadata@*`. Una acción nueva en un workflow se
   añade aquí en el mismo momento.

@@ -1,6 +1,6 @@
 # 0001 — Repository conventions from the template
 
-- Date: 2026-11-19 · Status: accepted · Inherited from the repository template
+- Date: 2026-11-24 · Status: accepted · Inherited from the repository template
 - Context: a repository on GitHub Free (private ones get a small Actions allowance and no
   branch protection), built by agent sessions that open, review and merge their own PRs.
 - Decision: `ci` on pull requests only, always reporting (prose-only changes pass in

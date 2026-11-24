@@ -23,7 +23,7 @@ decision, recorded in `docs/decisions/` and then reflected here.
 ## 5. Layout
 
 ```
-src/myproject/
+src/subphora/
   domain/     frozen models, imports nothing else of ours
   config/     settings schema and loader
 ```

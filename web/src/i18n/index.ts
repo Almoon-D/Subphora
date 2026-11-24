@@ -8,6 +8,11 @@ export const LOCALE = "es-ES";
 
 type Params = Readonly<Record<string, string | number>>;
 
+/** The message for a key built at run time (`layer.<id>`), or `fallback` when it has none. */
+export function lookup(key: string, fallback: string): string {
+  return (es as Readonly<Record<string, string>>)[key] ?? fallback;
+}
+
 /** The message for `key`, with each `{name}` replaced by `params[name]`. */
 export function t(key: MessageKey, params: Params = {}): string {
   return es[key].replace(/\{(\w+)\}/g, (_placeholder, name: string) => {

@@ -1,9 +1,20 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
-// The page: a search box, the parcel found, and the map.
-import { useEffect, useState, type SubmitEvent } from "react";
+// The page: a search box, the parcel found, the layer panel, what a tap found, and the map.
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
-import { fetchMapConfig, fetchParcel, type LookupFailure, type MapConfig, type Parcel } from "./api.ts";
+import {
+  fetchFeatureInfo,
+  fetchMapConfig,
+  fetchParcel,
+  type LookupFailure,
+  type MapConfig,
+  type Parcel,
+  type Position,
+} from "./api.ts";
 import { formatArea, formatDate, formatNumber, t } from "./i18n/index.ts";
+import { InfoPanel, type Tap } from "./map/InfoPanel.tsx";
+import { LayerPanel } from "./map/LayerPanel.tsx";
+import { initialLayers, type MapLayers, queryableOverlays } from "./map/layers.ts";
 import { MapView } from "./map/MapView.tsx";
 
 type Search =
@@ -45,12 +56,42 @@ export function App() {
   const [configFailed, setConfigFailed] = useState(false);
   const [reference, setReference] = useState("");
   const [search, setSearch] = useState<Search>({ state: "idle" });
+  const [layers, setLayers] = useState<MapLayers | null>(null);
+  const [zoom, setZoom] = useState(0);
+  const [tapped, setTapped] = useState<Position | null>(null);
+  const [tap, setTap] = useState<Tap>({ state: "none" });
+  // Only the answers to the latest tap are shown.
+  const tapCount = useRef(0);
 
   useEffect(() => {
-    fetchMapConfig().then(setConfig, () => {
-      setConfigFailed(true);
-    });
+    fetchMapConfig().then(
+      (loaded) => {
+        setConfig(loaded);
+        setLayers(initialLayers(loaded));
+      },
+      () => {
+        setConfigFailed(true);
+      },
+    );
   }, []);
+
+  async function onTap(lon: number, lat: number, tapZoom: number) {
+    if (!config || !layers) {
+      return;
+    }
+    setTapped([lon, lat]);
+    const asked = queryableOverlays(config, layers, tapZoom);
+    const count = ++tapCount.current;
+    if (asked.length === 0) {
+      setTap({ state: "none" });
+      return;
+    }
+    setTap({ state: "loading" });
+    const results = await Promise.all(asked.map((o) => fetchFeatureInfo(o.id, lon, lat, tapZoom)));
+    if (count === tapCount.current) {
+      setTap({ state: "done", results });
+    }
+  }
 
   async function onSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,6 +145,12 @@ export function App() {
           </p>
         )}
         {parcel && <ParcelCard parcel={parcel} />}
+        {config && layers && (
+          <>
+            <InfoPanel tap={tap} />
+            <LayerPanel config={config} layers={layers} zoom={zoom} onChange={setLayers} />
+          </>
+        )}
         {configFailed && (
           <p className="error" role="alert">
             {t("app.mapUnavailable")}
@@ -111,7 +158,20 @@ export function App() {
         )}
       </aside>
       <main className="map-area">
-        {config ? <MapView config={config} parcel={parcel} /> : !configFailed && <p>{t("app.loading")}</p>}
+        {config && layers ? (
+          <MapView
+            config={config}
+            parcel={parcel}
+            layers={layers}
+            tapped={tapped}
+            onZoom={setZoom}
+            onTap={(lon, lat, tapZoom) => {
+              void onTap(lon, lat, tapZoom);
+            }}
+          />
+        ) : (
+          !configFailed && <p>{t("app.loading")}</p>
+        )}
       </main>
     </div>
   );

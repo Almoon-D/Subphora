@@ -21,6 +21,8 @@ const cadastre: MapConfig["cadastre"] = {
   refresh_delay_ms: 400,
   max_image_px: 2048,
   attribution: "Dirección General del Catastro",
+  visible: true,
+  opacity: 1,
 };
 
 describe("imageSize", () => {

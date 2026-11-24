@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 import { describe, expect, it } from "vitest";
 
-import { fetchMapConfig, fetchParcel } from "./api.ts";
+import { fetchFeatureInfo, fetchMapConfig, fetchParcel } from "./api.ts";
 
 function answering(status: number, body: string): typeof fetch {
   return () => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
@@ -59,5 +59,49 @@ describe("fetchMapConfig", () => {
 
   it("throws when the server fails", async () => {
     await expect(fetchMapConfig(answering(500, "{}"))).rejects.toThrow("answered 500");
+  });
+});
+
+describe("fetchFeatureInfo", () => {
+  it("asks the API for the layer at the point and zoom", async () => {
+    let asked = "";
+    const spy: typeof fetch = (input) => {
+      asked = input instanceof Request ? input.url : input.toString();
+      return Promise.resolve(new Response('{"layer_id":"rivers","features":[]}', { status: 200 }));
+    };
+    const result = await fetchFeatureInfo("rivers", -3.7, 40.4, 14.256, spy);
+    expect(asked).toBe("/api/layers/rivers/info?lon=-3.700000&lat=40.400000&zoom=14.26");
+    expect(result).toEqual({ ok: true, layerId: "rivers", info: { layer_id: "rivers", features: [] } });
+  });
+
+  it.each([
+    [502, "upstream_error"],
+    [504, "upstream_timeout"],
+  ])("passes on the server's reason (%i)", async (status, code) => {
+    const result = await fetchFeatureInfo("rivers", 0, 0, 10, answering(status, JSON.stringify({ code })));
+    expect(result).toEqual({ ok: false, layerId: "rivers", failure: code });
+  });
+
+  it("calls anything else unexpected", async () => {
+    expect(await fetchFeatureInfo("x", 0, 0, 10, answering(404, '{"code":"unknown_layer"}'))).toEqual({
+      ok: false,
+      layerId: "x",
+      failure: "unexpected",
+    });
+    expect(await fetchFeatureInfo("x", 0, 0, 10, answering(502, "<html/>"))).toEqual({
+      ok: false,
+      layerId: "x",
+      failure: "unexpected",
+    });
+    expect(await fetchFeatureInfo("x", 0, 0, 10, answering(500, '"text"'))).toEqual({
+      ok: false,
+      layerId: "x",
+      failure: "unexpected",
+    });
+  });
+
+  it("reports an unreachable server", async () => {
+    const offline: typeof fetch = () => Promise.reject(new TypeError("Failed to fetch"));
+    expect(await fetchFeatureInfo("x", 0, 0, 10, offline)).toEqual({ ok: false, layerId: "x", failure: "network" });
   });
 });

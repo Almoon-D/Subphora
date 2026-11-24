@@ -1,10 +1,14 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
-// The map: PNOA tiles as the base, Catastro's parcels as one image per view, and the
-// parcel found by the search outlined on top.
+// The map: a base map (PNOA or the IGN maps), the official layers as tiles, Catastro's
+// parcels as one image per view, and the parcel found by the search outlined on top.
 import {
   type GeoJSONSource,
   type ImageSource,
+  type LayerSpecification,
+  type RasterSourceSpecification,
+  type StyleSpecification,
   Map as MaplibreMap,
+  Marker,
   MercatorCoordinate,
   NavigationControl,
   setWorkerUrl,
@@ -13,16 +17,18 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState } from "react";
 
-import type { MapConfig, Parcel } from "../api.ts";
+import type { MapConfig, Parcel, Position } from "../api.ts";
 import { t } from "../i18n/index.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
+import { describeOverlays, type MapLayers, overlayTiles } from "./layers.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
 setWorkerUrl(workerUrl);
 
 // Half the width of the EPSG:3857 world, in metres: MapLibre's mercator units are 0…1.
 const WEB_MERCATOR_HALF_EXTENT_M = 20037508.342789244;
-const BASE = "base";
+const baseId = (id: string) => `base-${id}`;
+const overlayId = (id: string) => `overlay-${id}`;
 const CADASTRE = "cadastre";
 const PARCEL = "parcel";
 const PARCEL_COLOUR = "#ffd400";
@@ -30,6 +36,11 @@ const PARCEL_COLOUR = "#ffd400";
 interface Props {
   config: MapConfig;
   parcel: Parcel | null;
+  layers: MapLayers;
+  /** The last tapped point, marked on the map. */
+  tapped: Position | null;
+  onZoom: (zoom: number) => void;
+  onTap: (lon: number, lat: number, zoom: number) => void;
 }
 
 function mercatorBox(map: MaplibreMap): MercatorBox {
@@ -51,14 +62,19 @@ function viewCorners(map: MaplibreMap): [[number, number], [number, number], [nu
   ];
 }
 
-/** Ask for one cadastral image of the current view, or hide the layer when zoomed out. */
-function refreshCadastre(map: MaplibreMap, cadastre: MapConfig["cadastre"]): boolean {
-  const visible = cadastreVisible(cadastre, map.getZoom());
+const visibility = (visible: boolean) => (visible ? "visible" : "none");
+
+/** Ask for one cadastral image of the current view, or hide the layer when off or zoomed out.
+ * Returns whether the zoom allows the parcels to be drawn. */
+function refreshCadastre(map: MaplibreMap, cadastre: MapConfig["cadastre"], layers: MapLayers): boolean {
+  const reached = cadastreVisible(cadastre, map.getZoom());
+  const visible = reached && layers.cadastre.visible;
   if (map.getLayer(CADASTRE)) {
-    map.setLayoutProperty(CADASTRE, "visibility", visible ? "visible" : "none");
+    map.setLayoutProperty(CADASTRE, "visibility", visibility(visible));
+    map.setPaintProperty(CADASTRE, "raster-opacity", layers.cadastre.opacity);
   }
   if (!visible) {
-    return false;
+    return reached;
   }
   const canvas = map.getCanvas();
   const size = imageSize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio, cadastre.max_image_px);
@@ -70,24 +86,98 @@ function refreshCadastre(map: MaplibreMap, cadastre: MapConfig["cadastre"]): boo
   } else {
     map.addSource(CADASTRE, { type: "image", url, coordinates });
     map.addLayer(
-      { id: CADASTRE, type: "raster", source: CADASTRE, paint: { "raster-fade-duration": 0 } },
+      {
+        id: CADASTRE,
+        type: "raster",
+        source: CADASTRE,
+        paint: { "raster-fade-duration": 0, "raster-opacity": layers.cadastre.opacity },
+      },
       map.getLayer(`${PARCEL}-fill`) ? `${PARCEL}-fill` : undefined,
     );
   }
   return true;
 }
 
-export function MapView({ config, parcel }: Props) {
+/** Apply the panel's choices to the map's layers. */
+function applyLayers(map: MaplibreMap, config: MapConfig, layers: MapLayers): void {
+  for (const base of config.base_maps) {
+    map.setLayoutProperty(baseId(base.id), "visibility", visibility(base.id === layers.base));
+  }
+  for (const overlay of config.overlays) {
+    const state = layers.overlays[overlay.id];
+    map.setLayoutProperty(overlayId(overlay.id), "visibility", visibility(state?.visible === true));
+    map.setPaintProperty(overlayId(overlay.id), "raster-opacity", state?.opacity ?? overlay.opacity);
+  }
+}
+
+function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification {
+  const origin = window.location.origin;
+  const sources: Record<string, RasterSourceSpecification> = {};
+  for (const base of config.base_maps) {
+    sources[baseId(base.id)] = {
+      type: "raster",
+      tiles: base.tiles,
+      tileSize: base.tile_size,
+      maxzoom: base.max_zoom,
+      attribution: base.attribution,
+    };
+  }
+  for (const overlay of config.overlays) {
+    sources[overlayId(overlay.id)] = {
+      type: "raster",
+      tiles: overlayTiles(overlay, origin),
+      tileSize: overlay.tile_size,
+      minzoom: overlay.min_zoom,
+      maxzoom: overlay.max_zoom,
+      attribution: overlay.attribution,
+    };
+  }
+  const styleLayers: LayerSpecification[] = [
+    ...config.base_maps.map(
+      (base): LayerSpecification => ({
+        id: baseId(base.id),
+        type: "raster",
+        source: baseId(base.id),
+        layout: { visibility: visibility(base.id === layers.base) },
+      }),
+    ),
+    ...config.overlays.map((overlay): LayerSpecification => {
+      const state = layers.overlays[overlay.id];
+      return {
+        id: overlayId(overlay.id),
+        type: "raster",
+        source: overlayId(overlay.id),
+        minzoom: overlay.min_zoom,
+        layout: { visibility: visibility(state?.visible === true) },
+        paint: { "raster-opacity": state?.opacity ?? overlay.opacity },
+      };
+    }),
+  ];
+  return { version: 8, sources, layers: styleLayers };
+}
+
+export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
+  const markerRef = useRef<Marker | null>(null);
+  // The handlers registered once read the latest choices and callbacks through these.
+  const layersRef = useRef(layers);
+  const onZoomRef = useRef(onZoom);
+  const onTapRef = useRef(onTap);
   const [loaded, setLoaded] = useState(false);
-  const [cadastreShown, setCadastreShown] = useState(false);
+  const [cadastreReached, setCadastreReached] = useState(false);
+
+  useEffect(() => {
+    layersRef.current = layers;
+    onZoomRef.current = onZoom;
+    onTapRef.current = onTap;
+  });
 
   useEffect(() => {
     if (!container.current) {
       return;
     }
-    const { base, cadastre, initial_view: view } = config;
+    const { cadastre, initial_view: view } = config;
     const map = new MaplibreMap({
       container: container.current,
       center: [view.longitude, view.latitude],
@@ -98,19 +188,7 @@ export function MapView({ config, parcel }: Props) {
       touchPitch: false,
       // An image source carries no attribution of its own: the control names Catastro.
       attributionControl: { compact: false, customAttribution: cadastre.attribution },
-      style: {
-        version: 8,
-        sources: {
-          [BASE]: {
-            type: "raster",
-            tiles: base.tiles,
-            tileSize: base.tile_size,
-            maxzoom: base.max_zoom,
-            attribution: base.attribution,
-          },
-        },
-        layers: [{ id: BASE, type: "raster", source: BASE }],
-      },
+      style: initialStyle(config, layersRef.current),
     });
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
@@ -123,13 +201,18 @@ export function MapView({ config, parcel }: Props) {
     });
     map.on("moveend", () => {
       clearTimeout(timer);
+      onZoomRef.current(map.getZoom());
       timer = setTimeout(() => {
-        setCadastreShown(refreshCadastre(map, cadastre));
+        setCadastreReached(refreshCadastre(map, cadastre, layersRef.current));
       }, cadastre.refresh_delay_ms);
+    });
+    map.on("click", (event) => {
+      onTapRef.current(event.lngLat.lng, event.lngLat.lat, map.getZoom());
     });
     map.on("load", () => {
       setLoaded(true);
-      setCadastreShown(refreshCadastre(map, cadastre));
+      onZoomRef.current(map.getZoom());
+      setCadastreReached(refreshCadastre(map, cadastre, layersRef.current));
     });
     return () => {
       clearTimeout(timer);
@@ -137,6 +220,21 @@ export function MapView({ config, parcel }: Props) {
       map.remove();
     };
   }, [config]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
+      return;
+    }
+    applyLayers(map, config, layers);
+    setCadastreReached(refreshCadastre(map, config.cadastre, layers));
+  }, [layers, loaded, config]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    markerRef.current?.remove();
+    markerRef.current = map && tapped ? new Marker().setLngLat([tapped[0], tapped[1]]).addTo(map) : null;
+  }, [tapped, loaded]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -173,15 +271,23 @@ export function MapView({ config, parcel }: Props) {
         [west, south],
         [east, north],
       ],
-      { padding: config.parcel_padding_px, maxZoom: config.base.max_zoom, animate: false },
+      { padding: config.parcel_padding_px, maxZoom: Math.max(...config.base_maps.map((b) => b.max_zoom)), animate: false },
     );
   }, [parcel, loaded, config]);
 
   const label = parcel ? t("parcel.heading", { reference: parcel.reference }) : t("app.tagline");
   return (
     <div className="map-wrapper">
-      <div ref={container} className="map" role="region" aria-label={label} data-parcel={parcel?.reference ?? ""} />
-      {loaded && !cadastreShown && <p className="map-hint">{t("map.cadastreHidden")}</p>}
+      <div
+        ref={container}
+        className="map"
+        role="region"
+        aria-label={label}
+        data-parcel={parcel?.reference ?? ""}
+        data-base={loaded ? layers.base : ""}
+        data-overlays={loaded ? describeOverlays(config, layers) : ""}
+      />
+      {loaded && layers.cadastre.visible && !cadastreReached && <p className="map-hint">{t("map.cadastreHidden")}</p>}
     </div>
   );
 }

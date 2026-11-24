@@ -1,9 +1,14 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 import { describe, expect, it } from "vitest";
 
-import { LOOKUP_FAILURES } from "../api.ts";
+import { readFileSync } from "node:fs";
+
+import { INFO_FAILURES, LOOKUP_FAILURES, type MapConfig } from "../api.ts";
 import { es } from "./es.ts";
-import { formatArea, formatNumber, t } from "./index.ts";
+import { formatArea, formatNumber, lookup, t } from "./index.ts";
+
+// The API's GET /api/map (the Python tests keep this fixture equal to it).
+const MAP = JSON.parse(readFileSync(new URL("../../e2e/fixtures/map.json", import.meta.url), "utf-8")) as MapConfig;
 
 describe("t", () => {
   it("fills every placeholder", () => {
@@ -24,6 +29,26 @@ describe("t", () => {
     for (const failure of LOOKUP_FAILURES) {
       expect(Object.keys(es)).toContain(`error.${failure}`);
     }
+    for (const failure of INFO_FAILURES) {
+      expect(Object.keys(es)).toContain(`info.error.${failure}`);
+    }
+  });
+
+  it("names every base map, group, layer and regional coverage the map serves", () => {
+    const keys = [
+      ...MAP.base_maps.map((b) => `base.${b.id}`),
+      ...MAP.overlay_groups.map((g) => `group.${g}`),
+      ...MAP.overlays.map((o) => `layer.${o.id}`),
+      ...MAP.overlays.flatMap((o) => o.coverage.filter((c) => c.includes("-")).map((c) => `area.${c}`)),
+    ];
+    expect(keys.filter((key) => !(key in es))).toEqual([]);
+  });
+});
+
+describe("lookup", () => {
+  it("falls back to the given text for a key with no message", () => {
+    expect(lookup("field.CodMasa", "CodMasa")).toBe("Código de masa");
+    expect(lookup("field.Nombre", "Nombre")).toBe("Nombre");
   });
 });
 

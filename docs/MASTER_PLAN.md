@@ -1,33 +1,307 @@
 # Master plan
 
 The design. Sessions build it; they do not relitigate it. A change of design is an owner
-decision, recorded in `docs/decisions/` and then reflected here.
+decision, recorded in `docs/decisions/` and then reflected here. The owner's original request
+is `docs/BRIEF.md`; where this plan differs from it, an owner ruling in `docs/decisions/`
+says why (0003).
 
 ## 1. Goal
 
-<!-- What the project must do, for whom, and what "done" looks like. -->
+Subphora estimates where groundwater is most likely to be found, anywhere in Spain, from
+public data and field evidence, and says how sure it is. It is for the owner and a few
+non-technical people of a family farming company (dry farmland, olive groves and almond
+orchards on estates around Antequera, Málaga, and in Sevilla).
+
+For a location (a cadastral reference, a SIGPAC reference, an address, a municipality,
+coordinates, or a point or polygon drawn on the map) the app shows:
+
+1. **Where:** a water-potential map of all of Spain at a coarse scale, refined to a detailed
+   map around a selected parcel, with ranked candidate spots.
+2. **How deep:** the estimated depth to water where piezometric data allows it, with its
+   uncertainty and a drilling-cost range.
+3. **How sure:** a confidence layer next to every score, the contribution of every input,
+   the inputs that are missing, and how well the model performs against known wells in that
+   area, including an explicit "no better than chance here" when that is the case.
+4. **Whether drilling is allowed:** the competent water authority, the groundwater body and
+   its legal status, and the main rules that apply, as plain-language guidance with the
+   official source and its date. It is never legal advice.
+5. **In the field:** the user's live GPS position on a detailed map, guidance to a candidate
+   spot, and observations (notes, photos, voice memos, track) recorded without coverage and
+   synced later.
+
+"Done" for version 1 (after session 12): the owner types a cadastral reference, sees the
+parcel with the official layers and our water-potential map, opens the per-parcel report,
+walks to the best candidate spot with a phone, and logs a field observation there.
+After version 1: a well registry whose results update the map (13), satellite and climate
+layers (14), and the hardware plan (15).
+
+The product never claims to see water. It estimates a likelihood and shows what would
+reduce the uncertainty.
 
 ## 2. Non-goals
 
-<!-- What it will never do. The hard rules in AGENTS.md come from here. -->
+- No dowsing, no "water detector" claims, and no method without a physical basis (phone
+  magnetometer apps, commercial "natural electric field" water detectors). The app never
+  presents an estimate as a certainty.
+- No cadastral owner (titular) data: only the non-protected cadastral data is fetched or shown.
+- No legal advice: legal output is guidance with its source, date and a disclaimer.
+- No LLM or other generative AI in the product. The model is a transparent weighted overlay,
+  later calibrated statistically (decision 0006). Field data is never sent to an LLM.
+- No native mobile apps: one progressive web app for PC, Android and iPhone (0004).
+- No scraping and no use of a service against its terms. Google imagery is never cached
+  or used offline.
+- No paid service, paid API or recurring cost without the owner's approval in a decision.
+- No unprompted recommendations to hire a hydrogeologist or other professional. The
+  professional export pack (session 11) exists for when the owner chooses to use one.
+- No hardware design or purchase before session 15. Until then, the data model only stays
+  open to a future instrument (§4.7).
 
 ## 3. Constraints
 
-<!-- Budget (free tiers, LLM spend), data sources, jurisdiction, runtime, deployment. -->
+**Budget.** Public open data first, free tiers, zero recurring spend by default. Google Maps
+only with the owner's key and hard daily quota caps per API (a budget alert alone is not a
+cap). Any paid service or API needs an owner decision first.
+
+**Data sources** (each verified live in session 01, recorded in `docs/knowledge/`):
+Catastro (WMS; INSPIRE WFS for parcel geometry), SIGPAC (FEGA), IGN/CNIG (PNOA orthophoto,
+MDT02/MDT05/MDT25, CartoCiudad geocoder), IGME (MAGNA 1:50,000, 1:200,000 lithostratigraphic
+and permeability map, hydrogeological map, water-point database), MITECO and the basin
+authorities (groundwater bodies and status, piezometric network, rivers, public water domain,
+zona de policía, basin plans), the Junta de Andalucía (Andalusian Mediterranean basins,
+REDIAM), Copernicus (Sentinel-2, EGMS), AEMET. Foral cadastres (País Vasco, Navarra) are not
+supported (decision 0010).
+
+**Jurisdiction.** All of Spain for maps and the model; legal rules first for the basins that
+cover the owner's estates (Guadalquivir; Andalusian Mediterranean basins), each other basin
+marked "rules not loaded" until added.
+
+**Coordinates.** ETRS89 / UTM zones 29, 30 and 31 (EPSG:25829, 25830, 25831) on the mainland
+and Balearics, chosen by the parcel's location; REGCAN95 / UTM 28N (EPSG:4083) in the
+Canaries; Web Mercator (EPSG:3857) only for display tiles; the national grid in ETRS89-LAEA
+(EPSG:3035), with a separate Canaries grid. `pyproj` does every transformation; no
+hand-written coordinate maths.
+
+**Licences and politeness.** Every layer and report carries the attribution its licence
+requires (Catastro, IGN/CNIG, IGME, MITECO, Copernicus, Google). Every external host has a
+rate limit and cache lifetime in `config/`; the HTTP client sends a generic `subphora/<version>`
+User-Agent and no personal contact data.
+
+**Privacy.** The owner's parcels, wells, field notes, photos, voice memos and tracks are
+private: stored only on the owner's devices and server, never committed (`data/` is
+git-ignored), never in fixtures (tests use public or synthetic parcels), never sent to an LLM.
+
+**Runtime.** Python (newest stable) for the backend and data processing; TypeScript on the
+newest Node LTS for the front end, pinned in one file and covered by Dependabot. Network I/O is
+asyncio (`httpx`); CPU-bound raster work runs in a process pool, never in the event loop.
+Money is `Decimal`; datetimes are timezone-aware UTC, shown in `Europe/Madrid` (or
+`Atlantic/Canary`) through `zoneinfo`.
+
+**Interface.** Spanish, every string translatable from day one. Field mode has large controls,
+high contrast for sunlight, and works with gloves.
+
+**Hosting.** Any cheap Linux machine: a free tier (such as Oracle Cloud Always Free), a cheap
+paid server, or a computer the owner buys. The app is packaged to run on any of them; the
+owner picks in session 12 (decision 0007). Until then it runs locally (`make dev`).
 
 ## 4. Architecture
 
-<!-- Components and how data flows between them. Each boundary becomes an import-linter
-     contract in pyproject.toml. -->
+```
+ browser / phone (PWA)                       server (owner's host)                 public services
+ ┌──────────────────────────┐   HTTPS   ┌──────────────────────────────┐  HTTPS  ┌───────────────┐
+ │ web/  React + TypeScript │ ────────► │ api/  FastAPI                │ ──────► │ Catastro, IGN │
+ │ MapLibre GL JS map       │ ◄──────── │ services/ orchestration      │ ◄────── │ IGME, MITECO  │
+ │ IndexedDB: field data,   │           │ model/  legal/  geo/         │         │ basins, FEGA  │
+ │   offline packs, outbox  │           │ sources/ polite cached client│         │ Copernicus    │
+ │ service worker (offline) │           │ store/  SQLite + file cache  │         │ AEMET         │
+ └────────────┬─────────────┘           └──────────────┬───────────────┘         └───────────────┘
+              │ Google tiles (browser, owner's key, capped, never cached)        ┌───────────────┐
+              └──────────────────────────────────────────────────────────────────► Google Maps   │
+                                                                                  └───────────────┘
+ batch: `subphora national build` → national potential grid → raster tiles (PMTiles) served by api
+```
+
+### 4.1 Front end (`web/`)
+
+A progressive web app (Vite, React, TypeScript, MapLibre GL JS), installable on Android and
+iPhone (decision 0004). Two modes:
+
+- **Research mode:** search (cadastral, SIGPAC, address, municipality, coordinates, drawn
+  point or polygon); switchable layers with opacity and legend; the national and parcel
+  potential maps; tap-to-explain; ranked candidate spots; parcel comparison; report export.
+- **Field mode:** live position with accuracy circle and heading; distance and direction to
+  a chosen spot; observations (note, photo, voice memo) and track; downloaded offline packs.
+  IndexedDB is the device's source of truth: every observation is written there before the
+  UI confirms it, and an outbox syncs it later with an idempotency key (§4.6).
+
+Base maps: PNOA orthophoto (default) and IGN maps; Google satellite and road only when a key
+is configured (decision 0005). Official layers come from their WMS/WMTS services directly,
+or through the server's caching proxy where a service lacks CORS or EPSG:3857 (session 01
+records which).
+
+### 4.2 Server (`src/subphora/`)
+
+A FastAPI application (`subphora serve`) and a CLI (`subphora …`), in layers:
+
+| Package | Role | May import |
+|---|---|---|
+| `domain/` | frozen models: references, estimates, explanations, legal status, observations | nothing of ours |
+| `config/` | settings schema and loader | `domain` |
+| `sources/` | one async client per external service; catalogue, rate limits, cache, attribution | `domain`, `config` |
+| `geo/` | CRS choice, reprojection, clipping, raster and vector operations, terrain derivatives | `domain`, `config` |
+| `model/` | criteria, scoring, confidence, explanation, candidates, validation, calibration, depth, cost | `domain`, `config`, `geo` |
+| `legal/` | authority lookup and rule evaluation from rules held as data | `domain`, `config` |
+| `store/` | SQLite for private data and job state; file cache for rasters and tiles | `domain`, `config` |
+| `services/` | use cases: fetch inputs, run the model, assemble a parcel analysis | all of the above |
+| `report/` | per-parcel PDF and professional export pack | `domain`, `config`, `services` |
+| `api/`, `__main__` | HTTP and CLI boundaries | everything |
+
+Each boundary is an import-linter contract added by the session that creates the package.
+`model/` and `legal/` never import `sources/`: they receive data, so they are testable
+without network.
+
+### 4.3 The water-potential model (decision 0006)
+
+**Two scales.**
+1. **National:** a grid of all of Spain (default 100 m, in `config/`) from nationwide inputs.
+   It is precomputed by `subphora national build [--region …]`, published as raster tiles,
+   and is what the user sees when the app opens.
+2. **Parcel:** computed on demand around a selected parcel (parcel plus buffer, default 5 m,
+   with MDT02 where available), from detailed inputs, and cached per parcel.
+
+**Criteria.** Each input becomes a 0–1 suitability through a lookup table or function in
+`config/`, with the source of every weight and class recorded:
+lithology and permeability, structure (faults and lineament density), terrain (slope, topographic
+wetness index, drainage proximity), groundwater-body status, distance to and yield of known
+water points, piezometric depth, and later the late-summer vegetation anomaly (14).
+
+**Score.** A weighted linear combination over the inputs available at that cell, with the
+weights renormalised over what is present. Until it is calibrated (session 07) the score is a
+**relative potential index**, labelled as such, never a probability.
+
+**Confidence (0–1, with labels low/medium/high at thresholds in `config/`).** Combines the
+share of total weight whose inputs are present, how well each input's resolution fits the
+cell, the age of each input, the distance to the nearest validation evidence, and the
+model's measured skill in that hydrogeological domain. Missing data lowers confidence; it is
+never interpolated silently.
+
+**Explanation.** For any cell: the score, each input's value and contribution, each input's
+source, date and resolution, the missing inputs, and the confidence breakdown.
+
+**Candidates.** The top cells of a parcel by score among those above a minimum confidence,
+separated by a minimum distance (both in `config/`), each with score, confidence, estimated
+depth and legal status ("not evaluated" until session 08).
+
+**Validation and calibration (07).** Against public water points (productive where yield is
+recorded; dry where a source says so) with spatial block cross-validation: AUC with a
+bootstrap interval per hydrogeological domain. Where the interval's lower bound is not above
+0.5 the app says "no better than chance here". Where enough labelled wells exist (threshold
+in `config/`), a calibration turns the index into a probability with an interval; elsewhere it
+stays an index.
+
+**Depth and cost (07).** Water-table elevation is interpolated only within one groundwater
+body from piezometric levels, with uncertainty growing with distance and "unknown" beyond a
+maximum distance (in `config/`). Depth = ground elevation (LiDAR) − water-table elevation,
+with propagated uncertainty, flagged as unreliable in karst. Drilling cost = depth range ×
+cost per metre plus fixed costs (`Decimal`, in `config/` with source and date).
+
+**Learning (13).** The owner's well results (depth, flow, dry or productive) and field
+observations update the probabilities locally: a Bayesian update of the calibrated prior with
+a spatially decaying likelihood whose range is in `config/`. A machine-learning model is
+considered only once the labelled wells pass a threshold in `config/`, and only if it beats the
+transparent model under the same validation.
+
+### 4.4 Legal filter (session 08)
+
+From the location: the river-basin district and competent authority (a Confederación
+Hidrográfica or a regional agency, such as the Junta de Andalucía for the Andalusian
+Mediterranean basins), the groundwater body and its legal status, and the rules that apply:
+the article 54.2 regime of the Water Law (up to 7,000 m³/year) and when it needs
+authorisation, distances to existing wells and to the public water domain, the basin plan's
+limits on new abstractions, and the drilling permits. Rules are data in `config/legal/`, each
+with the official source (BOE, BOJA, basin plan), its date and the date it was checked; the
+engine evaluates them and returns "probably not allowed", "conditions apply", "no blocking
+rule found" or "rules not loaded for this basin". Every output carries the disclaimer.
+
+### 4.5 Reports (session 11)
+
+`report/` renders a per-parcel PDF (WeasyPrint) that a hydrogeologist or water authority can
+read: maps, candidates, scores with confidence, explanations, validation skill, depth and
+cost ranges, legal guidance, every source with its date and attribution, and the
+limitations. The professional export pack adds a ZIP with the layers (GeoPackage, COG) and
+tables (CSV).
+
+### 4.6 Field mode and offline
+
+- **Positioning:** the browser Geolocation API with its reported accuracy circle. A position
+  only counts as "at the spot" within a distance in `config/`, and never if the accuracy is
+  worse than that distance.
+- **Observations:** append-only records (UUIDv7 ids, UTC time, position with accuracy,
+  kind, payload and media as IndexedDB blobs). An edit is a new version, never an overwrite.
+  The server accepts the same id twice as one record, so a retried sync never duplicates or
+  loses data.
+- **Offline packs (10):** for the selected parcels and a buffer, the PNOA and cadastral
+  tiles, our potential and confidence layers, and the parcel geometry, at zooms in `config/`,
+  stored by the service worker with persistent storage requested. Google layers are never in
+  a pack.
+- **Data safety:** a manual export of all unsynced data to a file, and a visible count of
+  unsynced records.
+
+### 4.7 Room for hardware
+
+Hardware is not designed before session 15 (decision 0008). The design keeps two things open
+for it: observations have a `kind`, so a future instrument reading or survey line is a new
+kind rather than a new store; and a measurement that injects current is gated by the safety
+checklist of hard rule 3, which the session that first controls or imports instrument data
+enforces in code.
+
+### 4.8 Deployment (session 12)
+
+Docker Compose with the API and a Caddy reverse proxy (HTTPS, static PWA), on any Linux host
+(x86-64 or ARM64). A login for the few users (hashed passwords, secure cookies), nightly
+backups of `data/` to a place the owner chooses, and secrets only from the environment
+(decision 0007).
 
 ## 5. Layout
 
 ```
-src/myproject/
+src/subphora/
   domain/     frozen models, imports nothing else of ours
   config/     settings schema and loader
+  sources/    external-service clients and the source catalogue          (01)
+  geo/        CRS, reprojection, clipping, terrain derivatives           (02, 05)
+  model/      water-potential model, validation, depth, cost             (05)
+  legal/      legal filter                                               (08)
+  store/      SQLite for private data, file cache                        (02)
+  services/   use cases                                                  (02)
+  report/     PDF and export pack                                        (11)
+  api/        FastAPI app                                                (02)
+web/          the PWA: Vite, React, TypeScript, MapLibre GL JS           (02)
+config/       defaults/, owner.yaml, legal/ (rules as data)              (08)
+data/         private data and caches, git-ignored                       (02)
+deploy/       Docker Compose and Caddy                                   (12)
 ```
+
+The number is the session that creates each package.
 
 ## 6. Build path
 
-<!-- The ordered sessions and what each delivers; the table itself lives in docs/ROADMAP.md. -->
+Each session ends in something the owner can see or run. The table with status is in
+`docs/ROADMAP.md`; each prompt is in `docs/sessions/`.
+
+| # | Session | The owner sees |
+|---|---|---|
+| 01 | Verify data sources, terms and legal rules | `subphora sources check` prints the status of every service; a knowledge file per source |
+| 02 | First end-to-end slice | `make dev`: type a cadastral reference, see the parcel on PNOA with the cadastral layer |
+| 03 | Official layers | Water and geology layers, optional Google base map, opacity and legend |
+| 04 | More ways to search | SIGPAC, coordinates, municipality, address, drawn point or polygon |
+| 05 | National potential map v0 | All of Spain coloured by potential index, with its confidence layer |
+| 06 | Parcel detail | High-resolution parcel map, tap-to-explain, ranked candidates, parcel comparison |
+| 07 | Validation, depth and cost | Model skill against known wells per area; estimated depth and drilling-cost range |
+| 08 | Legal filter | Authority, groundwater-body status, key rules and the "probably cannot drill" flag |
+| 09 | Field mode | GPS position, guidance to a spot, observations and track without coverage, then sync |
+| 10 | Offline map packs | Parcels downloaded for use with no coverage |
+| 11 | Report and professional pack | The per-parcel PDF and the ZIP |
+| 12 | Deployment | The app on the owner's chosen host with login, installed on a phone: version 1 |
+| 13 | Well registry and learning | Logged wells and outcomes update the map |
+| 14 | Satellite and climate layers | Late-summer vegetation anomaly (irrigation masked), ground motion, rainfall |
+| 15 | Hardware planning | Options compared with prices; the owner decides |

@@ -1,6 +1,6 @@
 # 0002 — Changes from the external review of the template
 
-- Date: 2026-11-19 · Status: accepted · Inherited from the repository template
+- Date: 2026-11-24 · Status: accepted · Inherited from the repository template
 - Decision: session 00 plans a new project and every session leaves the next prompt ready;
   one session at a time per repository; a cloud session prepares itself (SessionStart hook
   → `make setup`); Dependabot auto-merge only for updates read as minor or patch (fails

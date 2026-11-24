@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from myproject import __version__
-from myproject.__main__ import main
-from myproject.config import load_settings
-from myproject.domain import DomainModel
+from subphora import __version__
+from subphora.__main__ import main
+from subphora.config import load_settings
+from subphora.domain import DomainModel
 
 
 def test_version_is_semver() -> None:

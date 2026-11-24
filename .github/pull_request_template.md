@@ -24,7 +24,12 @@
 - [ ] No secrets, account ids, tokens or personal data in code, fixtures, logs or this PR
 - [ ] No hardcoded values: thresholds, schedules and budgets live in `config/`
 - [ ] Every new config key has a consumer
-- [ ] <project-specific rule>
+- [ ] Every score ships with confidence, inputs and missing inputs; an uncalibrated score says "index" (hard rule 1)
+- [ ] Every recommendation carries its legal status, source, date and disclaimer (hard rule 2)
+- [ ] No measurement starts or is imported without a passed safety checklist (hard rule 3)
+- [ ] Only catalogued hosts, within their terms; Google never cached; no keys in the repository (hard rule 4)
+- [ ] Field data written locally before confirmation; sync idempotent and append-only (hard rule 5)
+- [ ] No titular data; no private parcels, wells or notes in the repository or fixtures (hard rule 6)
 
 ## Follow-ups
 

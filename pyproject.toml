@@ -3,16 +3,16 @@ requires = ["hatchling>=1.33"]
 build-backend = "hatchling.build"
 
 [project]
-name = "myproject"
+name = "subphora"
 version = "0.0.0"
-description = "One sentence: what this project does and for whom."
+description = "Estimates where groundwater is most likely to be found anywhere in Spain, from public data and field evidence, with its uncertainty and legal status, for a family farming company."
 readme = "README.md"
-license = "AGPL-3.0-or-later"
-license-files = ["LICENSE"]
+license = "LicenseRef-Proprietary"
 requires-python = ">=3.15,<3.16"
-authors = [{ name = "Your Name" }]
+authors = [{ name = "Almoon-D" }]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
+    "Private :: Do Not Upload",
     "Programming Language :: Python :: 3.15",
     "Typing :: Typed",
 ]
@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-myproject = "myproject.__main__:main"
+subphora = "subphora.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -41,7 +41,7 @@ dev = [
 python-preference = "only-managed"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/myproject"]
+packages = ["src/subphora"]
 
 [tool.ruff]
 line-length = 100
@@ -77,7 +77,7 @@ addopts = ["--strict-markers", "--strict-config", "-ra", "--import-mode=importli
 filterwarnings = ["error"]
 
 [tool.coverage.run]
-source = ["myproject"]
+source = ["subphora"]
 branch = true
 # sys.monitoring: much lower overhead than the classic tracer.
 core = "sysmon"
@@ -90,7 +90,7 @@ skip_covered = true
 fail_under = 95
 
 [tool.importlinter]
-root_packages = ["myproject"]
+root_packages = ["subphora"]
 include_external_packages = true
 
 # Architecture rules as tests. Add one contract per boundary the design draws
@@ -98,5 +98,5 @@ include_external_packages = true
 [[tool.importlinter.contracts]]
 name = "The domain layer imports nothing else of ours"
 type = "forbidden"
-source_modules = ["myproject.domain"]
-forbidden_modules = ["myproject.config"]
+source_modules = ["subphora.domain"]
+forbidden_modules = ["subphora.config"]

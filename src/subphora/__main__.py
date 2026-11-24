@@ -1,15 +1,15 @@
-"""Command-line entry point: ``uv run myproject --help``."""
+"""Command-line entry point: ``uv run subphora --help``."""
 
 import argparse
 import logging
 from collections.abc import Sequence
 
-from myproject import __version__
-from myproject.config import load_settings
+from subphora import __version__
+from subphora.config import load_settings
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="myproject")
+    parser = argparse.ArgumentParser(prog="subphora")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("config", help="validate the configuration and print it")

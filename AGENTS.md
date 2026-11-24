@@ -1,4 +1,4 @@
-# AGENTS.md — myproject
+# AGENTS.md — subphora
 
 <!-- One paragraph: what the project is, for whom, and the stack. Example:
      "An autonomous X for one Y. Python 3.15, Pydantic v2, <main external API>." -->
@@ -56,6 +56,32 @@ plan or your prompt, stop and report it in the PR description before writing cod
   fixtures and mark checks `VERIFY-LIVE(<what>)` in code and in `docs/ROADMAP.md` →
   "Live verification queue".
 
+Subphora's own hard rules (`docs/MASTER_PLAN.md` → Non-goals), each with the code that
+enforces it. The session that first touches a rule's area adds its enforcement and tests.
+
+1. **No estimate without its confidence and inputs.** Every score crosses the API as a
+   domain model that requires a confidence, the per-input contributions with their source,
+   date and resolution, and the list of missing inputs (validators refuse an incomplete
+   one). An uncalibrated score is labelled an index, never a probability. Missing data lowers
+   confidence; it is never interpolated or filled in. The UI renders scores only through the
+   component that shows confidence next to them.
+2. **Legal status with every recommendation.** A candidate spot cannot be built without a
+   legal status that carries its source, its date and the "guidance, not legal advice"
+   disclaimer; "not evaluated" and "rules not loaded" are explicit states, never a blank.
+3. **No measurement without the safety checklist.** Any code that starts a current-injecting
+   measurement or imports its readings refuses unless a passed checklist record is attached.
+   No instrument code exists before session 15 decides one.
+4. **Official APIs and terms only; no secrets in the repository.** The HTTP client calls only
+   hosts in the source catalogue (`config/defaults/sources.yaml`), each with its terms recorded
+   in `docs/knowledge/`; anything else is refused. Google imagery is never cached or stored
+   offline. API keys come only from the environment, never from `config/` or the repository.
+5. **Field data is never lost offline.** An observation is written to IndexedDB before the UI
+   confirms it; the sync outbox is idempotent (client-generated ids, server upserts); records
+   are append-only. Browser tests cover going offline, reloading mid-sync and retrying.
+6. **No owner (titular) data and no private data in the repository.** Only non-protected
+   cadastral data is requested. The owner's parcels, wells and notes live in git-ignored
+   `data/`; fixtures use public or synthetic places.
+
 ## Engineering rules
 
 - **Current toolchains.** The newest stable Python (one place: `.python-version`, mirrored in
@@ -70,7 +96,7 @@ plan or your prompt, stop and report it in the PR description before writing cod
   `docs/knowledge/` = observed external behaviour; `MASTER_PLAN.md` = design.
 - **Honest degradation.** Missing or immature input → explicit status. Never fabricate,
   silently interpolate or substitute an unlabelled proxy.
-- Pydantic v2 only; domain models frozen with `extra="forbid"` (`myproject.domain.DomainModel`).
+- Pydantic v2 only; domain models frozen with `extra="forbid"` (`subphora.domain.DomainModel`).
 - Timezone-aware UTC datetimes; local time through `zoneinfo`. `Decimal` wherever money is.
 - No mutable module globals. When the project does concurrent I/O: asyncio, and no blocking
   calls in the event loop. Rules that belong to one project's domain go in its
@@ -173,12 +199,12 @@ make setup                 # newest uv and Python, uv sync (cloud sessions run i
 make check                 # format, lint, types, import contracts, tests, coverage
 make test                  # pytest only
 make prompt S=00           # the prompt for session 00 (or 01, maintenance…)
-uv run myproject --help
+uv run subphora --help
 ```
 
 
 Copyright (c) 2027 Almoon-D. All rights reserved.
 ## Layout
 
-`src/myproject/` per `docs/MASTER_PLAN.md` → Layout · `config/` · `tests/` · `docs/` ·
+`src/subphora/` per `docs/MASTER_PLAN.md` → Layout · `config/` · `tests/` · `docs/` ·
 `scripts/`.

@@ -1,0 +1,36 @@
+# Session 06 — Parcel-scale detail, explanation and candidate spots
+
+Model and effort: Opus 5.5, high.
+
+## Goal
+
+For a selected area the app computes a detailed potential map (default 5 m), explains any
+point when tapped, ranks candidate spots, and compares several selected areas side by side.
+
+## Read
+
+- `docs/MASTER_PLAN.md` § 4.3 (in full), § 4.2.
+- `docs/decisions/` 0006 and session 05's decisions.
+- `docs/knowledge/`: IGN/CNIG (MDT02/MDT05), IGME (MAGNA, faults).
+
+## Build
+
+1. A per-area job: clip the detailed inputs (MDT02/MDT05, MAGNA 1:50,000, faults, water
+   points), derive slope, wetness index, drainage and lineament density, and compute index and
+   confidence with the session-05 model at parcel resolution; cached per area; job status
+   visible in the UI.
+2. Tap-to-explain at parcel scale: score, each input's value, contribution, source, date and
+   resolution, missing inputs, confidence breakdown.
+3. Candidates by the §4.3 rule, each with legal status "not evaluated" (hard rule 2).
+4. Comparison of selected areas: area, best candidates, mean index and confidence.
+5. Tests: clipping at area edges and across UTM zones, a missing detailed input lowering
+   confidence, candidate separation and minimum confidence, the job's failure states.
+
+## DO NOT BUILD
+
+- Validation, calibration, depth or cost; the legal filter; reports.
+
+## Done when
+
+- `make check` is green and in `make dev` a selected parcel shows its detailed map, tap-to-explain
+  and ranked candidates, and two parcels can be compared.

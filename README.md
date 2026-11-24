@@ -1,6 +1,6 @@
 # subphora
 
-Una frase: qué hace y para quién.
+Estima dónde es más probable encontrar agua subterránea en cualquier lugar de España, a partir de datos públicos y del campo, con su incertidumbre y su situación legal, para una empresa agrícola familiar.
 
 ## Ajustes de GitHub
 

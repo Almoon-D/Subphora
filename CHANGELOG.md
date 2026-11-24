@@ -7,6 +7,19 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.4.0] - 2026-11-24
+
+- Regional detail on the map: inside Navarra its 1:25,000 soil map, inside Catalonia the
+  ICGC's 1:25,000 hydrogeological units, and in the three Andalusian intra-community basins
+  the groundwater bodies the Junta keeps under preventive control, each drawn over the
+  national layer and only inside its official boundary.
+- A tap asks the regional service first and the national one when the regional has
+  nothing, fails or is too slow, and says which answered, with its scale and its date.
+- Every layer in the panel names its national source and any regional ones, each with its
+  scale and edition, or says when the publisher states neither.
+- Every autonomous community, Ceuta, Melilla and every basin authority surveyed under the
+  same rule; the verdicts per theme are in `docs/knowledge/regional-layers.md`.
+
 ## [0.3.2] - 2026-11-24
 
 - Planned: the map will use each region's own, more detailed official services where they

@@ -1,0 +1,118 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Regional detail over the national layers (decision 0023). Where a region, province or
+# basin authority publishes a more detailed official service for a map theme, the map draws
+# it inside that authority's area over the national layer, and a tap asks it first; the
+# national layer stays the baseline everywhere and the fallback. Every region was surveyed
+# under the same rule: the verdicts and their evidence are in
+# docs/knowledge/regional-layers.md. A layer listed below that fails the rule stops the
+# settings from loading.
+
+# The rule, the same for every region.
+rule:
+  # Only a public body's own service qualifies.
+  official_only: true
+  # A regional edition may be this many years older than the national one: 0 means "at
+  # least as recent". A national layer whose edition is not stated cannot be compared, so
+  # no regional layer qualifies over it until the national edition is known.
+  max_years_older: 0
+  # A map at 1:N resolves about N × 0.0005 m on the ground (0.5 mm on the sheet): this
+  # compares a map scale with a grid cell (1:25,000 ≈ 12.5 m; SoilGrids' cell is 250 m).
+  metres_per_scale_unit: 0.0005
+  # Finer: the regional ground resolution is below this fraction of the national one.
+  finer_than_ratio: 1.0
+  # Themes whose answer is a legal status: only the competent authority's layer qualifies.
+  legal_themes: [groundwater-at-risk, public-water-domain]
+
+# The official boundaries each regional layer is drawn and asked inside, from national WFS
+# services, in EPSG:4326. Both datasets keep shared borders as shared vertices.
+boundaries:
+  # Every vertex is rounded to this grid (about 11 m by 8 m in Spain): finer than a tile
+  # pixel up to zoom 13, coarse enough to keep a region's boundary near 1 MB.
+  grid_deg: 0.0001
+  sources:
+    # Autonomous communities and cities: IGN, INSPIRE administrative units.
+    region:
+      service: ign-admin-units
+      type_name: au:AdministrativeUnit
+      code_property: au:nationalCode
+      namespaces: {au: "http://inspire.ec.europa.eu/schemas/au/4.0"}
+      output_format: application/geo+json
+    # River-basin districts: MITECO, plans 2022-2027.
+    district:
+      service: miteco-river-basin-districts-wfs
+      type_name: agua:demarhidro_2027
+      code_property: cod_ddhh
+      output_format: application/json
+
+# The areas the regional layers below use. code: the area's code in its boundary service
+# (the IGN's national code of an autonomous community: 34, its INE code, then zeros).
+# bbox: west, south, east, north, enclosing the boundary rounded outward to 0.01°.
+areas:
+  - {id: ES-NC, kind: region, code: "34150000000", bbox: [-2.51, 41.90, -0.72, 43.32]}
+  - {id: ES-CT, kind: region, code: "34090000000", bbox: [0.15, 40.52, 3.34, 42.87]}
+  # The three Andalusian intra-community districts, whose water authority is the Junta.
+  - {id: ES060, kind: district, code: ES060, bbox: [-5.66, 36.02, -1.70, 37.60]}
+  - {id: ES063, kind: district, code: ES063, bbox: [-6.48, 35.98, -5.03, 37.07]}
+  - {id: ES064, kind: district, code: ES064, bbox: [-7.36, 37.07, -6.38, 37.91]}
+
+# The regional layers that qualify. theme: the national overlay (map.yaml) they detail;
+# the panel shows them under it. legend and info as in map.yaml. evidence: what the survey
+# found, against which the rule above is checked.
+layers:
+  - id: navarra-soils
+    theme: soil-clay
+    areas: [ES-NC]
+    service: idena-wms
+    layer: EDAFOL_Pol_Suelos25m
+    # Its scale range: drawn from 1:200,000.
+    min_zoom: 12
+    legend: {kind: wms}
+    info:
+      info_format: application/json
+      parser: geojson
+      fields: ["SOILTAXON1", "CLASIF_HS1", "CLASIF_SC1", "GEOMORF1", "FASE", "SOILTAXON2", "CLASIF_HS2"]
+    evidence:
+      official: true
+      # Soil map of Navarra 1:25,000, revised 2023-01-15 (its metadata).
+      detail: {scale_denominator: 25000, edition: 2023}
+      adds: "soil series by Soil Taxonomy with textural and substrate classes per unit"
+      clip_of_national: false
+      competent_authority: false
+
+  - id: catalonia-hydrogeology
+    theme: hydrogeology
+    areas: [ES-CT]
+    service: icgc-hydrogeology-wms
+    layer: unitats_hidrogeologiques_tipus
+    min_zoom: 11
+    legend: {kind: wms}
+    info:
+      info_format: text/xml
+      parser: esri_xml
+      fields: ["Nom", "Tipus", "ComportamentHidraulic", "Porositat", "Naturalesa_descripcio", "TipusFormacions_descripcio"]
+    evidence:
+      official: true
+      # Continuous hydrogeological map of Catalonia 1:25,000, revised 2022-12 (its metadata).
+      detail: {scale_denominator: 25000, edition: 2022}
+      adds: "aquifer type, hydraulic behaviour and porosity per hydrogeological unit"
+      clip_of_national: false
+      competent_authority: false
+
+  - id: andalusia-preventive-control
+    theme: groundwater-at-risk
+    areas: [ES060, ES063, ES064]
+    service: rediam-preventive-control
+    layer: masas_agua_subt_intracom
+    min_zoom: 5
+    legend: {kind: wms}
+    info:
+      info_format: application/vnd.ogc.gml
+      parser: gml
+      fields: ["thematicIdIdentifier", "nametext", "control_preventivo"]
+    evidence:
+      official: true
+      # The plans 2022-2027 of the three districts (bodies versioned 2023-02-07).
+      detail: {edition: 2023}
+      adds: "bodies under preventive control (Andalusian Water Law, art. 51), a legal status the national layer does not carry"
+      clip_of_national: false
+      competent_authority: true

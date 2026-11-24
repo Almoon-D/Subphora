@@ -80,7 +80,7 @@ export function App() {
       return;
     }
     setTapped([lon, lat]);
-    const asked = queryableOverlays(config, layers, tapZoom);
+    const asked = queryableOverlays(config, layers, lon, lat, tapZoom);
     const count = ++tapCount.current;
     if (asked.length === 0) {
       setTap({ state: "nothing" });

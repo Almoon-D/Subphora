@@ -12,7 +12,8 @@ import yaml
 from pydantic import model_validator
 
 from subphora.config.base import Section
-from subphora.config.map import MapSettings
+from subphora.config.map import Legend, MapSettings
+from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
 
@@ -25,6 +26,7 @@ __all__ = [
     "ApiSettings",
     "CoreSettings",
     "MapSettings",
+    "RegionalSettings",
     "Section",
     "Settings",
     "SourcesSettings",
@@ -45,14 +47,16 @@ class Settings(Section):
     api: ApiSettings
     store: StoreSettings
     map: MapSettings
+    regional: RegionalSettings
 
     @model_validator(mode="after")
     def _map_layers_are_drawable(self) -> Self:
         """Each map layer is a catalogued layer, drawable as configured.
 
         The base maps and the cadastre are drawn by the browser from the service, so their
-        services need EPSG:3857 and CORS. An overlay whose service lacks either names an
-        ArcGIS export of the same map service, which the API's proxy draws.
+        services need EPSG:3857 and CORS. An overlay whose service lacks CORS is drawn by the
+        API's proxy; one whose service lacks EPSG:3857 names an ArcGIS export of the same
+        map service, which the proxy draws.
         """
         direct = [
             (f"map.base_maps.{base.id}", base.service, base.layer, "wmts")
@@ -66,22 +70,55 @@ class Settings(Section):
         for overlay in self.map.overlays.layers:
             key = f"map.overlays.{overlay.id}"
             service = self._catalogued(key, overlay.service, "wms", overlay.layer)
-            drawable = bool(service.web_mercator and service.cors)
-            if drawable and overlay.export is not None:
-                raise ValueError(f"{key}: {service.id} has CORS and EPSG:3857; no export is needed")
+            if service.web_mercator and overlay.export is not None:
+                raise ValueError(f"{key}: {service.id} offers EPSG:3857; no export is needed")
             if not service.web_mercator and not service.crs:
                 raise ValueError(f"{key}: {service.id} lists no CRS to ask its features in")
-            if not drawable:
+            if not service.web_mercator:
                 if overlay.export is None:
-                    raise ValueError(
-                        f"{key}: {service.id} lacks CORS or EPSG:3857 and has no export"
-                    )
+                    raise ValueError(f"{key}: {service.id} lacks EPSG:3857 and has no export")
                 export = self._catalogued(key, overlay.export.service, "rest")
                 if export.host != service.host:
                     raise ValueError(f"{key}: the export must be on {service.host}")
-            if overlay.legend.url is not None and host_of(overlay.legend.url) != service.host:
-                raise ValueError(f"{key}: the legend must be on {service.host}")
+            self._check_legend(key, overlay.legend, service)
         return self
+
+    @model_validator(mode="after")
+    def _regional_layers_qualify(self) -> Self:
+        """Every regional layer details a national theme, can be drawn, and qualifies under
+        the rule of decision 0023 against that theme's national layer."""
+        regional = self.regional
+        for source in regional.boundaries.sources.values():
+            self._catalogued("regional.boundaries", source.service, "wfs", source.type_name)
+        themes = {overlay.id: overlay for overlay in self.map.overlays.layers}
+        for layer in regional.layers:
+            key = f"regional.layers.{layer.id}"
+            national = themes.get(layer.theme)
+            if national is None:
+                raise ValueError(f"{key}: theme {layer.theme!r} is not a map overlay")
+            if layer.id in themes:
+                raise ValueError(f"{key}: its id is a map overlay's")
+            service = self._catalogued(key, layer.service, "wms", layer.layer)
+            if not service.web_mercator:
+                raise ValueError(f"{key}: {service.id} lacks EPSG:3857")
+            if layer.min_zoom > self.map.overlays.max_zoom:
+                raise ValueError(f"{key}: min_zoom is above the overlays' max_zoom")
+            for area_id in layer.areas:
+                area = regional.area(area_id)
+                if area.kind == "region" and area_id not in service.coverage:
+                    raise ValueError(f"{key}: {service.id} does not cover {area_id}")
+            self._check_legend(key, layer.legend, service)
+            failures = qualification_failures(
+                regional.rule, layer.theme, layer.evidence, national.detail
+            )
+            if failures:
+                raise ValueError(f"{key} does not qualify: {'; '.join(failures)}")
+        return self
+
+    @staticmethod
+    def _check_legend(key: str, legend: Legend, service: Service) -> None:
+        if legend.url is not None and host_of(legend.url) != service.host:
+            raise ValueError(f"{key}: the legend must be on {service.host}")
 
     def _catalogued(
         self, key: str, service_id: str, kind: str, layer: str | None = None

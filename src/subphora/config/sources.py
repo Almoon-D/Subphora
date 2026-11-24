@@ -101,6 +101,8 @@ class Service(Section):
     terms_url: str
     # The docs/knowledge/ file with the observed behaviour and terms of this service.
     knowledge: str
+    # A larger cap than the client's for this service's answers (official boundaries).
+    max_response_bytes: PositiveInt | None = None
     needs_key: bool = False
     # Name of the environment variable holding the key; keys never live in config/.
     key_env: str | None = None

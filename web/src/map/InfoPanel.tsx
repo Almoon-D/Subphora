@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // What the switched-on layers hold at the tapped point, each with its source and date.
-import type { InfoResult } from "../api.ts";
+import type { FeatureInfo, InfoResult } from "../api.ts";
 import { formatDate, lookup, t } from "../i18n/index.ts";
+import { describeDetail } from "./LayerPanel.tsx";
 
 /** Idle: no tap yet (the panel is not shown); nothing: a tap with no layer to ask. */
 export type Tap =
@@ -19,6 +20,31 @@ function Value({ value }: { value: string }) {
     );
   }
   return <>{value}</>;
+}
+
+/** Which layer answered, at what scale and of what date, and the regional ones that did not. */
+function AnsweredBy({ info }: { info: FeatureInfo }) {
+  const answer = info.answered_by;
+  const who =
+    answer.level === "regional"
+      ? t("info.answeredRegional", {
+          publisher: answer.publisher,
+          area: lookup(`area.${answer.area_id ?? ""}`, answer.area_id ?? ""),
+          detail: describeDetail(answer.detail),
+        })
+      : t("info.answeredNational", { publisher: answer.publisher, detail: describeDetail(answer.detail) });
+  return (
+    <>
+      <p className="note answered" data-answered={answer.layer_id}>
+        {who}
+      </p>
+      {info.fallbacks.map((fallback) => (
+        <p key={fallback.layer_id} className="note" data-fallback={fallback.reason}>
+          {t(`info.fallback.${fallback.reason}`, { title: lookup(`layer.${fallback.layer_id}`, fallback.layer_id) })}
+        </p>
+      ))}
+    </>
+  );
 }
 
 function Result({ result }: { result: InfoResult }) {
@@ -48,6 +74,7 @@ function Result({ result }: { result: InfoResult }) {
           ))}
         </dl>
       ))}
+      <AnsweredBy info={info} />
       <p className="note">
         {t("info.source", { attribution: info.source.attribution, date: formatDate(info.source.retrieved_at) })}
       </p>

@@ -53,7 +53,7 @@ class CachedFetcher:
         if hit is not None:
             return Fetched(hit.content, provenance(service, hit.fetched_at), key, True)
         try:
-            response = await self._client.get(url, params)
+            response = await self._client.get(url, params, max_bytes=service.max_response_bytes)
         except SourceTimeoutError as exc:
             raise UpstreamFailure(f"{service.publisher}: {exc}", timeout=True) from exc
         except SourceError as exc:
@@ -72,6 +72,27 @@ class CachedFetcher:
             fetched.cache_key,
             fetched.content,
             fetched.provenance.retrieved_at,
+            service.politeness.cache_lifetime_s,
+        )
+
+    async def recall(self, service: Service, key: str) -> Fetched | None:
+        """Something derived from a service's answer and kept under ``key``, if fresh."""
+        lifetime = service.politeness.cache_lifetime_s
+        hit = await asyncio.to_thread(self._cache.get, service.id, key, lifetime)
+        if hit is None:
+            return None
+        return Fetched(hit.content, provenance(service, hit.fetched_at), key, True)
+
+    async def remember(
+        self, service: Service, key: str, content: bytes, source: Provenance
+    ) -> None:
+        """Keep something derived from a service's answer, dated like that answer."""
+        await asyncio.to_thread(
+            self._cache.put,
+            service.id,
+            key,
+            content,
+            source.retrieved_at,
             service.politeness.cache_lifetime_s,
         )
 

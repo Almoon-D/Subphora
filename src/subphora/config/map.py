@@ -12,6 +12,7 @@ from pydantic import Field, PositiveInt, model_validator
 
 from subphora.config.base import Section
 from subphora.config.sources import host_of
+from subphora.domain.layers import LayerDetail
 
 _ZOOM = Field(ge=0, le=24)
 _OPACITY = Field(ge=0, le=1)
@@ -79,8 +80,9 @@ class FeatureInfo(Section):
     """How a tap reads the features of a layer, and which of their fields are shown."""
 
     info_format: str = Field(min_length=1)
-    # geojson: a GeoJSON FeatureCollection; esri_xml: ArcGIS's FeatureInfoResponse.
-    parser: Literal["geojson", "esri_xml"]
+    # geojson: a GeoJSON FeatureCollection; esri_xml: ArcGIS's FeatureInfoResponse;
+    # gml: MapServer's msGMLOutput.
+    parser: Literal["geojson", "esri_xml", "gml"]
     # The only fields shown, by the names the service gives them, in this order.
     fields: list[str] = Field(min_length=1)
 
@@ -98,6 +100,9 @@ class Overlay(Section):
     legend: Legend
     info: FeatureInfo | None
     export: ArcgisExport | None = None
+    # The publisher's stated scale or grid cell and edition, shown with every tap and
+    # compared with a regional layer's by the rule of decision 0023.
+    detail: LayerDetail
 
 
 class Overlays(Section):

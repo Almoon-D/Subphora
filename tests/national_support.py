@@ -1,0 +1,191 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+"""A synthetic Spain for the national build: every nationwide service behind one
+httpx.MockTransport, answering any window with made-up but well-formed data.
+
+- IGN MDT WCS: a GeoTIFF of the requested window at 25 m, a valley running north-south
+  whose floor falls to the south.
+- SoilGrids WCS: 25 % clay everywhere.
+- IGME permeability: one polygon over the whole window, class ALTA, in two pages.
+- IGME water points: two springs and a surface stream at the window's centre.
+- MITECO groundwater bodies: one body over the window's west half, status Malo.
+- IGN administrative units: a small square around a point in Madrid.
+"""
+
+import io
+import json
+import re
+from collections.abc import Callable
+from typing import Any
+from urllib.parse import parse_qs
+
+import httpx
+import numpy as np
+import rasterio
+from rasterio.transform import from_origin
+
+from subphora.config import Settings
+from tests.support import fast_settings
+
+type Handler = Callable[[httpx.Request], httpx.Response]
+
+# A small area in Madrid (degrees), the boundary of the synthetic province.
+MADRID = (-3.71, 40.41, -3.69, 40.43)
+_NUMBER = r"(-?\d+(?:\.\d+)?)"
+
+
+def small_settings() -> Settings:
+    """The real configuration with no waiting, a 1 km buffer and tiles up to zoom 9."""
+    settings = fast_settings()
+    national = settings.national.model_copy(
+        update={
+            "buffer_m": 1000.0,
+            "tiles": settings.national.tiles.model_copy(update={"max_zoom": 9}),
+        }
+    )
+    return settings.model_copy(update={"national": national})
+
+
+def geotiff(
+    bounds: tuple[float, float, float, float],
+    crs: str,
+    cell: float,
+    fill: Callable[[np.ndarray, np.ndarray], np.ndarray],
+    dtype: str,
+) -> bytes:
+    west, south, east, north = bounds
+    width = max(1, round((east - west) / cell))
+    height = max(1, round((north - south) / cell))
+    columns, rows = np.meshgrid(np.arange(width), np.arange(height))
+    xs = west + (columns + 0.5) * cell
+    ys = north - (rows + 0.5) * cell
+    data = fill(xs, ys).astype(dtype)
+    buffer = io.BytesIO()
+    with rasterio.open(
+        buffer,
+        "w",
+        driver="GTiff",
+        width=width,
+        height=height,
+        count=1,
+        dtype=dtype,
+        crs=crs,
+        transform=from_origin(west, north, cell, cell),
+    ) as dataset:
+        dataset.write(data, 1)
+    return buffer.getvalue()
+
+
+def _subsets(request: httpx.Request, first: str, second: str) -> tuple[float, ...]:
+    values = parse_qs(request.url.query.decode(), keep_blank_values=True)
+    subsets = values.get("subset", []) + values.get("SUBSET", [])
+    found: dict[str, tuple[float, float]] = {}
+    for subset in subsets:
+        match = re.match(rf"(\w+)\({_NUMBER},{_NUMBER}\)", subset)
+        if match:
+            found[match.group(1)] = (float(match.group(2)), float(match.group(3)))
+    return (found[first][0], found[second][0], found[first][1], found[second][1])
+
+
+def _box(request: httpx.Request, name: str) -> tuple[float, float, float, float]:
+    raw = request.url.params[name].split(",")
+    west, south, east, north = (float(v) for v in raw[:4])
+    return (west, south, east, north)
+
+
+def _feature(geometry: dict[str, Any], **properties: Any) -> dict[str, Any]:
+    return {"type": "Feature", "geometry": geometry, "properties": properties}
+
+
+def _square(west: float, south: float, east: float, north: float) -> dict[str, Any]:
+    ring = [[west, south], [east, south], [east, north], [west, north], [west, south]]
+    return {"type": "Polygon", "coordinates": [ring]}
+
+
+def _collection(features: list[dict[str, Any]], **extra: Any) -> httpx.Response:
+    return httpx.Response(200, json={"type": "FeatureCollection", "features": features, **extra})
+
+
+class FakeSpain:
+    """Answers every nationwide service; ``fail`` maps a host to a status to answer."""
+
+    def __init__(self, fail: dict[str, int] | None = None) -> None:
+        self.fail = fail or {}
+        self.requests: list[httpx.Request] = []
+
+    def transport(self) -> httpx.MockTransport:
+        return httpx.MockTransport(self._handle)
+
+    def _handle(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        host = request.url.host
+        if host in self.fail:
+            return httpx.Response(self.fail[host], content=b"<error/>")
+        path = request.url.path
+        if host == "servicios.idee.es":
+            return self._terrain(request)
+        if host == "maps.isric.org":
+            box = _subsets(request, "long", "lat")
+            content = geotiff(box, "EPSG:4326", 0.002, lambda x, _y: np.full(x.shape, 250), "int16")
+            return httpx.Response(200, content=content, headers={"content-type": "image/tiff"})
+        if host == "mapas.igme.es" and "Permeabilidad" in path:
+            return self._permeability(request)
+        if host == "mapas.igme.es" and "PuntosAgua" in path:
+            return self._water_points(request)
+        if host == "gis.miteco.gob.es":
+            return self._bodies(request)
+        if host == "www.ign.es":
+            return _collection([_feature(_square(*MADRID), nationalCode="34132800000")])
+        return httpx.Response(404)
+
+    @staticmethod
+    def _terrain(request: httpx.Request) -> httpx.Response:
+        box = _subsets(request, "x", "y")
+        centre = 440_000.0
+
+        def valley(xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
+            return 600 + np.abs(xs - centre) * 0.05 + (ys - 4_470_000) * 0.01
+
+        content = geotiff(box, "EPSG:25830", 25.0, valley, "int16")
+        return httpx.Response(200, content=content, headers={"content-type": "image/tiff"})
+
+    @staticmethod
+    def _permeability(request: httpx.Request) -> httpx.Response:
+        west, south, east, north = _box(request, "geometry")
+        offset = int(request.url.params["resultOffset"])
+        if offset == 0:
+            feature = _feature(
+                _square(west, south, east, north), PERME="ALTA", DCO="CARBONATADAS-ALTA"
+            )
+            return _collection([feature], exceededTransferLimit=True)
+        blank = _feature(
+            _square(west, south, west + 100, south + 100), PERME=" ", DCO="Masa de agua superficial"
+        )
+        return _collection([blank])
+
+    @staticmethod
+    def _water_points(request: httpx.Request) -> httpx.Response:
+        west, south, east, north = _box(request, "geometry")
+        x, y = (west + east) / 2, (south + north) / 2
+
+        def point(dx: float, kind: str) -> dict[str, Any]:
+            return _feature({"type": "Point", "coordinates": [x + dx, y]}, Naturaleza=kind)
+
+        points = [point(0, "Manantial"), point(300, "Sondeo"), point(-3000, "Cauce superficial")]
+        return _collection(points, exceededTransferLimit=False)
+
+    @staticmethod
+    def _bodies(request: httpx.Request) -> httpx.Response:
+        raw = request.url.params["bbox"].split(",")
+        west, south, east, north = (float(v) for v in raw[:4])
+        body = _feature(
+            _square(west, south, (west + east) / 2, north),
+            cod_masa="ES030MSBT000",
+            nom_masa="Synthetic body",
+            est_cu_desc="Malo",
+        )
+        return httpx.Response(
+            200,
+            content=json.dumps(
+                {"type": "FeatureCollection", "features": [body], "numberMatched": 1}
+            ).encode(),
+        )

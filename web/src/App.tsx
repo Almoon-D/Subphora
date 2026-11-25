@@ -9,11 +9,15 @@ import {
   type AreaResult,
   drawnPoint,
   drawnPolygon,
+  type ExplainResult,
   type Failed,
+  fetchExplanation,
   fetchFeatureInfo,
   fetchMapConfig,
+  fetchNational,
   type Interpretation,
   type MapConfig,
+  type NationalMap,
   type Position,
   resolveArea,
   searchText,
@@ -23,6 +27,7 @@ import { InfoPanel, type Tap } from "./map/InfoPanel.tsx";
 import { LayerPanel } from "./map/LayerPanel.tsx";
 import { initialLayers, type MapLayers, queryableOverlays } from "./map/layers.ts";
 import { type Draft, MapView } from "./map/MapView.tsx";
+import { nationalAnswersTap } from "./map/national.ts";
 import {
   areaHeading,
   areaKey,
@@ -190,6 +195,8 @@ function SessionList({ session, onSelect }: { session: SessionAreas; onSelect: (
 
 export function App() {
   const [config, setConfig] = useState<MapConfig | null>(null);
+  // Null when the national map could not be read: the rest of the page works without it.
+  const [national, setNational] = useState<NationalMap | null>(null);
   const [configFailed, setConfigFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState<Search>({ state: "idle" });
@@ -205,10 +212,11 @@ export function App() {
   const searchCount = useRef(0);
 
   useEffect(() => {
-    fetchMapConfig().then(
-      (loaded) => {
+    Promise.all([fetchMapConfig(), fetchNational().catch(() => null)]).then(
+      ([loaded, nationalMap]) => {
         setConfig(loaded);
-        setLayers(initialLayers(loaded));
+        setNational(nationalMap);
+        setLayers(initialLayers(loaded, nationalMap));
       },
       () => {
         setConfigFailed(true);
@@ -226,15 +234,20 @@ export function App() {
     }
     setTapped([lon, lat]);
     const asked = queryableOverlays(config, layers, lon, lat, tapZoom);
+    const askNational = nationalAnswersTap(national, layers, lon, lat);
     const count = ++tapCount.current;
-    if (asked.length === 0) {
+    if (asked.length === 0 && !askNational) {
       setTap({ state: "nothing" });
       return;
     }
     setTap({ state: "loading" });
-    const results = await Promise.all(asked.map((o) => fetchFeatureInfo(o.id, lon, lat, tapZoom)));
+    const explained: Promise<ExplainResult | null> = askNational ? fetchExplanation(lon, lat) : Promise.resolve(null);
+    const [nationalResult, results] = await Promise.all([
+      explained,
+      Promise.all(asked.map((o) => fetchFeatureInfo(o.id, lon, lat, tapZoom))),
+    ]);
     if (count === tapCount.current) {
-      setTap({ state: "done", results });
+      setTap({ state: "done", results, national: nationalResult });
     }
   }
 
@@ -408,7 +421,7 @@ export function App() {
         {config && layers && (
           <>
             <InfoPanel tap={tap} />
-            <LayerPanel config={config} layers={layers} zoom={zoom} onChange={setLayers} />
+            <LayerPanel config={config} national={national} layers={layers} zoom={zoom} onChange={setLayers} />
           </>
         )}
         {configFailed && (
@@ -421,6 +434,7 @@ export function App() {
         {config && layers ? (
           <MapView
             config={config}
+            national={national}
             area={area}
             layers={layers}
             tapped={tapped}

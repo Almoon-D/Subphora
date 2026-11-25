@@ -15,6 +15,10 @@
   features under a tapped point, from the regional layer whose area holds it or the
   national one, saying which answered.
 - ``GET /api/areas/{id}``: the official boundary a regional layer is drawn inside.
+- ``GET /api/national``: the national water-potential map's layers, legends and regions.
+- ``GET /api/national/tiles/{layer}/{z}/{x}/{y}``: a PNG tile of a national layer.
+- ``GET /api/national/explain?lon=&lat=``: the index at a point with its confidence, the
+  contribution and source of every input, and the inputs missing there.
 """
 
 import logging
@@ -30,16 +34,19 @@ from pydantic import Field, ValidationError
 
 from subphora import __version__
 from subphora.api.map import MapConfig, map_config
+from subphora.api.national import NationalMap, national_map
 from subphora.config import REPO_ROOT, Settings
 from subphora.domain import DomainModel
 from subphora.domain.aoi import AoiOrigin, AreaOfInterest, SearchAnswer, SearchError, SearchFailure
 from subphora.domain.areas import AreaBoundary
 from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
 from subphora.domain.parcels import Position
+from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
 from subphora.geo import MAX_TILE_ZOOM
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
 from subphora.services.layers import LayerService
+from subphora.services.national_map import NationalMapService
 from subphora.services.parcels import ParcelService
 from subphora.sources import CatalogueClient
 from subphora.sources.client import Transport
@@ -74,6 +81,13 @@ _LAYER_STATUS = {
     LayerFailure.UPSTREAM_TIMEOUT: 504,
 }
 _UPSTREAM_LAYER_FAILURES = (LayerFailure.UPSTREAM_ERROR, LayerFailure.UPSTREAM_TIMEOUT)
+_NATIONAL_STATUS = {
+    NationalFailure.NOT_BUILT: 404,
+    NationalFailure.OUTSIDE_BUILT_AREA: 404,
+    NationalFailure.UNKNOWN_LAYER: 404,
+    NationalFailure.INVALID_TILE: 400,
+    NationalFailure.UNREADABLE: 500,
+}
 _PNG = "image/png"
 _ZOOM = Query(ge=0, le=MAX_TILE_ZOOM)
 _TILE_INDEX = fastapi.Path(ge=0)
@@ -102,7 +116,11 @@ def create_app(
             app.state.aoi = AoiService(client, settings, cache, parcels)
             app.state.areas = AreaService(client, settings, cache)
             app.state.layers = LayerService(client, settings, cache, app.state.areas)
-            yield
+            app.state.national = NationalMapService(settings, root)
+            try:
+                yield
+            finally:
+                app.state.national.close()
 
     app = FastAPI(title="Subphora", version=__version__, lifespan=lifespan)
     map_body = map_config(settings)
@@ -125,6 +143,15 @@ def create_app(
             _log.warning("layer request failed upstream: %s", exc.detail)
         return JSONResponse(
             status_code=_LAYER_STATUS[exc.failure],
+            content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    @app.exception_handler(NationalError)
+    async def national_failed(_request: Request, exc: NationalError) -> JSONResponse:
+        if exc.failure is NationalFailure.UNREADABLE:
+            _log.error("the national map cannot be read: %s", exc.detail)
+        return JSONResponse(
+            status_code=_NATIONAL_STATUS[exc.failure],
             content={"code": exc.failure.value, "detail": exc.detail},
         )
 
@@ -198,6 +225,38 @@ def create_app(
     ) -> LayerFeatureInfo:
         layers: LayerService = request.app.state.layers
         return await layers.info(layer_id, lon, lat, zoom)
+
+    def national(request: Request) -> NationalMapService:
+        service: NationalMapService = request.app.state.national
+        return service
+
+    @app.get("/api/national")
+    async def national_layers(request: Request) -> NationalMap:
+        return national_map(settings, await national(request).describe())
+
+    @app.get("/api/national/tiles/{layer_id}/{z}/{x}/{y}", response_class=Response)
+    async def national_tile(
+        layer_id: str,
+        z: Annotated[int, _TILE_INDEX],
+        x: Annotated[int, _TILE_INDEX],
+        y: Annotated[int, _TILE_INDEX],
+        request: Request,
+    ) -> Response:
+        content = await national(request).tile(layer_id, z, x, y)
+        max_age = settings.national.tiles.browser_cache_s
+        return Response(
+            content=content,
+            media_type=_PNG,
+            headers={"Cache-Control": f"public, max-age={max_age}"},
+        )
+
+    @app.get("/api/national/explain")
+    async def national_explain(
+        lon: Annotated[float, Query(ge=-180, le=180)],
+        lat: Annotated[float, Query(ge=-85, le=85)],
+        request: Request,
+    ) -> CellExplanation:
+        return await national(request).explain(lon, lat)
 
     @app.get("/api/areas/{area_id}")
     async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:

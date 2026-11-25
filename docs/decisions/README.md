@@ -6,6 +6,8 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0028](0028-national-build-and-tiles.md) | The national build: per-province grids in a process pool, PMTiles served by the API | accepted |
+| [0027](0027-national-model-v0.md) | The national model v0: nine criteria, seven with nationwide data, confidence that says so | accepted |
 | [0026](0026-search-and-area-of-interest.md) | One area of interest from every search, checked on land by SIGPAC | accepted |
 | [0025](0025-national-editions-per-part.md) | A national layer published in parts is compared by its parts over the area | accepted |
 | [0024](0024-regional-layers-clipped-in-the-browser.md) | Regional layers: the rule as data, official boundaries on one grid, clipped in the browser | accepted; extended by 0025 |

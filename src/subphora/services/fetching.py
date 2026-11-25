@@ -7,7 +7,7 @@ page or an empty answer is asked again next time.
 """
 
 import asyncio
-from collections.abc import Collection, Mapping
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import urlencode
@@ -15,6 +15,7 @@ from urllib.parse import urlencode
 from subphora.config.sources import Service
 from subphora.domain.provenance import Provenance
 from subphora.sources import CatalogueClient, SourceError, SourceTimeoutError
+from subphora.sources.client import Params
 from subphora.store import FileCache
 from subphora.store.file_cache import Clock, utc_now
 
@@ -49,7 +50,7 @@ class CachedFetcher:
         self,
         service: Service,
         url: str,
-        params: Mapping[str, str],
+        params: Params,
         empty_statuses: Collection[int] = (),
     ) -> Fetched:
         """The cached answer if fresh, else the service's; raises UpstreamFailure.
@@ -110,8 +111,9 @@ class CachedFetcher:
         )
 
 
-def _request_key(url: str, params: Mapping[str, str]) -> str:
-    return url + "?" + urlencode(sorted(params.items()))
+def _request_key(url: str, params: Params) -> str:
+    # A list value is a repeated parameter (WCS subsets).
+    return url + "?" + urlencode(sorted(params.items()), doseq=True)
 
 
 def provenance(service: Service, retrieved_at: datetime) -> Provenance:

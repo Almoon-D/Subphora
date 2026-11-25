@@ -10,7 +10,10 @@ point when tapped, ranks candidate spots, and compares several selected areas si
 ## Read
 
 - `docs/MASTER_PLAN.md` § 4.3 (in full), § 4.2.
-- `docs/decisions/` 0006 and session 05's decisions.
+- `docs/decisions/` 0006, 0027 (the model v0) and 0028 (the national build).
+- The session-05 code to reuse, not duplicate: `subphora.model` (`evaluate`, `explain_cell`,
+  `dataset_quality`), `config/defaults/model.yaml`, `subphora.geo.terrain` and
+  `subphora.geo.raster`, and the domain estimate `subphora.domain.potential`.
 - `docs/knowledge/`: IGN/CNIG (MDT02/MDT05), IGME (MAGNA, faults).
 - `src/subphora/domain/aoi.py` (decision 0026): a selected area is an `AreaOfInterest`, an
   outline or a point (an address, coordinates, a drawn point); the session's list of them

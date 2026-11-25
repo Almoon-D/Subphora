@@ -57,7 +57,11 @@ make setup     # entorno de Python y del front end
 make dev       # API + web en local
 make check     # todo lo que corre CI (Python y web, con tests en navegador)
 uv run subphora --help
+uv run subphora national build --region ES-Z   # mapa nacional de una provincia
+uv run subphora national build --all           # toda España (~5 GB libres, varias horas)
 ```
+
+El mapa nacional se guarda en `data/national/` y `make dev` lo muestra al abrir el mapa.
 
 La primera vez, `make check` descarga el Chromium de Playwright para los tests en
 navegador.

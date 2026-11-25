@@ -1,0 +1,169 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The water-potential model (MASTER_PLAN §4.3, decisions 0006 and 0027): the criteria, their
+# weights and suitability lookups, and how confidence is computed. Every weight and class
+# names its source. Until session 07 calibrates it against wells, the score is a relative
+# potential index, never a probability.
+#
+# Per criterion: weight (the criteria's weights add up to 1; at a cell they are
+# renormalised over the criteria whose input is present there); variable, the grid the
+# national build makes from a nationwide input (null: no nationwide input yet, so the
+# criterion is missing everywhere and lowers confidence); lookup, how a value becomes a
+# 0-1 suitability: `classes` maps a category to a suitability (`absent` is the suitability
+# where the input has no feature at all, null when that means "no data"); `breaks` maps a
+# number to values[i], where i is how many breaks are at or below it.
+
+criteria:
+  - id: permeability
+    weight: 0.25
+    weight_source: >-
+      Expert default. Lithology and permeability carry the largest weight in the GIS
+      multi-criteria groundwater-potential literature (Machiwal, Jha and Mal 2011, Water
+      Resources Management 25:1359-1386; Arulbalaji, Padmalal and Sreelash 2019, Scientific
+      Reports 9:2082); calibrated in session 07.
+    variable: permeability_class
+    lookup:
+      kind: classes
+      # IGME's five permeability classes of the 1:200,000 map, ordinal, in equal steps.
+      classes: {MUY ALTA: 1.0, ALTA: 0.8, MEDIA: 0.55, BAJA: 0.3, MUY BAJA: 0.1}
+      # No polygon (the sea) or a polygon without a class (surface water): no data.
+      absent: null
+      source: >-
+        IGME, Mapa de permeabilidades de España 1:200.000 (classes MUY ALTA to MUY BAJA);
+        the suitability of each class is an expert default in equal steps.
+
+  - id: structure
+    weight: 0.10
+    weight_source: >-
+      Expert default after the same literature, where lineament or fault density weighs
+      about as much as slope.
+    # Faults, lineament density and the dip of permeable layers: no nationwide grid yet
+    # (MAGNA's structural data are points per sheet, docs/knowledge/igme.md).
+    variable: null
+
+  - id: slope
+    weight: 0.10
+    weight_source: Expert default after the same literature.
+    variable: slope_deg
+    lookup:
+      kind: breaks
+      unit: deg
+      breaks: [2, 5, 10, 20]
+      values: [1.0, 0.8, 0.6, 0.35, 0.15]
+      source: >-
+        Gentle slopes keep rainfall long enough to infiltrate; the classes 0-2, 2-5, 5-10,
+        10-20 and over 20 degrees are the usual ones of the same literature; values are an
+        expert default.
+
+  - id: wetness
+    weight: 0.08
+    weight_source: Expert default after the same literature.
+    variable: twi
+    lookup:
+      kind: breaks
+      unit: twi
+      breaks: [6, 8, 10]
+      values: [0.2, 0.45, 0.7, 1.0]
+      source: >-
+        Topographic wetness index ln(a / tan b) (Beven and Kirkby 1979): higher where
+        water converges; classes for a 100 m grid, an expert default.
+
+  - id: drainage
+    weight: 0.08
+    weight_source: Expert default after the same literature.
+    variable: drainage_distance_m
+    lookup:
+      kind: breaks
+      unit: m
+      breaks: [250, 500, 1000, 2000]
+      values: [1.0, 0.8, 0.55, 0.35, 0.2]
+      source: >-
+        Distance to the drainage network derived from the terrain: valley floors and
+        alluvium near channels hold shallow groundwater more often; expert default.
+
+  - id: soil
+    weight: 0.07
+    weight_source: Expert default after the same literature.
+    variable: clay_pct
+    lookup:
+      kind: breaks
+      unit: pct
+      breaks: [10, 20, 40]
+      values: [1.0, 0.75, 0.45, 0.2]
+      source: >-
+        Topsoil clay content: infiltration falls as clay rises. The 10 % and 40 % limits
+        are those of the USDA hydrologic soil groups A and D (NRCS National Engineering
+        Handbook, part 630, chapter 7); the values are an expert default.
+
+  - id: groundwater_body
+    weight: 0.12
+    weight_source: >-
+      Expert default: a groundwater body is where the basin plan has delimited a
+      significant aquifer (Water Framework Directive, article 2).
+    variable: groundwater_status
+    lookup:
+      kind: classes
+      # The body's quantitative status in the basin plans 2022-2027.
+      classes: {Bueno: 1.0, Malo: 0.6}
+      # Outside every groundwater body: no significant aquifer delimited there.
+      absent: 0.3
+      source: >-
+        MITECO, quantitative status of the groundwater bodies, plans 2022-2027; poor
+        status (abstraction above recharge) lowers the suitability; expert default values.
+
+  - id: water_points
+    weight: 0.10
+    weight_source: Expert default.
+    variable: water_point_distance_m
+    lookup:
+      kind: breaks
+      unit: m
+      breaks: [500, 1000, 2000, 5000]
+      values: [1.0, 0.8, 0.6, 0.4, 0.2]
+      source: >-
+        Distance to the nearest well, borehole, spring or gallery of the IGME water-point
+        inventory: groundwater has been found or tapped nearby. Its yield is mostly not
+        recorded (docs/knowledge/igme.md), so only the distance counts; expert default.
+
+  - id: piezometric_depth
+    weight: 0.10
+    weight_source: Expert default.
+    # Water-table depth comes with the piezometric levels of session 07.
+    variable: null
+
+# Confidence (0-1): a weighted sum of five components (MASTER_PLAN §4.3), labelled low,
+# medium or high at the thresholds below. The weights are an expert default.
+confidence:
+  weights:
+    # The share of the total criteria weight whose input is present at the cell.
+    coverage: 0.30
+    # How well each present input's resolution fits the cell (cell / input resolution).
+    resolution: 0.20
+    # How recent each present input is, by its ageing profile.
+    age: 0.15
+    # How near the nearest validation evidence is (the IGME water points until session 07).
+    evidence: 0.15
+    # The model's measured skill in the hydrogeological domain (session 07).
+    skill: 0.20
+  # value >= medium is medium, >= high is high, below medium is low.
+  thresholds: {medium: 0.4, high: 0.7}
+  # The resolution or age component of an input whose publisher states no resolution or
+  # no edition: unknown is never treated as good.
+  unknown_value: 0.5
+  # Evidence counts fully within this distance and not at all beyond the second.
+  evidence_full_within_m: 1000
+  evidence_none_beyond_m: 10000
+  # Skill is not measured until session 07: it contributes nothing.
+  skill_not_measured: 0.0
+  # How an input's age (build year minus edition year) lowers its age component: 1 up to
+  # full_years, falling linearly to 0 at zero_years.
+  ageing:
+    # Geology changes on geological time; a map ages through revisions and new mapping.
+    geology: {full_years: 20, zero_years: 80}
+    # Terrain changes little; earthworks and new surveys age it slowly.
+    terrain: {full_years: 15, zero_years: 60}
+    # Soil properties predicted from a global model.
+    soil: {full_years: 10, zero_years: 40}
+    # A status assessed per six-year plan cycle.
+    status: {full_years: 6, zero_years: 18}
+    # An inventory added to over decades.
+    inventory: {full_years: 10, zero_years: 50}

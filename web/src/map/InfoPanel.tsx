@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // What the switched-on layers hold at the tapped point, each with its source and date.
-import type { FeatureInfo, InfoResult } from "../api.ts";
+import type { ExplainResult, FeatureInfo, InfoResult } from "../api.ts";
 import { formatDate, lookup, t } from "../i18n/index.ts";
+import { NationalExplanation } from "./Explanation.tsx";
 import { describeDetail } from "./LayerPanel.tsx";
 
 /** Idle: no tap yet (the panel is not shown); nothing: a tap with no layer to ask. */
@@ -9,7 +10,7 @@ export type Tap =
   | { state: "idle" }
   | { state: "nothing" }
   | { state: "loading" }
-  | { state: "done"; results: InfoResult[] };
+  | { state: "done"; results: InfoResult[]; national: ExplainResult | null };
 
 function Value({ value }: { value: string }) {
   if (value.startsWith("https://")) {
@@ -93,6 +94,7 @@ export function InfoPanel({ tap }: { tap: Tap }) {
       {tap.state === "loading" && <p>{t("info.loading")}</p>}
       {tap.state === "done" && (
         <ul>
+          {tap.national && <NationalExplanation result={tap.national} />}
           {tap.results.map((result) => (
             <Result key={result.layerId} result={result} />
           ))}

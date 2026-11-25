@@ -13,6 +13,8 @@ from pydantic import model_validator
 
 from subphora.config.base import Section
 from subphora.config.map import Legend, MapSettings
+from subphora.config.model import ModelSettings
+from subphora.config.national import NationalSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.search import SearchSettings
 from subphora.config.server import ApiSettings, StoreSettings
@@ -27,6 +29,8 @@ __all__ = [
     "ApiSettings",
     "CoreSettings",
     "MapSettings",
+    "ModelSettings",
+    "NationalSettings",
     "RegionalSettings",
     "SearchSettings",
     "Section",
@@ -51,6 +55,8 @@ class Settings(Section):
     map: MapSettings
     regional: RegionalSettings
     search: SearchSettings
+    model: ModelSettings
+    national: NationalSettings
 
     @model_validator(mode="after")
     def _map_layers_are_drawable(self) -> Self:
@@ -127,6 +133,43 @@ class Settings(Section):
     def _search_services_catalogued(self) -> Self:
         self._catalogued("search.sigpac", self.search.sigpac.service, "rest")
         self._catalogued("search.cartociudad", self.search.cartociudad.service, "rest")
+        return self
+
+    @model_validator(mode="after")
+    def _national_inputs_catalogued(self) -> Self:
+        """Each nationwide input reads a catalogued service of the right kind, with the
+        layers it asks for, and ages by a profile of model.yaml."""
+        datasets = self.national.datasets
+        kinds = {
+            "permeability": "rest",
+            "terrain": "wcs",
+            "soil": "wcs",
+            "groundwater_bodies": "wfs",
+            "water_points": "rest",
+        }
+        for name, dataset in datasets.all().items():
+            key = f"national.datasets.{name}"
+            self._catalogued(key, dataset.service, kinds[name])
+            if dataset.ageing not in self.model.confidence.ageing:
+                raise ValueError(f"{key}: no ageing profile {dataset.ageing!r} in model.yaml")
+        for grid in self.national.grids:
+            key = f"national.grids.{grid.id}"
+            self._catalogued(key, datasets.terrain.service, "wcs", grid.terrain.coverage)
+            known = {territory.id for territory in self.search.territories}
+            unknown = sorted(set(grid.territories) - known)
+            if unknown:
+                raise ValueError(f"{key}: {unknown} are not search.yaml territories")
+        self._catalogued(
+            "national.datasets.soil", datasets.soil.service, "wcs", datasets.soil.coverage
+        )
+        bodies = datasets.groundwater_bodies
+        service = self._catalogued(
+            "national.datasets.groundwater_bodies", bodies.service, "wfs", bodies.type_name
+        )
+        if bodies.srs not in service.crs:
+            raise ValueError(
+                f"national.datasets.groundwater_bodies: {service.id} lacks {bodies.srs}"
+            )
         return self
 
     @staticmethod

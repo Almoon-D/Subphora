@@ -7,6 +7,22 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.7.0] - 2026-11-25
+
+- A national map of groundwater potential: when the app opens, every province built is
+  coloured by a relative potential index (0 to 1), labelled an index and never a
+  probability, with a confidence layer beside it.
+- `subphora national build --region ES-Z` (a province), `--region ES-AR` (every province of
+  a region), a box in degrees, or `--all`, downloads the nationwide public inputs politely
+  and computes the 100 m grids; the Canaries have their own grid.
+- The index weighs permeability and lithology (IGME), slope, wetness and drainage (IGN
+  terrain), topsoil clay (SoilGrids), the groundwater body's status (MITECO) and nearby
+  water points (IGME); criteria without nationwide data yet are listed as missing.
+- A tap on the map explains the index there: each input's value, suitability, weight,
+  contribution, source and date, the inputs missing, and what the confidence depends on.
+- Slope, distance to the drainage network and the topographic wetness index are map layers
+  too, each with its legend.
+
 ## [0.6.0] - 2026-11-25
 
 - One search box for every way to name a place: a cadastral or SIGPAC reference (parcel or

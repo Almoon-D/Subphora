@@ -8,8 +8,11 @@ import pytest
 import yaml
 
 from subphora.api.map import MapConfig, map_config
+from subphora.api.national import NationalMap, national_map
 from subphora.config import load_settings
 from subphora.domain.aoi import AreaOfInterest, SearchAnswer
+from subphora.domain.potential import CellExplanation
+from tests.national_support import small_settings
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -190,3 +193,9 @@ def test_the_browser_test_fixtures_match_the_api() -> None:
     assert SearchAnswer.model_validate_json((fixtures / "search-daimiel.json").read_bytes())
     served = MapConfig.model_validate_json((fixtures / "map.json").read_bytes())
     assert served == map_config(load_settings())
+    national = NationalMap.model_validate_json((fixtures / "national.json").read_bytes())
+    assert national.built
+    # Built with the synthetic build's settings (tiles up to zoom 9).
+    assert national.layers == national_map(small_settings(), None).layers
+    explained = CellExplanation.model_validate_json((fixtures / "explain-madrid.json").read_bytes())
+    assert explained.estimate.kind == "index"

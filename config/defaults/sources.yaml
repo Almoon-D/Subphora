@@ -436,6 +436,8 @@ services:
     attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico"
     terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
     knowledge: docs/knowledge/miteco-basins.md
+    # Bodies at full detail for the national build: 79 bodies around Zaragoza are 6.9 MB.
+    max_response_bytes: 40000000
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
     sample:
       description: status of the groundwater bodies around Daimiel, as GeoJSON

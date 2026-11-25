@@ -21,12 +21,20 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState } from "react";
 
-import { type AreaBoundary, type AreaOfInterest, fetchArea, type MapConfig, type Position } from "../api.ts";
+import {
+  type AreaBoundary,
+  type AreaOfInterest,
+  fetchArea,
+  type MapConfig,
+  type NationalMap,
+  type Position,
+} from "../api.ts";
 import { lookup, t } from "../i18n/index.ts";
 import { areaHeading } from "../search/areas.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
 import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
 import { describeOverlays, describeRegional, type MapLayers, overlayTiles } from "./layers.ts";
+import { describeNational } from "./national.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
 setWorkerUrl(workerUrl);
@@ -36,6 +44,7 @@ const WEB_MERCATOR_HALF_EXTENT_M = 20037508.342789244;
 const baseId = (id: string) => `base-${id}`;
 const overlayId = (id: string) => `overlay-${id}`;
 const regionalId = (id: string) => `regional-${id}`;
+const nationalId = (id: string) => `national-${id}`;
 const CADASTRE = "cadastre";
 const AREA = "area";
 const AREA_COLOUR = "#ffd400";
@@ -50,6 +59,8 @@ export interface Draft {
 
 interface Props {
   config: MapConfig;
+  /** The national map; its layers are drawn only once it is built. */
+  national: NationalMap | null;
   area: AreaOfInterest | null;
   layers: MapLayers;
   /** The last tapped point, marked on the map. */
@@ -220,8 +231,18 @@ function refreshCadastre(map: MaplibreMap, cadastre: MapConfig["cadastre"], laye
   return true;
 }
 
+/** The national layers drawn by the map: none until the map is built. */
+function drawnNational(national: NationalMap | null): NationalMap["layers"] {
+  return national?.built ? national.layers : [];
+}
+
 /** Apply the panel's choices to the map's layers. */
-function applyLayers(map: MaplibreMap, config: MapConfig, layers: MapLayers): void {
+function applyLayers(map: MaplibreMap, config: MapConfig, national: NationalMap | null, layers: MapLayers): void {
+  for (const layer of drawnNational(national)) {
+    const state = layers.national[layer.id];
+    map.setLayoutProperty(nationalId(layer.id), "visibility", visibility(state?.visible === true));
+    map.setPaintProperty(nationalId(layer.id), "raster-opacity", state?.opacity ?? layer.opacity);
+  }
   for (const base of config.base_maps) {
     map.setLayoutProperty(baseId(base.id), "visibility", visibility(base.id === layers.base));
   }
@@ -237,9 +258,22 @@ function applyLayers(map: MaplibreMap, config: MapConfig, layers: MapLayers): vo
   }
 }
 
-function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification {
+function initialStyle(config: MapConfig, national: NationalMap | null, layers: MapLayers): StyleSpecification {
   const origin = window.location.origin;
   const sources: Record<string, RasterSourceSpecification> = {};
+  const nationalAttribution = national ? national.attributions.join(", ") : "";
+  for (const layer of drawnNational(national)) {
+    sources[nationalId(layer.id)] = {
+      type: "raster",
+      tiles: overlayTiles(layer, origin),
+      tileSize: layer.tile_size,
+      minzoom: layer.min_zoom,
+      maxzoom: layer.max_zoom,
+      // Tiles outside the regions built are never requested.
+      ...(national?.bounds ? { bounds: national.bounds } : {}),
+      attribution: nationalAttribution,
+    };
+  }
   for (const base of config.base_maps) {
     sources[baseId(base.id)] = {
       type: "raster",
@@ -280,6 +314,16 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
         layout: { visibility: visibility(base.id === layers.base) },
       }),
     ),
+    // The national map over the base map and under the official layers.
+    ...drawnNational(national).map(
+      (layer): LayerSpecification => ({
+        id: nationalId(layer.id),
+        type: "raster",
+        source: nationalId(layer.id),
+        layout: { visibility: visibility(layers.national[layer.id]?.visible === true) },
+        paint: { "raster-opacity": layers.national[layer.id]?.opacity ?? layer.opacity, "raster-resampling": "nearest" },
+      }),
+    ),
     ...config.overlays.flatMap((overlay): LayerSpecification[] => {
       const state = layers.overlays[overlay.id];
       const layout = { visibility: visibility(state?.visible === true) };
@@ -303,7 +347,7 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
   return { version: 8, sources, layers: styleLayers };
 }
 
-export function MapView({ config, area, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
+export function MapView({ config, national, area, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
@@ -362,7 +406,7 @@ export function MapView({ config, area, layers, tapped, draft, onZoom, onTap, on
       touchPitch: false,
       // An image source carries no attribution of its own: the control names Catastro.
       attributionControl: { compact: false, customAttribution: cadastre.attribution },
-      style: initialStyle(config, layersRef.current),
+      style: initialStyle(config, national, layersRef.current),
     });
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
@@ -398,15 +442,15 @@ export function MapView({ config, area, layers, tapped, draft, onZoom, onTap, on
       mapRef.current = null;
       map.remove();
     };
-  }, [config]);
+  }, [config, national]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded) {
       return;
     }
-    applyLayers(map, config, layers);
-  }, [layers, loaded, config]);
+    applyLayers(map, config, national, layers);
+  }, [layers, loaded, config, national]);
 
   // Only switching the cadastre on or off asks Catastro for an image; opacity does not.
   const cadastreOn = layers.cadastre.visible;
@@ -478,6 +522,7 @@ export function MapView({ config, area, layers, tapped, draft, onZoom, onTap, on
         data-base={loaded ? layers.base : ""}
         data-overlays={loaded ? describeOverlays(config, layers) : ""}
         data-regional={loaded ? describeRegional(config, layers) : ""}
+        data-national={loaded ? describeNational(national, layers) : ""}
       />
       {loaded && layers.cadastre.visible && !cadastreReached && <p className="map-hint">{t("map.cadastreHidden")}</p>}
       {missingAreas.length > 0 && <p className="map-hint">{t("map.areaMissing", { areas: missingAreas.map((id) => lookup(`area.${id}`, id)).join(", ") })}</p>}

@@ -6,6 +6,7 @@ the square world is split into 2^z by 2^z tiles, x from the west, y from the nor
 extent comes from pyproj (longitude 180° in EPSG:3857), not from a written constant.
 """
 
+import math
 from functools import cache
 
 from subphora.geo.reproject import to_lon_lat, transform_point
@@ -57,3 +58,25 @@ def reproject_box(box: MercatorBox, crs: str) -> tuple[float, float, float, floa
     firsts = [first for first, _ in corners]
     seconds = [second for _, second in corners]
     return (min(firsts), min(seconds), max(firsts), max(seconds))
+
+
+def tiles_covering(bbox: tuple[float, float, float, float], z: int) -> list[tuple[int, int]]:
+    """The (x, y) of every zoom-``z`` tile that meets a west, south, east, north box in
+    degrees (latitudes beyond Web Mercator's are clamped to it)."""
+    half = _half_extent()
+    west, south, east, north = bbox
+    limit = to_lon_lat([(0.0, half)], _WEB_MERCATOR)[0][1]
+    (x0, y0), (x1, y1) = (
+        transform_point((west, max(-limit, min(limit, north))), _WEB_MERCATOR),
+        transform_point((east, max(-limit, min(limit, south))), _WEB_MERCATOR),
+    )
+    size = 2 * half / (1 << z)
+    last = (1 << z) - 1
+
+    def index(metres: float) -> int:
+        return max(0, min(last, math.floor((metres + half) / size)))
+
+    columns = range(index(x0), index(x1) + 1)
+    # Rows count from the north: a row index is that of minus the northing.
+    rows = range(index(-y0), index(-y1) + 1)
+    return [(x, y) for y in rows for x in columns]

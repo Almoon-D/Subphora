@@ -1,0 +1,154 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The national water-potential map (MASTER_PLAN §4.3, decision 0027): the grids, the
+# nationwide inputs the batch command `subphora national build` downloads, and the map
+# layers it publishes as tiles. The criteria and confidence are in model.yaml.
+
+# The cell size of every national grid, in metres.
+resolution_m: 100
+# Inputs are read this far beyond a build region, so that drainage, wetness and the
+# distances near its edge see what lies just outside. Distances beyond it are reported as
+# "at least this far".
+buffer_m: 10000
+
+# The national grids: ETRS89-LAEA (EPSG:3035) for the mainland, the Balearics, Ceuta and
+# Melilla; REGCAN95-LAEA (EPSG:5635) for the Canaries, whose datum is REGCAN95 (MASTER_PLAN
+# §3). Cells are aligned to multiples of resolution_m from the CRS origin, so every region
+# of one grid shares its cells. `regions` are the ISO regions on that grid; the grid with
+# none takes every other region. `territories` are the search.yaml territory boxes on that
+# grid, for a build region given as a bbox. `terrain` is the IGN WCS coverage that holds the
+# grid's elevation, in its own CRS, and that coverage's extent (DescribeCoverage).
+grids:
+  - id: mainland
+    crs: EPSG:3035
+    regions: []
+    territories: [mainland-balearics, ceuta, melilla]
+    terrain:
+      coverage: Elevacion25830_25
+      crs: EPSG:25830
+      extent: [-19487.5, 3901187.5, 1140387.5, 4865712.5]
+  - id: canaries
+    crs: EPSG:5635
+    regions: [ES-CN]
+    territories: [canaries]
+    terrain:
+      coverage: Elevacion4083_25
+      crs: EPSG:4083
+      extent: [188162.5, 3060462.5, 662037.5, 3255112.5]
+
+# The nationwide inputs (docs/knowledge/nationwide-inputs.md). Each has the publisher's
+# stated detail (map scale or grid cell, and edition year; left out when not stated) and
+# an ageing profile of model.yaml.
+datasets:
+  # IGME permeability map 1:200,000: polygons by area, paged, in the grid's CRS.
+  permeability:
+    service: igme-rest
+    path: /Cartografia_Tematica/IGME_Permeabilidad_200/MapServer/0/query
+    class_field: PERME
+    label_field: DCO
+    page_size: 1000
+    # Vertices closer than this (metres) are dropped by the server: a quarter of a cell.
+    generalise_m: 25
+    detail: {scale_denominator: 200000, edition: 2009}
+    ageing: geology
+  # IGN MDT25 by WCS windows in the coverage's CRS (EPSG:25830 or 4083), averaged to the
+  # grid. Its integers are metres; 0 is the sea (no nodata is declared).
+  terrain:
+    service: ign-mdt-wcs
+    window_m: 20000
+    # Windows overlap by this much, so that no grid cell straddles a seam.
+    overlap_m: 200
+    sea_value: 0
+    # A cell drains to a channel once its upstream area reaches this many km².
+    channel_area_km2: 1.0
+    # The wetness index divides by tan(slope); flatter cells use this slope (degrees).
+    min_slope_deg: 0.1
+    # The edition is not stated by the service: VERIFY-LIVE(national-editions).
+    detail: {cell_m: 25}
+    ageing: terrain
+  # SoilGrids 2.0 clay content (g/kg) of the topsoil, by WCS windows in EPSG:4326.
+  soil:
+    service: soilgrids-wcs
+    coverage: clay_0-5cm_mean
+    window_deg: 1.0
+    # SoilGrids masks water and built-up land with 0 (observed at the Ebro in Zaragoza).
+    nodata_value: 0
+    # g/kg to percent.
+    scale: 0.1
+    detail: {cell_m: 250, edition: 2020}
+    ageing: soil
+  # MITECO groundwater bodies with their quantitative status, by WFS pages in EPSG:3857.
+  groundwater_bodies:
+    service: miteco-gw-status
+    type_name: agua:estado_masas_aguasub_2027
+    status_field: est_cu_desc
+    name_field: nom_masa
+    code_field: cod_masa
+    srs: EPSG:3857
+    page_size: 50
+    # The plans' cycle 2022-2027; the bodies' scale is not stated: VERIFY-LIVE(national-editions).
+    detail: {edition: 2022}
+    ageing: status
+  # IGME water-point inventory: points by area, paged, in the grid's CRS.
+  water_points:
+    service: igme-rest
+    path: /BasesDatos/IGME_PuntosAgua/MapServer/0/query
+    kind_field: Naturaleza
+    # Kinds that are not groundwater: a surface stream.
+    exclude_kinds: [Cauce superficial]
+    page_size: 1000
+    detail: {}
+    ageing: inventory
+
+# The build: worker processes for the grids and tiles (0: one per CPU), and where the grids
+# and tiles are written (relative to the repository root; data/ is git-ignored).
+build:
+  workers: 0
+  output_dir: data/national
+
+# The published map layers: raster tiles (PNG in one PMTiles archive per layer), from
+# min_zoom (all of Spain) to max_zoom (a tile pixel near the cell size); the map enlarges
+# the last level beyond it. Each layer colours a grid by classes: values below the first
+# break take the first colour, and so on. `visible` layers are shown when the map opens.
+tiles:
+  min_zoom: 5
+  max_zoom: 11
+  tile_size: 256
+  # How long a browser keeps a tile: a new build shows after at most this many seconds.
+  browser_cache_s: 300
+  layers:
+    - id: potential-index
+      variable: index
+      visible: true
+      opacity: 0.65
+      unit: index
+      breaks: [0.2, 0.4, 0.6, 0.8]
+      colours: ["#ffffcc", "#a1dab4", "#41b6c4", "#2c7fb8", "#253494"]
+    - id: potential-confidence
+      variable: confidence
+      visible: false
+      opacity: 0.7
+      unit: confidence
+      # The labels' thresholds (model.yaml): low, medium, high.
+      breaks: [0.4, 0.7]
+      colours: ["#fee6ce", "#fdae6b", "#7f2704"]
+    - id: terrain-slope
+      variable: slope_deg
+      visible: false
+      opacity: 0.7
+      unit: deg
+      breaks: [2, 5, 10, 20, 30]
+      colours: ["#ffffb2", "#fed976", "#feb24c", "#fd8d3c", "#f03b20", "#bd0026"]
+    - id: terrain-drainage
+      variable: drainage_distance_m
+      visible: false
+      opacity: 0.7
+      unit: m
+      breaks: [250, 500, 1000, 2000]
+      colours: ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#eff3ff"]
+    - id: terrain-wetness
+      variable: twi
+      visible: false
+      opacity: 0.7
+      unit: twi
+      breaks: [6, 8, 10, 12]
+      colours: ["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]

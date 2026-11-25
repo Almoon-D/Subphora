@@ -11,8 +11,8 @@
 | 03b | `docs/sessions/done/03b-regional-detail.md` | Opus 5.5, high | done |
 | 03ba | `docs/sessions/done/03ba-regional-evidence.md` | Opus 5.5, high | done |
 | 04 | `docs/sessions/done/04-search.md` | Opus 5.5, medium | done |
-| 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | next |
-| 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
+| 05 | `docs/sessions/done/05-national-map.md` | Opus 5.5, high | done |
+| 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | next |
 | 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
 | 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | planned |
 | 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | planned |
@@ -48,7 +48,7 @@
 - VERIFY-LIVE(igme-water-levels): levels per IGME water point exist only in the BDAguas web
   app, with no documented API; ask IGME or find a download. Queued by 01; session 07.
 - VERIFY-LIVE(igme-geode-download): the GEODE vector download route and size. Queued by 01;
-  session 05.
+  the national model (05) needed none; session 06 or 08 if it reads GEODE in bulk.
 - VERIFY-LIVE(cnig-mdt02-coverage): MDT02 coverage and download route (the CNIG download
   centre is a JavaScript app). Queued by 01; session 06.
 - VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
@@ -71,6 +71,12 @@
   1:25,000 geological map (sheet 58-III: December 2009) against GEODE's zones there
   (2007-2010); its tap answers only a pixel colour, so a qualifying version needs the
   sheet layer's links too. Queued by 03ba.
+- VERIFY-LIVE(national-all): the owner runs `uv run subphora national build --all` on a
+  machine with ~5 GB free (estimate: ~2 GB of grids, 2-3 GB of cached terrain windows) and
+  records the time, the size and any region that failed. Two provinces were built live (05).
+- VERIFY-LIVE(national-editions): the MDT25's edition and the groundwater bodies' scale are
+  not stated by their services; their confidence uses the "unknown" value until a record
+  states them (IGN, MITECO catalogues). Queued by 05.
 - VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
   until the owner's key exists (session 15). Queued by 01.
 
@@ -134,11 +140,36 @@
   parcel view (06) can analyse is that session's limit to set. (04)
 - The session's areas are kept in sessionStorage; several large municipalities (up to
   ~150 KB each) can fill it, and then the list lives only until the tab reloads. (04)
+- National model: structure and piezometric depth have no nationwide grid, so confidence
+  never reaches "high"; a nationwide lineament or fault-density grid (IGME QAFI or MAGNA
+  faults) could fill structure in a later session. (05)
+- Wetness and drainage are computed per province with a 10 km buffer: a large river's
+  catchment beyond it is not counted, so its floodplain's wetness index is lower than a
+  whole-basin computation would give. (05)
+- The IGME water points are a criterion and the confidence's evidence: session 07 must keep
+  a validation fold's wells out of both before measuring skill. (05)
+- `data/cache` grows with every build's terrain windows (476 MB for two provinces): the size
+  cap of session 13 covers it. (05)
 
 ## Session log
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 05 — National water-potential map v0 (2026-11-25, version 0.7.0)
+
+- Landed: `subphora national build --region <province|region|box> | --all`; the model
+  (`model.yaml`, `subphora.model`): nine criteria, renormalised index, five-part confidence;
+  the 100 m grids (EPSG:3035, Canaries EPSG:5635), terrain derivatives; PMTiles for index,
+  confidence, slope, drainage and wetness; `/api/national`, its tiles and tap-to-explain;
+  the panel's legends ("índice", never "probabilidad"); decisions 0027, 0028.
+- Live: ES-Z (sedimentary Ebro basin) and ES-GC (volcanic islands, Canaries grid) built
+  from the real services; `make dev` shows both with tap-to-explain.
+- Live findings: IGME refuses a page now and then under concurrent queries (retried); MDT
+  sea is 0 and outside-extent windows answer 400; MITECO refuses unlisted CRSs
+  (`docs/knowledge/nationwide-inputs.md`).
+- VERIFY-LIVE: national-all (the owner), national-editions.
+- Prompt edits: 06 (reads decisions 0027-0028; reuses `subphora.model`, `geo.terrain`).
 
 ### 04 — More ways to search (2026-11-25, version 0.6.0)
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // What the layer panel switches, and which layers draw and answer a tap at a zoom. A
 // theme's regional layers follow its switch and opacity: one panel entry per theme.
-import type { LayerDetail, MapConfig, Overlay, RegionalOverlay } from "../api.ts";
+import type { LayerDetail, MapConfig, NationalMap, Overlay, RegionalOverlay } from "../api.ts";
 
 export interface LayerState {
   visible: boolean;
@@ -14,10 +14,12 @@ export interface MapLayers {
   base: string;
   cadastre: LayerState;
   overlays: Record<string, LayerState>;
+  /** The national map's layers (none when it could not be read). */
+  national: Record<string, LayerState>;
 }
 
 /** The layers as the configuration starts them: the first base map, the configured states. */
-export function initialLayers(config: MapConfig): MapLayers {
+export function initialLayers(config: MapConfig, national: NationalMap | null = null): MapLayers {
   const first = config.base_maps[0];
   if (!first) {
     throw new Error("the map configuration has no base map");
@@ -26,7 +28,16 @@ export function initialLayers(config: MapConfig): MapLayers {
     base: first.id,
     cadastre: { visible: config.cadastre.visible, opacity: config.cadastre.opacity },
     overlays: Object.fromEntries(config.overlays.map((o) => [o.id, { visible: o.visible, opacity: o.opacity }])),
+    national: Object.fromEntries((national?.layers ?? []).map((l) => [l.id, { visible: l.visible, opacity: l.opacity }])),
   };
+}
+
+export function withNational(layers: MapLayers, id: string, change: Partial<LayerState>): MapLayers {
+  const current = layers.national[id];
+  if (!current) {
+    return layers;
+  }
+  return { ...layers, national: { ...layers.national, [id]: { ...current, ...change } } };
 }
 
 export function withOverlay(layers: MapLayers, id: string, change: Partial<LayerState>): MapLayers {

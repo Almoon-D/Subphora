@@ -8,7 +8,8 @@
   request starts, the strictest of the services on that host.
 - Transport errors (resets, timeouts) are retried; HTTP errors are returned as they are.
 - Bodies are capped at ``max_response_bytes`` (or a service's own larger cap, for the
-  official boundaries): the client fetches samples and single features, never bulk data.
+  official boundaries and the national build's groundwater bodies): bulk data comes in
+  pages and windows (the national build), never as one large download.
 """
 
 import asyncio

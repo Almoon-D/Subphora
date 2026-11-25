@@ -345,3 +345,145 @@ export async function fetchArea(areaId: string, fetchFn: Fetch = fetch): Promise
   }
   return (await response.json()) as AreaBoundary;
 }
+
+/** One class of a national layer's legend: values from `min` (inclusive) to `max`. */
+export interface LegendClass {
+  min: number | null;
+  max: number | null;
+  colour: string;
+}
+
+/** A layer of the national map: PNG tiles from the API (a relative route). */
+export interface NationalLayer {
+  id: string;
+  variable: string;
+  tiles: string[];
+  min_zoom: number;
+  max_zoom: number;
+  tile_size: number;
+  opacity: number;
+  visible: boolean;
+  /** "index", "confidence", "deg", "m" or "twi". */
+  unit: string;
+  legend: LegendClass[];
+}
+
+export interface NationalRegion {
+  id: string;
+  name: string;
+  bbox: [number, number, number, number];
+  built_at: string;
+}
+
+/** The national water-potential map; `built` is false before the first build. */
+export interface NationalMap {
+  /** A relative potential index until the model is calibrated: never a probability. */
+  kind: "index";
+  built: boolean;
+  rendered_at: string | null;
+  bounds: [number, number, number, number] | null;
+  regions: NationalRegion[];
+  layers: NationalLayer[];
+  attributions: string[];
+}
+
+export async function fetchNational(fetchFn: Fetch = fetch): Promise<NationalMap> {
+  const response = await fetchFn("/api/national");
+  if (!response.ok) {
+    throw new Error(`GET /api/national answered ${String(response.status)}`);
+  }
+  return (await response.json()) as NationalMap;
+}
+
+/** An input's value at a cell: a number, a category, or absent (no feature there). */
+export interface InputValue {
+  number: number | null;
+  unit: string | null;
+  at_least: boolean;
+  category: string | null;
+  label: string | null;
+  absent: boolean;
+}
+
+export interface InputSource {
+  service_id: string;
+  publisher: string;
+  attribution: string;
+  retrieved_at: string;
+  detail: LayerDetail;
+  resolution_m: number | null;
+}
+
+export interface Contribution {
+  criterion: string;
+  weight: number;
+  /** The weight renormalised over the inputs present. */
+  share: number;
+  value: InputValue;
+  suitability: number;
+  contribution: number;
+  source: InputSource;
+}
+
+export interface MissingInput {
+  criterion: string;
+  weight: number;
+  reason: "no_dataset" | "no_data";
+}
+
+export type ConfidenceLabel = "low" | "medium" | "high";
+
+export interface Confidence {
+  value: number;
+  label: ConfidenceLabel;
+  components: { id: string; weight: number; value: number; measured: boolean }[];
+}
+
+export interface PotentialEstimate {
+  kind: "index";
+  /** Null where no input is present: no estimate there. */
+  score: number | null;
+  confidence: Confidence;
+  contributions: Contribution[];
+  missing: MissingInput[];
+}
+
+export interface CellExplanation {
+  longitude: number;
+  latitude: number;
+  grid: string;
+  region_id: string;
+  region_name: string;
+  cell_m: number;
+  built_at: string;
+  estimate: PotentialEstimate;
+}
+
+export const EXPLAIN_FAILURES = ["not_built", "outside_built_area", "unreadable", "network", "unexpected"] as const;
+
+export type ExplainFailure = (typeof EXPLAIN_FAILURES)[number];
+
+export type ExplainResult = { ok: true; explanation: CellExplanation } | { ok: false; failure: ExplainFailure };
+
+/** The national map's estimate at (lon, lat), explained. Never throws. */
+export async function fetchExplanation(lon: number, lat: number, fetchFn: Fetch = fetch): Promise<ExplainResult> {
+  const query = new URLSearchParams({ lon: lon.toFixed(6), lat: lat.toFixed(6) });
+  let response: Response;
+  try {
+    response = await fetchFn(`/api/national/explain?${query.toString()}`);
+  } catch {
+    return { ok: false, failure: "network" };
+  }
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, failure: "unexpected" };
+  }
+  if (response.ok) {
+    return { ok: true, explanation: body as CellExplanation };
+  }
+  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
+  const known = typeof code === "string" && (EXPLAIN_FAILURES as readonly string[]).includes(code);
+  return { ok: false, failure: known ? (code as ExplainFailure) : "unexpected" };
+}

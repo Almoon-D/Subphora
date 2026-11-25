@@ -32,6 +32,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--only", action="append", metavar="ID", help="check only this service (repeatable)"
     )
     sources_sub.add_parser("list", help="print the catalogue: services, licences, limits")
+    national = sub.add_parser("national", help="the national water-potential map")
+    national_sub = national.add_subparsers(dest="national_command", required=True)
+    build = national_sub.add_parser(
+        "build",
+        help="download the nationwide inputs, compute the index and confidence grids, "
+        "and write the map's tiles (data/national)",
+    )
+    target = build.add_mutually_exclusive_group(required=True)
+    target.add_argument(
+        "--region",
+        action="append",
+        metavar="AREA",
+        help="a province (ES-Z), a region (ES-AR) or a box west,south,east,north in "
+        "degrees (repeatable)",
+    )
+    target.add_argument("--all", action="store_true", help="every province of Spain")
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -42,6 +58,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _print_config(settings, args.key)
     if args.command == "serve":
         return _serve(settings)
+    if args.command == "national":
+        return _national_build(settings, args.region, all_provinces=args.all)
     if args.sources_command == "list":
         print(_catalogue_table(settings))
         return 0
@@ -96,6 +114,50 @@ def _sources_check(settings: Settings, only: list[str] | None) -> int:
             results = await check_catalogue(client, services, origin)
         print(format_table(results))
         return EXIT_FAILED_CHECK if any(r.status is CheckStatus.FAILED for r in results) else 0
+
+    return asyncio.run(run())
+
+
+def _national_build(settings: Settings, specs: list[str] | None, *, all_provinces: bool) -> int:
+    # Imported here: the other commands do not need the raster stack.
+    import os
+    from concurrent.futures import ProcessPoolExecutor
+
+    from subphora.config import REPO_ROOT
+    from subphora.services.national import (
+        NationalBuilder,
+        RegionSpecError,
+        all_regions,
+        resolve_region,
+    )
+    from subphora.store import FileCache
+
+    try:
+        regions = (
+            all_regions(settings)
+            if all_provinces
+            else [r for spec in specs or [] for r in resolve_region(settings, spec)]
+        )
+    except RegionSpecError as exc:
+        print(exc)
+        return EXIT_USAGE
+    workers = settings.national.build.workers or os.cpu_count() or 1
+
+    async def run() -> int:
+        async with CatalogueClient(settings.sources, __version__) as client:
+            cache = FileCache(settings.store.cache_path(REPO_ROOT))
+            builder = NationalBuilder(client, settings, cache, REPO_ROOT)
+            with ProcessPoolExecutor(max_workers=workers) as executor:
+                report = await builder.build(regions, executor, workers)
+        for result in report.built:
+            print(f"{result.region_id}: built, {result.scored} of {result.cells} cells scored")
+        for failure in report.failed:
+            print(f"{failure.region_id}: FAILED: {failure.detail}")
+        for layer, count in report.tiles.items():
+            print(f"{layer}: {count} tiles")
+        if report.built:
+            print(f"Written to {builder.output}")
+        return EXIT_FAILED_CHECK if report.failed else 0
 
     return asyncio.run(run())
 

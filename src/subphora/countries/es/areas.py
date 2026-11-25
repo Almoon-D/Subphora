@@ -74,6 +74,48 @@ _PROVINCES: tuple[tuple[str, str, str, str], ...] = (
 )
 
 
+# The INE code of each autonomous community and city: the IGN's administrative units are
+# coded 34, this code, the province's code and five zeros (docs/knowledge/regional-layers.md).
+_REGION_INE: dict[str, str] = {
+    "ES-AN": "01",
+    "ES-AR": "02",
+    "ES-AS": "03",
+    "ES-IB": "04",
+    "ES-CN": "05",
+    "ES-CB": "06",
+    "ES-CL": "07",
+    "ES-CM": "08",
+    "ES-CT": "09",
+    "ES-VC": "10",
+    "ES-EX": "11",
+    "ES-GA": "12",
+    "ES-MD": "13",
+    "ES-MC": "14",
+    "ES-NC": "15",
+    "ES-PV": "16",
+    "ES-RI": "17",
+    "ES-CE": "18",
+    "ES-ML": "19",
+}
+_IGN_COUNTRY = "34"
+_IGN_MUNICIPALITY_ZEROS = "00000"
+
+
+def provinces_of(area: str) -> tuple[Province, ...]:
+    """The provinces an ISO code names: one for a province, all of a region's for a region
+    (Ceuta and Melilla are both); none for a code that is neither."""
+    provinces = all_provinces()
+    exact = tuple(p for p in provinces if p.iso == area)
+    if exact:
+        return exact
+    return tuple(p for p in provinces if p.region == area)
+
+
+def ign_province_code(province: Province) -> str:
+    """The province's ``au:nationalCode`` in the IGN's administrative units."""
+    return _IGN_COUNTRY + _REGION_INE[province.region] + province.code + _IGN_MUNICIPALITY_ZEROS
+
+
 def province_by_code(code: str) -> Province | None:
     """The province with this two-digit code, or None when Spain has no such province."""
     for province_code, iso, region, name in _PROVINCES:

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "subphora"
-version = "0.6.0"
+version = "0.7.0"
 description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"
@@ -22,9 +22,15 @@ classifiers = [
 dependencies = [
     "fastapi>=0.165,<1",
     "httpx>=0.28.1,<1",
+    "numpy>=2.5,<3",
+    "pillow>=13,<14",
+    "pmtiles>=3.8.1,<4",
     "pydantic>=2.12,<3",
+    "pyflwdir>=0.6,<1",
     "pyproj>=3.8,<4",
     "PyYAML>=6.0.3,<7",
+    "rasterio>=1.5.2,<2",
+    "scipy>=1.18,<2",
     "uvicorn>=0.54,<1",
 ]
 
@@ -77,6 +83,11 @@ files = ["src"]
 warn_unreachable = true
 plugins = ["pydantic.mypy"]
 
+# Libraries without type information: their calls are wrapped in typed functions in geo/.
+[[tool.mypy.overrides]]
+module = ["rasterio.*", "pyflwdir.*", "scipy.*"]
+ignore_missing_imports = true
+
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
@@ -92,7 +103,12 @@ addopts = ["--strict-markers", "--strict-config", "-ra", "--import-mode=importli
 pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    # rasterio's in-memory warp target is created before its transform is set; under the
+    # build tests' thread pool its own catch_warnings (not thread-safe) lets this through.
+    "ignore::rasterio.errors.NotGeoreferencedWarning",
+]
 
 [tool.coverage.run]
 source = ["subphora"]
@@ -122,6 +138,7 @@ layers = [
     "__main__",
     "api",
     "services",
+    "model",
     "countries | geo | sources | store",
     "config",
     "domain",
@@ -136,6 +153,7 @@ source_modules = [
     "subphora.config",
     "subphora.countries",
     "subphora.geo",
+    "subphora.model",
     "subphora.store",
     "subphora.services",
     "subphora.api",
@@ -143,3 +161,11 @@ source_modules = [
 ]
 forbidden_modules = ["httpx", "httpcore", "http"]
 allow_indirect_imports = true
+
+# The model receives grids and never fetches or stores them (MASTER_PLAN §4.2), so it is
+# tested on synthetic grids without network.
+[[tool.importlinter.contracts]]
+name = "The model imports only domain, config and geo"
+type = "forbidden"
+source_modules = ["subphora.model"]
+forbidden_modules = ["subphora.sources", "subphora.store", "subphora.countries"]

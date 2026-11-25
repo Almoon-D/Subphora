@@ -19,11 +19,17 @@
 - ``GET /api/national/tiles/{layer}/{z}/{x}/{y}``: a PNG tile of a national layer.
 - ``GET /api/national/explain?lon=&lat=``: the index at a point with its confidence, the
   contribution and source of every input, and the inputs missing there.
+- ``POST /api/parcel`` (an area of interest): the job of its detailed map, started unless
+  it is running or done; ``GET /api/parcel/{id}``: the job, with the analysis (summary
+  and ranked candidates) and its layers once done.
+- ``GET /api/parcel/{id}/explain?lon=&lat=``: the detailed map's estimate at a point.
+- ``GET /api/parcel/{id}/layers/{layer}``: a layer of the detailed map as one PNG.
 """
 
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from concurrent.futures import Executor, ProcessPoolExecutor
+from contextlib import AsyncExitStack, asynccontextmanager
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -35,11 +41,13 @@ from pydantic import Field, ValidationError
 from subphora import __version__
 from subphora.api.map import MapConfig, map_config
 from subphora.api.national import NationalMap, national_map
+from subphora.api.parcel import ParcelAnswer, parcel_answer
 from subphora.config import REPO_ROOT, Settings
 from subphora.domain import DomainModel
 from subphora.domain.aoi import AoiOrigin, AreaOfInterest, SearchAnswer, SearchError, SearchFailure
 from subphora.domain.areas import AreaBoundary
 from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
+from subphora.domain.parcel_map import JobState, ParcelError, ParcelExplanation, ParcelFailure
 from subphora.domain.parcels import Position
 from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
 from subphora.geo import MAX_TILE_ZOOM
@@ -47,6 +55,7 @@ from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
 from subphora.services.layers import LayerService
 from subphora.services.national_map import NationalMapService
+from subphora.services.parcel import ParcelMapService
 from subphora.services.parcels import ParcelService
 from subphora.sources import CatalogueClient
 from subphora.sources.client import Transport
@@ -88,6 +97,17 @@ _NATIONAL_STATUS = {
     NationalFailure.INVALID_TILE: 400,
     NationalFailure.UNREADABLE: 500,
 }
+_PARCEL_STATUS = {
+    ParcelFailure.INVALID_AREA: 400,
+    ParcelFailure.TOO_LARGE: 422,
+    ParcelFailure.OUTSIDE_COVERAGE: 422,
+    ParcelFailure.UNKNOWN_JOB: 404,
+    ParcelFailure.NOT_READY: 409,
+    ParcelFailure.OUTSIDE_GRID: 404,
+    ParcelFailure.UNKNOWN_LAYER: 404,
+    ParcelFailure.UNREADABLE: 500,
+}
+_AREA_ID = fastapi.Path(pattern=r"^[0-9a-f]{16}$")
 _PNG = "image/png"
 _ZOOM = Query(ge=0, le=MAX_TILE_ZOOM)
 _TILE_INDEX = fastapi.Path(ge=0)
@@ -104,23 +124,31 @@ def create_app(
     settings: Settings,
     root: Path = REPO_ROOT,
     transport: Transport | None = None,
+    executor: Executor | None = None,
 ) -> FastAPI:
-    """The application; ``transport`` replaces the network in tests."""
+    """The application; ``transport`` replaces the network and ``executor`` the worker
+    processes of the detailed maps in tests."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        # One client for the life of the server: its per-host limits hold across requests.
-        async with CatalogueClient(settings.sources, __version__, transport) as client:
+        async with AsyncExitStack() as stack:
+            # One client for the life of the server: its per-host limits hold across requests.
+            client = await stack.enter_async_context(
+                CatalogueClient(settings.sources, __version__, transport)
+            )
+            workers = executor or stack.enter_context(
+                ProcessPoolExecutor(max_workers=settings.parcel.jobs.workers)
+            )
             cache = FileCache(settings.store.cache_path(root))
             parcels = ParcelService(client, settings.sources, cache)
             app.state.aoi = AoiService(client, settings, cache, parcels)
             app.state.areas = AreaService(client, settings, cache)
             app.state.layers = LayerService(client, settings, cache, app.state.areas)
             app.state.national = NationalMapService(settings, root)
-            try:
-                yield
-            finally:
-                app.state.national.close()
+            app.state.parcel = ParcelMapService(client, settings, cache, root, workers)
+            stack.callback(app.state.national.close)
+            stack.push_async_callback(app.state.parcel.close)
+            yield
 
     app = FastAPI(title="Subphora", version=__version__, lifespan=lifespan)
     map_body = map_config(settings)
@@ -152,6 +180,15 @@ def create_app(
             _log.error("the national map cannot be read: %s", exc.detail)
         return JSONResponse(
             status_code=_NATIONAL_STATUS[exc.failure],
+            content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    @app.exception_handler(ParcelError)
+    async def parcel_failed(_request: Request, exc: ParcelError) -> JSONResponse:
+        if exc.failure is ParcelFailure.UNREADABLE:
+            _log.error("a detailed map cannot be read: %s", exc.detail)
+        return JSONResponse(
+            status_code=_PARCEL_STATUS[exc.failure],
             content={"code": exc.failure.value, "detail": exc.detail},
         )
 
@@ -257,6 +294,46 @@ def create_app(
         request: Request,
     ) -> CellExplanation:
         return await national(request).explain(lon, lat)
+
+    def parcel(request: Request) -> ParcelMapService:
+        service: ParcelMapService = request.app.state.parcel
+        return service
+
+    @app.post("/api/parcel")
+    async def parcel_start(request: Request, response: Response) -> ParcelAnswer:
+        try:
+            area = AreaOfInterest.model_validate_json(await request.body())
+        except ValidationError as exc:
+            raise ParcelError(
+                ParcelFailure.INVALID_AREA, "the body is not an area of interest"
+            ) from exc
+        job = await parcel(request).submit(area)
+        if job.state in (JobState.QUEUED, JobState.RUNNING):
+            response.status_code = 202
+        return parcel_answer(settings, job)
+
+    @app.get("/api/parcel/{area_id}")
+    async def parcel_job(area_id: Annotated[str, _AREA_ID], request: Request) -> ParcelAnswer:
+        return parcel_answer(settings, await parcel(request).job(area_id))
+
+    @app.get("/api/parcel/{area_id}/explain")
+    async def parcel_explain(
+        area_id: Annotated[str, _AREA_ID],
+        lon: Annotated[float, Query(ge=-180, le=180)],
+        lat: Annotated[float, Query(ge=-85, le=85)],
+        request: Request,
+    ) -> ParcelExplanation:
+        return await parcel(request).explain(area_id, lon, lat)
+
+    @app.get("/api/parcel/{area_id}/layers/{layer_id}", response_class=Response)
+    async def parcel_layer(
+        area_id: Annotated[str, _AREA_ID], layer_id: str, request: Request
+    ) -> Response:
+        content = await parcel(request).image(area_id, layer_id)
+        # An area's id changes with its settings and code: its images never change.
+        return Response(
+            content=content, media_type=_PNG, headers={"Cache-Control": "private, max-age=86400"}
+        )
 
     @app.get("/api/areas/{area_id}")
     async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:

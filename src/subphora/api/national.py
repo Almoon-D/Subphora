@@ -55,7 +55,7 @@ class NationalMap(DomainModel):
     attributions: tuple[str, ...]
 
 
-def _legend(layer: TileLayer) -> tuple[LegendClass, ...]:
+def legend(layer: TileLayer) -> tuple[LegendClass, ...]:
     edges: list[float | None] = [None, *layer.breaks, None]
     return tuple(
         LegendClass(min=edges[i], max=edges[i + 1], colour=colour)
@@ -88,7 +88,7 @@ def national_map(settings: Settings, published: MapManifest | None) -> NationalM
                 opacity=layer.opacity,
                 visible=layer.visible,
                 unit=layer.unit,
-                legend=_legend(layer),
+                legend=legend(layer),
             )
             for layer in tiles.layers
         ),

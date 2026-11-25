@@ -32,6 +32,10 @@ class Variable(StrEnum):
     CLAY_PCT = "clay_pct"
     GROUNDWATER_STATUS = "groundwater_status"
     WATER_POINT_DISTANCE_M = "water_point_distance_m"
+    # Parcel scale only (no nationwide grid): mapped faults per area around a cell, and the
+    # dip of the bedding measured nearest to it.
+    LINEAMENT_DENSITY = "lineament_density"
+    BEDDING_DIP_DEG = "bedding_dip_deg"
     INDEX = "index"
     CONFIDENCE = "confidence"
 
@@ -40,6 +44,10 @@ class Variable(StrEnum):
 # the input has no feature at the cell.
 CATEGORICAL: frozenset[Variable] = frozenset(
     {Variable.PERMEABILITY_CLASS, Variable.GROUNDWATER_STATUS}
+)
+# Variables that are distances, capped at how far their input was read ("at least this far").
+DISTANCES: frozenset[Variable] = frozenset(
+    {Variable.DRAINAGE_DISTANCE_M, Variable.WATER_POINT_DISTANCE_M}
 )
 # The model's results, not inputs.
 RESULTS: frozenset[Variable] = frozenset({Variable.INDEX, Variable.CONFIDENCE})
@@ -100,7 +108,7 @@ class Contribution(DomainModel):
 
 
 class MissingReason(StrEnum):
-    # No nationwide input exists yet for the criterion.
+    # No input exists for the criterion at this scale (nationwide, or around the parcel).
     NO_DATASET = "no_dataset"
     # The input has no value at this cell.
     NO_DATA = "no_data"

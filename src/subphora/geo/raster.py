@@ -7,6 +7,7 @@ never by hand. Every grid is float, NaN where it has no value.
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import Any
 
 import numpy as np
@@ -18,6 +19,8 @@ from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.warp import reproject
 from scipy.ndimage import distance_transform_edt
+from scipy.signal import fftconvolve
+from scipy.spatial import cKDTree
 
 from subphora.geo.grid import GridWindow
 
@@ -121,6 +124,83 @@ def distance_to(mask: NDArray[np.bool_], cell_m: float, cap_m: float) -> FloatGr
     return np.minimum(distance, cap_m).astype(np.float32)
 
 
+def _cell_centres(window: GridWindow) -> NDArray[np.float64]:
+    """Every cell's centre (x, y) in the window's CRS, row by row."""
+    columns = window.west + (np.arange(window.width) + 0.5) * window.cell_m
+    rows = window.north - (np.arange(window.height) + 0.5) * window.cell_m
+    xs, ys = np.meshgrid(columns, rows)
+    return np.column_stack((xs.ravel(), ys.ravel()))
+
+
+def distance_to_points(
+    window: GridWindow, points: Sequence[tuple[float, float]], cap_m: float
+) -> FloatGrid:
+    """Metres from each cell's centre to the nearest point (in the window's CRS, inside the
+    window or not), at most ``cap_m``: the cap where none is that near."""
+    if not points:
+        return np.full(window.shape, cap_m, dtype=np.float32)
+    distance, _ = cKDTree(np.asarray(points, dtype=np.float64)).query(
+        _cell_centres(window), distance_upper_bound=cap_m
+    )
+    return np.minimum(np.asarray(distance), cap_m).reshape(window.shape).astype(np.float32)
+
+
+def nearest_value(
+    window: GridWindow,
+    points: Sequence[tuple[float, float]],
+    values: Sequence[float],
+    max_distance_m: float,
+) -> FloatGrid:
+    """Each cell takes the value of the nearest point within ``max_distance_m``; NaN where
+    none is that near."""
+    if not points:
+        return empty(window)
+    distance, nearest = cKDTree(np.asarray(points, dtype=np.float64)).query(
+        _cell_centres(window), distance_upper_bound=max_distance_m
+    )
+    found = np.isfinite(distance)
+    table = np.append(np.asarray(values, dtype=np.float64), np.nan)
+    result = np.where(found, table[np.where(found, nearest, len(values))], np.nan)
+    grid: FloatGrid = result.reshape(window.shape).astype(np.float32)
+    return grid
+
+
+def line_density(
+    window: GridWindow, lines: Iterable[Sequence[tuple[float, float]]], radius_m: float
+) -> FloatGrid:
+    """Kilometres of line within ``radius_m`` of each cell's centre, per km² of that circle.
+
+    Each line is cut into pieces no longer than half a cell, and each piece's length is
+    counted in the cell holding its middle; the sums are then added over a disc of cells.
+    Cells nearer than ``radius_m`` to the window's edge miss the lines beyond it.
+    """
+    lengths = np.zeros(window.shape, dtype=np.float64)
+    step = window.cell_m / 2
+    for line in lines:
+        vertices = np.asarray(line, dtype=np.float64)
+        if vertices.ndim != 2 or len(vertices) < 2:
+            continue
+        for (x0, y0), (x1, y1) in pairwise(vertices):
+            length = float(np.hypot(x1 - x0, y1 - y0))
+            if length == 0:
+                continue
+            pieces = max(1, int(np.ceil(length / step)))
+            middles = (np.arange(pieces) + 0.5) / pieces
+            xs = x0 + (x1 - x0) * middles
+            ys = y0 + (y1 - y0) * middles
+            columns = np.floor((xs - window.west) / window.cell_m).astype(np.int64)
+            rows = np.floor((window.north - ys) / window.cell_m).astype(np.int64)
+            keep = (rows >= 0) & (rows < window.height) & (columns >= 0) & (columns < window.width)
+            np.add.at(lengths, (rows[keep], columns[keep]), length / pieces)
+    reach = int(radius_m // window.cell_m)
+    offsets = np.arange(-reach, reach + 1) * window.cell_m
+    disc = (np.hypot(*np.meshgrid(offsets, offsets)) <= radius_m).astype(np.float64)
+    disc_km2 = disc.sum() * window.cell_m**2 / 1e6
+    total = np.clip(np.asarray(fftconvolve(lengths, disc, mode="same")), 0.0, None)
+    density: FloatGrid = (total / 1000 / disc_km2).astype(np.float32)
+    return density
+
+
 __all__ = [
     "FloatGrid",
     "Geometry",
@@ -129,7 +209,10 @@ __all__ = [
     "Resampling",
     "burn",
     "distance_to",
+    "distance_to_points",
     "empty",
+    "line_density",
+    "nearest_value",
     "points_mask",
     "read_geotiff",
     "warp_into",

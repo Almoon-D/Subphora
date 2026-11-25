@@ -3,7 +3,8 @@
 
 - Each criterion's input becomes a 0-1 suitability by its lookup; a cell where the input
   has no value, or a category the lookup does not list, is missing there (NaN), never
-  filled in.
+  filled in. A criterion whose variable is not among the grids (no input at this scale)
+  is missing everywhere.
 - The index is the weighted mean of the suitabilities present: the weights renormalised
   over the criteria present at that cell. No input present: no index (NaN).
 - Confidence is the weighted sum of five components (coverage, resolution, age,
@@ -107,7 +108,8 @@ def evaluate(
     quality: Mapping[str, Quality],
     evidence_distance_m: NDArray[np.floating],
 ) -> Evaluation:
-    """Index and confidence on the grids; ``quality`` per criterion with an input."""
+    """Index and confidence on the grids; ``quality`` per criterion whose variable is
+    among the grids."""
     shape = np.shape(evidence_distance_m)
     total_weight = sum(c.weight for c in model.criteria)
     weighted = np.zeros(shape)
@@ -116,7 +118,8 @@ def evaluate(
     age = np.zeros(shape)
     suitabilities: dict[str, Grid] = {}
     for criterion in model.criteria:
-        if criterion.variable is None:
+        # No input at any scale, or none at this one (the faults on the national map).
+        if criterion.variable is None or criterion.variable not in grids.values:
             continue
         values = grids.values[criterion.variable]
         suit = suitability(criterion, values, grids.categories.get(criterion.variable, ()))

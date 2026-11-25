@@ -1,0 +1,121 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The detailed potential map of an area of interest (MASTER_PLAN §4.3, parcel scale;
+# decision 0029): computed on demand by a job with the model of model.yaml, cached per
+# area. The permeability, soil, groundwater-body and water-point inputs are the national
+# ones (national.yaml), read over the area; the terrain is finer and the structure is
+# read from MAGNA 1:50,000.
+
+# The cell size of the detailed grid, in metres. The grid is in the area's local CRS
+# (its UTM zone, or REGCAN95 in the Canaries), cells aligned to multiples of it.
+resolution_m: 5
+# A point (an address, typed coordinates, a drawn point) is analysed as the disc of this
+# radius around it.
+point_radius_m: 250
+# Inputs are read this far beyond the area, so that flow, wetness and the distances near
+# its edge see what lies just outside. A channel farther than this is not seen, so the
+# distance to drainage is "at least this far" beyond it: it is at least the drainage
+# lookup's last break (checked), or the lookup would read a capped value as a near one.
+buffer_m: 2000
+# The most cells the window (the area's box plus the buffer) may hold: about an 8 km
+# square at 5 m. A larger area is refused; the national map covers it.
+max_cells: 2500000
+
+terrain:
+  service: ign-mdt-wcs
+  # The terrain model the grid reads. MDT02 is a download only, by sheet from the CNIG
+  # download centre, whose route and coverage are not verified:
+  # VERIFY-LIVE(cnig-mdt02-coverage). Until then every area reads MDT05 from the WCS.
+  model: MDT05
+  # Per national grid (national.yaml): the 5 m coverage in its own CRS, and its extent
+  # (DescribeCoverage, 2026-11-25).
+  coverages:
+    mainland:
+      coverage: Elevacion25830_5
+      crs: EPSG:25830
+      extent: [-19452.5, 3901197.5, 1140352.5, 4865682.5]
+    canaries:
+      coverage: Elevacion4083_5
+      crs: EPSG:4083
+      extent: [188197.5, 3060497.5, 662002.5, 3255102.5]
+  # Windows on a fixed grid of this size, so neighbouring areas share cached windows.
+  window_m: 5000
+  # Windows overlap by this much, so that no cell straddles a seam.
+  overlap_m: 20
+  # The edition is not stated by the service (as for MDT25): VERIFY-LIVE(national-editions).
+  detail: {cell_m: 5}
+  ageing: terrain
+
+# MAGNA 1:50,000 "Contactos y fallas" (REST layer 9): lines, each with its type.
+faults:
+  service: igme-rest
+  path: /Cartografia_Geologica/IGME_MAGNA_50/MapServer/9/query
+  type_field: TIPO
+  # Line types that are faults or fractures (a type starting with one of these), less the
+  # mechanical contacts that are landslides, not tectonics (docs/knowledge/igme.md).
+  kinds: [Falla, Fractura, Cabalgamiento, Retrocabalgamiento, Contacto mecánico, Diaclasas y fallas]
+  exclude: [Contacto mecánico por solifluxión, Contacto mecánico. Bloques deslizados]
+  page_size: 1000
+  # Lineament density: fault length within this radius of a cell, per km². At most buffer_m.
+  radius_m: 500
+  # The sheets' editions differ and the service states none.
+  detail: {scale_denominator: 50000}
+  ageing: geology
+
+# MAGNA 1:50,000 "Medidas estructurales" (REST layer 5): each a short line at the
+# measurement, with its type, dip direction and dip.
+bedding:
+  service: igme-rest
+  path: /Cartografia_Geologica/IGME_MAGNA_50/MapServer/5/query
+  kind_field: NOMBRE
+  dip_field: BUZAMIENTO
+  # The measurement types that are the attitude of the bedding (not cleavage, joints,
+  # cross-bedding or palaeocurrents).
+  kinds:
+    - Estratificación
+    - Estratificación invertida
+    - Estratificación subvertical
+    - Estratificación subhorizontal
+    - Estratificación regional
+    - Estratificación con polaridad sedimentaria a techo
+  page_size: 1000
+  # A cell takes the dip of the nearest measurement within this distance; farther from
+  # every one it has no dip (missing, lowering confidence). Measurements are sparse:
+  # 55 in a 20 km square of the Pre-Pyrenees (docs/knowledge/igme.md).
+  max_distance_m: 1500
+  detail: {scale_denominator: 50000}
+  ageing: geology
+
+# The national water-point inventory, read within this distance of the area: at least the
+# water-point lookup's last break and the confidence's evidence_none_beyond_m (checked),
+# so neither reads a capped distance as a near one.
+water_points_radius_m: 10000
+
+# Candidate spots (MASTER_PLAN §4.3): the best cells of the area by index among those
+# whose confidence reaches min_confidence (the "medium" label's threshold), each at least
+# min_separation_m from a better one.
+candidates:
+  count: 5
+  min_confidence: 0.4
+  min_separation_m: 50
+
+# The map layers published at the grid's resolution: national.yaml tile layers, coloured
+# and explained by the same legends. Each is one image over the grid, at most
+# image_max_px on its longer side.
+layers: [potential-index, potential-confidence, terrain-slope, terrain-drainage, terrain-wetness]
+image_max_px: 2048
+
+# Jobs: how many areas compute at once (each in its own worker process), how soon the page
+# asks again for a running one, and where the results are kept (relative to the
+# repository root; data/ is git-ignored).
+jobs:
+  workers: 1
+  poll_after_s: 2
+  output_dir: data/parcels
+
+# The legal status of every candidate until the legal filter exists (hard rule 2).
+legal:
+  not_evaluated_source: >-
+    No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).
+  disclaimer: >-
+    Guidance, not legal advice: the competent water authority and the municipality decide
+    whether and how a well may be drilled.

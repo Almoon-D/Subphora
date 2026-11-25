@@ -13,6 +13,7 @@ from subphora.config import load_settings
 from subphora.config.model import ModelSettings
 from subphora.domain.layers import LayerDetail
 from subphora.domain.potential import (
+    DISTANCES,
     ComponentId,
     Confidence,
     ConfidenceComponent,
@@ -96,7 +97,8 @@ def test_a_category_the_lookup_does_not_list_is_missing() -> None:
 
 def test_all_inputs_present_give_the_weighted_mean_and_the_present_share() -> None:
     result = evaluate(MODEL, grids(BEST), QUALITY, np.full((2, 2), 100.0))
-    present = sum(c.weight for c in MODEL.criteria if c.variable is not None)
+    # The national inputs: the faults and dips of the parcel scale are missing here.
+    present = sum(c.weight for c in MODEL.criteria if c.variable in BEST)
     expected = (present - weight("permeability") * (1 - 0.8)) / present
     assert np.allclose(result.index, expected)
     assert np.allclose(result.components[ComponentId.COVERAGE], present)
@@ -109,9 +111,7 @@ def test_weights_are_renormalised_over_the_inputs_present() -> None:
     values[Variable.CLAY_PCT] = float("nan")
     values[Variable.PERMEABILITY_CLASS] = 1.0  # BAJA: 0.3
     result = evaluate(MODEL, grids(values), QUALITY, np.full((2, 2), 100.0))
-    present = [
-        c for c in MODEL.criteria if c.variable is not None and c.id not in {"slope", "soil"}
-    ]
+    present = [c for c in MODEL.criteria if c.variable in BEST and c.id not in {"slope", "soil"}]
     total = sum(c.weight for c in present)
     expected = (total - weight("permeability") * (1 - 0.3)) / total
     assert np.allclose(result.index, expected)
@@ -167,7 +167,8 @@ def test_quality_from_the_stated_detail_and_unknown_is_never_good() -> None:
 
 
 def explain(values: dict[Variable, float], evidence: float = 100.0) -> PotentialEstimate:
-    return explain_cell(MODEL, values, CATEGORIES, QUALITY, SOURCES, evidence, 10_000)
+    caps = dict.fromkeys(DISTANCES, 10_000.0)
+    return explain_cell(MODEL, values, CATEGORIES, QUALITY, SOURCES, evidence, caps)
 
 
 def test_the_explanation_of_a_cell_matches_the_grid() -> None:
@@ -179,7 +180,8 @@ def test_the_explanation_of_a_cell_matches_the_grid() -> None:
     assert estimate.score == pytest.approx(float(grid.index[0]))
     assert estimate.confidence.value == pytest.approx(float(grid.confidence[0]))
     assert {m.criterion: m.reason for m in estimate.missing} == {
-        "structure": MissingReason.NO_DATASET,
+        "lineaments": MissingReason.NO_DATASET,
+        "bedding_dip": MissingReason.NO_DATASET,
         "piezometric_depth": MissingReason.NO_DATASET,
         "soil": MissingReason.NO_DATA,
     }

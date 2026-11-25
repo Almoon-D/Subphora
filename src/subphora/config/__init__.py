@@ -13,12 +13,14 @@ from pydantic import model_validator
 
 from subphora.config.base import Section
 from subphora.config.map import Legend, MapSettings
-from subphora.config.model import ModelSettings
+from subphora.config.model import BreaksLookup, ModelSettings
 from subphora.config.national import NationalSettings
+from subphora.config.parcel import ParcelSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.search import SearchSettings
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
+from subphora.domain.potential import Variable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CONFIG_DIR = REPO_ROOT / "config"
@@ -31,6 +33,7 @@ __all__ = [
     "MapSettings",
     "ModelSettings",
     "NationalSettings",
+    "ParcelSettings",
     "RegionalSettings",
     "SearchSettings",
     "Section",
@@ -57,6 +60,7 @@ class Settings(Section):
     search: SearchSettings
     model: ModelSettings
     national: NationalSettings
+    parcel: ParcelSettings
 
     @model_validator(mode="after")
     def _map_layers_are_drawable(self) -> Self:
@@ -170,6 +174,54 @@ class Settings(Section):
             raise ValueError(
                 f"national.datasets.groundwater_bodies: {service.id} lacks {bodies.srs}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _parcel_inputs_consistent(self) -> Self:
+        """The detailed map's inputs read catalogued services and age by profiles of
+        model.yaml; every national grid has a 5 m coverage; its layers are national tile
+        layers; and no distance it caps is read by a lookup beyond the cap."""
+        parcel = self.parcel
+        terrain = parcel.terrain
+        for grid in self.national.grids:
+            coverage = terrain.coverages.get(grid.id)
+            if coverage is None:
+                raise ValueError(f"parcel.terrain: no coverage for the {grid.id} grid")
+            self._catalogued("parcel.terrain", terrain.service, "wcs", coverage.coverage)
+        unknown_grids = sorted(set(terrain.coverages) - {g.id for g in self.national.grids})
+        if unknown_grids:
+            raise ValueError(f"parcel.terrain: {unknown_grids} are not national grids")
+        for key, service, ageing in (
+            ("parcel.terrain", terrain.service, terrain.ageing),
+            ("parcel.faults", parcel.faults.service, parcel.faults.ageing),
+            ("parcel.bedding", parcel.bedding.service, parcel.bedding.ageing),
+        ):
+            self._catalogued(key, service, "wcs" if key == "parcel.terrain" else "rest")
+            if ageing not in self.model.confidence.ageing:
+                raise ValueError(f"{key}: no ageing profile {ageing!r} in model.yaml")
+        known = {layer.id for layer in self.national.tiles.layers}
+        unknown = sorted(set(parcel.layers) - known)
+        if unknown:
+            raise ValueError(f"parcel.layers: {unknown} are not national tile layers")
+        reaches = {
+            Variable.DRAINAGE_DISTANCE_M: ("buffer_m", parcel.buffer_m),
+            Variable.WATER_POINT_DISTANCE_M: (
+                "water_points_radius_m",
+                parcel.water_points_radius_m,
+            ),
+        }
+        for criterion in self.model.criteria:
+            reach = reaches.get(criterion.variable) if criterion.variable else None
+            if (
+                reach is not None
+                and isinstance(criterion.lookup, BreaksLookup)
+                and reach[1] < criterion.lookup.breaks[-1]
+            ):
+                raise ValueError(
+                    f"parcel.{reach[0]} is below the last break of {criterion.id}'s lookup"
+                )
+        if parcel.water_points_radius_m < self.model.confidence.evidence_none_beyond_m:
+            raise ValueError("parcel.water_points_radius_m is below evidence_none_beyond_m")
         return self
 
     @staticmethod

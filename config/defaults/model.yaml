@@ -5,9 +5,10 @@
 # potential index, never a probability.
 #
 # Per criterion: weight (the criteria's weights add up to 1; at a cell they are
-# renormalised over the criteria whose input is present there); variable, the grid the
-# national build makes from a nationwide input (null: no nationwide input yet, so the
-# criterion is missing everywhere and lowers confidence); lookup, how a value becomes a
+# renormalised over the criteria whose input is present there); variable, the grid an
+# input becomes (null: no input at any scale yet, so the criterion is missing everywhere
+# and lowers confidence; a variable one scale does not make, such as the faults on the
+# national map, is missing at that scale only); lookup, how a value becomes a
 # 0-1 suitability: `classes` maps a category to a suitability (`absent` is the suitability
 # where the input has no feature at all, null when that means "no data"); `breaks` maps a
 # number to values[i], where i is how many breaks are at or below it.
@@ -31,14 +32,44 @@ criteria:
         IGME, Mapa de permeabilidades de España 1:200.000 (classes MUY ALTA to MUY BAJA);
         the suitability of each class is an expert default in equal steps.
 
-  - id: structure
-    weight: 0.10
+  # Structure (MASTER_PLAN §4.3): faults and lineaments, and the dip of the layers. Neither
+  # has a nationwide grid (MAGNA's structural data are lines and points per sheet,
+  # docs/knowledge/igme.md), so both are missing on the national map and present only on
+  # the detailed map of an area (parcel.yaml). Together they weigh what one structure
+  # criterion weighed before (decision 0029).
+  - id: lineaments
+    weight: 0.06
     weight_source: >-
       Expert default after the same literature, where lineament or fault density weighs
-      about as much as slope.
-    # Faults, lineament density and the dip of permeable layers: no nationwide grid yet
-    # (MAGNA's structural data are points per sheet, docs/knowledge/igme.md).
-    variable: null
+      about as much as slope; shared with the dip below.
+    variable: lineament_density
+    lookup:
+      kind: breaks
+      unit: km_km2
+      breaks: [0.5, 1, 2, 4]
+      values: [0.3, 0.5, 0.7, 0.85, 1.0]
+      source: >-
+        Length of the faults mapped on MAGNA 1:50,000 within a circle around the cell, per
+        km² (km/km²): fractured rock stores and conducts more water (Machiwal, Jha and Mal
+        2011; Arulbalaji, Padmalal and Sreelash 2019). No mapped fault nearby is data, not
+        a gap: the lowest class. Class limits and values are an expert default.
+
+  - id: bedding_dip
+    weight: 0.04
+    weight_source: >-
+      Expert default: the smaller share of structure, since a dip is a measurement at a
+      point, read at the cell from the nearest one.
+    variable: bedding_dip_deg
+    lookup:
+      kind: breaks
+      unit: deg
+      breaks: [10, 30, 60]
+      values: [1.0, 0.75, 0.5, 0.35]
+      source: >-
+        Dip of the bedding measured on MAGNA 1:50,000 nearest the cell: gently dipping
+        layers keep a unit near the surface over a wide outcrop that recharges it, and a
+        well reaches it near where it crops out; steep layers crop out in narrow bands.
+        Uncalibrated expert default (session 07 measures it).
 
   - id: slope
     weight: 0.10

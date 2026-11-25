@@ -19,7 +19,7 @@ import os
 import tempfile
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Annotated, Any, BinaryIO
 
 import numpy as np
 import rasterio
@@ -33,7 +33,7 @@ from rasterio.windows import from_bounds
 
 from subphora.config.model import ModelSettings
 from subphora.domain import DomainModel
-from subphora.domain.potential import InputSource, Variable
+from subphora.domain.potential import DISTANCES, InputSource, Variable
 
 type Bounds = tuple[float, float, float, float]
 
@@ -75,9 +75,14 @@ class RegionManifest(DomainModel):
     # Per criterion with an input: its source, and how its resolution and age fit.
     sources: dict[str, InputSource]
     quality: dict[str, CriterionQuality]
-    # Distances are reported as "at least" this.
+    # Distances are reported as "at least" this, unless ``distance_caps`` has their own.
     distance_cap_m: float = Field(gt=0)
     model: ModelSettings
+    distance_caps: dict[Variable, Annotated[float, Field(gt=0)]] = Field(default_factory=dict)
+
+    def caps(self) -> dict[Variable, float]:
+        """Every distance variable's cap."""
+        return {v: self.distance_caps.get(v, self.distance_cap_m) for v in DISTANCES}
 
 
 class RegionSummary(DomainModel):
@@ -168,10 +173,10 @@ def write_region(
     except BaseException:
         tif.unlink(missing_ok=True)
         raise
-    _write_bytes(folder / f"{manifest.region_id}.json", manifest.model_dump_json().encode())
+    write_bytes(folder / f"{manifest.region_id}.json", manifest.model_dump_json().encode())
 
 
-def _write_bytes(path: Path, content: bytes) -> None:
+def write_bytes(path: Path, content: bytes) -> None:
     tmp = _temporary(path.parent, path.suffix)
     try:
         tmp.write_bytes(content)
@@ -195,6 +200,18 @@ def read_manifests(root: Path) -> list[RegionManifest]:
         except ValueError as exc:
             raise ValueError(f"{path.name}: {exc}") from exc
     return manifests
+
+
+def read_manifest(root: Path, region_id: str) -> RegionManifest | None:
+    """One finished region, or None; raises ValueError for one that cannot be read."""
+    folder = regions_dir(root)
+    path = folder / f"{region_id}.json"
+    if not path.exists() or not (folder / f"{region_id}.tif").exists():
+        return None
+    try:
+        return RegionManifest.model_validate_json(path.read_bytes())
+    except ValueError as exc:
+        raise ValueError(f"{path.name}: {exc}") from exc
 
 
 def region_tif(root: Path, region_id: str) -> Path:
@@ -313,7 +330,7 @@ class TileArchive:
 
 
 def write_json(path: Path, body: DomainModel) -> None:
-    _write_bytes(path, body.model_dump_json(indent=2).encode())
+    write_bytes(path, body.model_dump_json(indent=2).encode())
 
 
 def manifest_categories(
@@ -336,11 +353,13 @@ __all__ = [
     "map_path",
     "read_cell",
     "read_decimated",
+    "read_manifest",
     "read_manifests",
     "read_map",
     "region_tif",
     "regions_dir",
     "tiles_path",
+    "write_bytes",
     "write_json",
     "write_region",
     "write_tiles",

@@ -100,9 +100,18 @@ class Overlay(DomainModel):
     regional: tuple[RegionalOverlay, ...]
 
 
+class SearchConfig(DomainModel):
+    """What the browser needs of the search settings: drawing and the session's list."""
+
+    max_vertices: int
+    session_areas: int
+
+
 class MapConfig(DomainModel):
     initial_view: View
-    parcel_padding_px: int
+    area_padding_px: int
+    point_zoom: float
+    search: SearchConfig
     base_maps: tuple[BaseMap, ...]
     cadastre: CadastreOverlay
     overlay_groups: tuple[str, ...]
@@ -225,7 +234,12 @@ def map_config(settings: Settings) -> MapConfig:
     view = settings.map.initial_view
     return MapConfig(
         initial_view=View(longitude=view.longitude, latitude=view.latitude, zoom=view.zoom),
-        parcel_padding_px=settings.map.parcel_padding_px,
+        area_padding_px=settings.map.area_padding_px,
+        point_zoom=settings.map.point_zoom,
+        search=SearchConfig(
+            max_vertices=settings.search.drawn_polygon.max_vertices,
+            session_areas=settings.search.session_areas,
+        ),
         base_maps=tuple(_base_map(settings, base) for base in settings.map.base_maps),
         cadastre=CadastreOverlay(
             service_id=cadastre_service.id,

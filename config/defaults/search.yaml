@@ -1,0 +1,39 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The search box (session 04): Spain's territories for coordinates and drawn areas, the
+# SIGPAC and CartoCiudad lookups, and the limits of a drawn polygon.
+
+# Every coordinate and drawn place must fall in one of these boxes (west, south, east,
+# north, rounded outward to 0.01°), and a UTM coordinate must use one of its zones (28 is
+# REGCAN95, EPSG:4083; 29-31 are ETRS89, EPSG:25829-25831). A box is coarse: where
+# `land_check` is on, SIGPAC must also have an enclosure at the point (its national service
+# covers every province but Ceuta and Melilla, docs/knowledge/sigpac.md), which also names
+# the province. Where it is off, the box alone accepts the point and names the province.
+territories:
+  - {id: mainland-balearics, bbox: [-9.31, 35.93, 4.33, 43.80], utm_zones: [29, 30, 31], land_check: true}
+  - {id: canaries, bbox: [-18.17, 27.63, -13.32, 29.42], utm_zones: [28], land_check: true}
+  - {id: ceuta, bbox: [-5.39, 35.86, -5.27, 35.92], utm_zones: [30], land_check: false, province: "51"}
+  - {id: melilla, bbox: [-2.97, 35.26, -2.92, 35.32], utm_zones: [30], land_check: false, province: "52"}
+
+# SIGPAC: the enclosure under a point (the land check) and the enclosures of a reference.
+sigpac:
+  service: sigpac-queries
+
+# CartoCiudad: the candidates for a text, and the one chosen. Only these candidate types are
+# offered, each as the kind of area it becomes; the rest (postal codes, and types not yet
+# observed) are dropped.
+cartociudad:
+  service: cartociudad
+  max_candidates: 10
+  types:
+    Municipio: municipality
+    poblacion: place
+    callejero: street
+    portal: address
+
+# A drawn polygon: at most this many vertices (the browser stops adding them there).
+drawn_polygon:
+  max_vertices: 200
+
+# The areas selected in this browser session that the panel lists to switch between; the
+# oldest leaves the list when another arrives. Kept in the browser only, never on the server.
+session_areas: 8

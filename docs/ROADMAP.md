@@ -134,8 +134,6 @@
   parcel view (06) can analyse is that session's limit to set. (04)
 - The session's areas are kept in sessionStorage; several large municipalities (up to
   ~150 KB each) can fill it, and then the list lives only until the tab reloads. (04)
-- The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
-  `main` is unprotected and a commit reached it without a pull request. (00)
 
 ## Session log
 

@@ -2,7 +2,7 @@
 // The national map's answer at a tapped point: the index with its confidence, what forms it
 // (each input's value, suitability, weight, contribution and source), the inputs missing
 // there, and what the confidence depends on.
-import type { CellExplanation, Confidence, ExplainResult, PotentialEstimate } from "../api.ts";
+import type { CellExplanation, Confidence, ExplainResult, ParcelExplainResult, PotentialEstimate } from "../api.ts";
 import { formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import { describeDetail } from "./LayerPanel.tsx";
 import { percent, valueText } from "./national.ts";
@@ -24,7 +24,7 @@ export function ScoreWithConfidence({ estimate }: { estimate: Pick<PotentialEsti
   );
 }
 
-function Inputs({ estimate }: { estimate: PotentialEstimate }) {
+export function Inputs({ estimate }: { estimate: PotentialEstimate }) {
   if (estimate.contributions.length === 0) {
     return null;
   }
@@ -56,7 +56,7 @@ function Inputs({ estimate }: { estimate: PotentialEstimate }) {
   );
 }
 
-function Missing({ estimate }: { estimate: PotentialEstimate }) {
+export function Missing({ estimate }: { estimate: PotentialEstimate }) {
   if (estimate.missing.length === 0) {
     return null;
   }
@@ -77,7 +77,7 @@ function Missing({ estimate }: { estimate: PotentialEstimate }) {
   );
 }
 
-function ConfidenceBreakdown({ confidence }: { confidence: Confidence }) {
+export function ConfidenceBreakdown({ confidence }: { confidence: Confidence }) {
   return (
     <>
       <h4>{t("explain.confidenceHeading")}</h4>
@@ -95,7 +95,7 @@ function ConfidenceBreakdown({ confidence }: { confidence: Confidence }) {
   );
 }
 
-function Sources({ estimate }: { estimate: PotentialEstimate }) {
+export function EstimateSources({ estimate }: { estimate: PotentialEstimate }) {
   if (estimate.contributions.length === 0) {
     return null;
   }
@@ -127,7 +127,7 @@ function Explained({ explanation }: { explanation: CellExplanation }) {
       <Inputs estimate={estimate} />
       <Missing estimate={estimate} />
       <ConfidenceBreakdown confidence={estimate.confidence} />
-      <Sources estimate={estimate} />
+      <EstimateSources estimate={estimate} />
       <p className="note">
         {t("explain.cell", {
           cell: explanation.cell_m,
@@ -148,6 +148,32 @@ export function NationalExplanation({ result }: { result: ExplainResult }) {
       ) : (
         <p className="error">{t(`explain.error.${result.failure}`)}</p>
       )}
+    </li>
+  );
+}
+
+/** The detailed map's answer at a tapped point inside its area. */
+export function ParcelExplanationView({ result }: { result: ParcelExplainResult }) {
+  if (!result.ok) {
+    return (
+      <li className="info-layer parcel-explanation">
+        <h3>{t("detailed.explainHeading")}</h3>
+        <p className="error">{lookup(`detailed.error.${result.failure}`, t("detailed.error.unexpected"))}</p>
+      </li>
+    );
+  }
+  const { explanation } = result;
+  const { estimate } = explanation;
+  return (
+    <li className="info-layer parcel-explanation">
+      <h3>{t("detailed.explainHeading")}</h3>
+      <ScoreWithConfidence estimate={estimate} />
+      <p className="note">{t("national.kindNote")}</p>
+      <Inputs estimate={estimate} />
+      <Missing estimate={estimate} />
+      <ConfidenceBreakdown confidence={estimate.confidence} />
+      <EstimateSources estimate={estimate} />
+      <p className="note">{t("detailed.cell", { cell: explanation.cell_m, date: formatDate(explanation.built_at) })}</p>
     </li>
   );
 }

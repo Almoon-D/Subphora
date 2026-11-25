@@ -332,3 +332,85 @@ table.inputs th .value {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
+.parcel,
+.comparison {
+  margin: 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d0d6dc;
+  border-radius: 4px;
+}
+
+.parcel h3 {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 1rem;
+}
+
+.parcel h4 {
+  margin: 0.4rem 0 0.1rem;
+  font-size: 0.95rem;
+}
+
+.parcel ul.missing,
+ol.candidates {
+  margin: 0.25rem 0;
+  padding-left: 1.1rem;
+}
+
+.parcel-layers {
+  margin: 0.5rem 0;
+  border: 1px solid #e2e6ea;
+  border-radius: 4px;
+}
+
+.candidate {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.candidate .legal {
+  font-size: 0.85rem;
+  margin: 0.2rem 0;
+}
+
+.candidate details summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.candidate-marker {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #253494;
+  color: #253494;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.4rem;
+  text-align: center;
+  cursor: default;
+}
+
+.comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison th,
+.comparison td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.2rem 0.25rem;
+  border-bottom: 1px solid #e2e6ea;
+}
+
+.comparison th .value {
+  display: block;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.comparison .score {
+  font-size: 0.85rem;
+}

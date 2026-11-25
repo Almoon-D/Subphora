@@ -41,7 +41,10 @@ def test_the_real_settings_load() -> None:
         (lambda d: criterion(d, "slope").update(variable="index"), "is a result"),
         (lambda d: criterion(d, "slope").update(variable="permeability_class"), "classes lookup"),
         (lambda d: criterion(d, "slope").update(variable="twi"), "same variable"),
-        (lambda d: criterion(d, "structure").update(variable="elevation_m"), "lookup exactly"),
+        (
+            lambda d: criterion(d, "piezometric_depth").update(variable="elevation_m"),
+            "lookup exactly",
+        ),
         (lambda d: criterion(d, "slope")["lookup"].update(breaks=[5, 2, 10, 20]), "rise"),
         (lambda d: criterion(d, "slope")["lookup"].update(values=[1.0]), "one more value"),
         (lambda d: d["criteria"].append(dict(criterion(d, "slope"))), "unique"),

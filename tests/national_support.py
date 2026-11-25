@@ -2,13 +2,17 @@
 """A synthetic Spain for the national build: every nationwide service behind one
 httpx.MockTransport, answering any window with made-up but well-formed data.
 
-- IGN MDT WCS: a GeoTIFF of the requested window at 25 m, a valley running north-south
-  whose floor falls to the south.
+- IGN MDT WCS: a GeoTIFF of the requested window at the coverage's cell (25 m or 5 m), a
+  valley running north-south whose floor falls to the south.
 - SoilGrids WCS: 25 % clay everywhere.
 - IGME permeability: one polygon over the whole window, class ALTA, in two pages.
 - IGME water points: two springs and a surface stream at the window's centre.
 - MITECO groundwater bodies: one body over the window's west half, status Malo.
 - IGN administrative units: a small square around a point in Madrid.
+- IGME MAGNA faults: a fault running north-south through the window's centre and a
+  contact (not a fault) running east-west.
+- IGME MAGNA structural measurements: a bedding dip of 20° at the box's centre and a
+  cleavage (not bedding) beside it; none at all when ``bedding`` is false.
 """
 
 import io
@@ -108,8 +112,17 @@ def _collection(features: list[dict[str, Any]], **extra: Any) -> httpx.Response:
 class FakeSpain:
     """Answers every nationwide service; ``fail`` maps a host to a status to answer."""
 
-    def __init__(self, fail: dict[str, int] | None = None) -> None:
+    def __init__(
+        self,
+        fail: dict[str, int] | None = None,
+        *,
+        bedding: bool = True,
+        timeout: frozenset[str] = frozenset(),
+    ) -> None:
         self.fail = fail or {}
+        self.bedding = bedding
+        # Hosts whose every request times out.
+        self.timeout = timeout
         self.requests: list[httpx.Request] = []
 
     def transport(self) -> httpx.MockTransport:
@@ -118,6 +131,8 @@ class FakeSpain:
     def _handle(self, request: httpx.Request) -> httpx.Response:
         self.requests.append(request)
         host = request.url.host
+        if host in self.timeout:
+            raise httpx.ReadTimeout("synthetic timeout", request=request)
         if host in self.fail:
             return httpx.Response(self.fail[host], content=b"<error/>")
         path = request.url.path
@@ -131,6 +146,10 @@ class FakeSpain:
             return self._permeability(request)
         if host == "mapas.igme.es" and "PuntosAgua" in path:
             return self._water_points(request)
+        if host == "mapas.igme.es" and path.endswith("IGME_MAGNA_50/MapServer/9/query"):
+            return self._faults(request)
+        if host == "mapas.igme.es" and path.endswith("IGME_MAGNA_50/MapServer/5/query"):
+            return self._bedding(request)
         if host == "gis.miteco.gob.es":
             return self._bodies(request)
         if host == "www.ign.es":
@@ -140,12 +159,15 @@ class FakeSpain:
     @staticmethod
     def _terrain(request: httpx.Request) -> httpx.Response:
         box = _subsets(request, "x", "y")
+        coverage = request.url.params["CoverageId"]
+        crs = f"EPSG:{coverage.removeprefix('Elevacion').split('_')[0]}"
+        cell = float(coverage.split("_")[1])
         centre = 440_000.0
 
         def valley(xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
             return 600 + np.abs(xs - centre) * 0.05 + (ys - 4_470_000) * 0.01
 
-        content = geotiff(box, "EPSG:25830", 25.0, valley, "int16")
+        content = geotiff(box, crs, cell, valley, "int16")
         return httpx.Response(200, content=content, headers={"content-type": "image/tiff"})
 
     @staticmethod
@@ -172,6 +194,33 @@ class FakeSpain:
 
         points = [point(0, "Manantial"), point(300, "Sondeo"), point(-3000, "Cauce superficial")]
         return _collection(points, exceededTransferLimit=False)
+
+    @staticmethod
+    def _faults(request: httpx.Request) -> httpx.Response:
+        west, south, east, north = _box(request, "geometry")
+        x, y = (west + east) / 2, (south + north) / 2
+        fault = _feature(
+            {"type": "LineString", "coordinates": [[x, south], [x, north]]}, TIPO="Falla conocida"
+        )
+        contact = _feature(
+            {"type": "MultiLineString", "coordinates": [[[west, y], [east, y]]]},
+            TIPO="Contacto concordante",
+        )
+        return _collection([fault, contact])
+
+    def _bedding(self, request: httpx.Request) -> httpx.Response:
+        if not self.bedding:
+            return _collection([])
+        west, south, east, north = _box(request, "geometry")
+        x, y = (west + east) / 2, (south + north) / 2
+
+        def measurement(dx: float, kind: str, dip: int) -> dict[str, Any]:
+            line = {"type": "LineString", "coordinates": [[x + dx - 10, y], [x + dx + 10, y]]}
+            return _feature(line, NOMBRE=kind, DIRECCION=90, BUZAMIENTO=dip)
+
+        return _collection(
+            [measurement(0, "Estratificación", 20), measurement(30, "Primera esquistosidad", 80)]
+        )
 
     @staticmethod
     def _bodies(request: httpx.Request) -> httpx.Response:

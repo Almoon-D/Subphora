@@ -1,0 +1,11 @@
+{
+  "job": {
+    "id": "45f6a846b1f3eac7",
+    "state": "queued",
+    "failure": null,
+    "detail": null,
+    "poll_after_s": 2.0,
+    "analysis": null
+  },
+  "layers": []
+}

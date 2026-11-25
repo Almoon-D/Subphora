@@ -9,7 +9,7 @@ one adds a row; evidence and dates live in the knowledge file named.
 
 | Organisation | What a paid product needs | Term and source | Knowledge |
 |---|---|---|---|
-| IGME (CN IGME-CSIC) | Consent to use the MAGNA 1:50,000 WMS inside a paid service | MAGNA WMS `AccessConstraints`: "No está permitido implementar un servicio de valor añadido no gratuito sin establecer contacto con el IGME" | `docs/knowledge/igme.md` |
+| IGME (CN IGME-CSIC) | Consent to use the MAGNA 1:50,000 WMS, and its faults and bedding dips read by REST for the detailed map (session 06), inside a paid service | MAGNA WMS `AccessConstraints`: "No está permitido implementar un servicio de valor añadido no gratuito sin establecer contacto con el IGME" | `docs/knowledge/igme.md` |
 | IGME (CN IGME-CSIC) | Access to water levels and analyses per water point (needed by session 07 too) | Only in the BDAguas web application, no documented API or download | `docs/knowledge/igme.md` |
 | Dirección General del Catastro | Confirmation that showing cadastral maps and parcel outlines to paying customers fits the licence (own use or transformed value-added products; no untransformed redistribution; not called "cartografía catastral"; no tiled requests, no massive downloads) | Licencia de acceso y uso INSPIRE, `https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf` | `docs/knowledge/catastro.md` |
 | Junta de Andalucía (REDIAM) | Confirmation that "free and gratuitous use citing the authors" covers a paid product | REDIAM WMS `AccessConstraints` | `docs/knowledge/junta-andalucia.md` |

@@ -87,9 +87,10 @@ async def test_the_build_writes_grids_tiles_and_the_map(settings: Settings, tmp_
     assert manifest.cell_m == 100
     assert [c.cls for c in manifest.categories[Variable.PERMEABILITY_CLASS]] == ["ALTA"]
     assert [c.cls for c in manifest.categories[Variable.GROUNDWATER_STATUS]] == ["Malo"]
+    # Every criterion with a nationwide input; the faults and dips are parcel-scale only.
     assert set(manifest.sources) == {
         c.id for c in settings.model.criteria if c.variable is not None
-    }
+    } - {"lineaments", "bedding_dip"}
     with rasterio.open(region_tif(root, manifest.region_id)) as dataset:
         bands = dict(zip(dataset.descriptions, dataset.read(), strict=True))
     inside = ~np.isnan(bands["index"])
@@ -263,7 +264,11 @@ async def test_the_built_map_serves_tiles_and_explains_a_cell(
     assert estimate["kind"] == "index"
     assert 0 <= estimate["score"] <= 1
     assert estimate["confidence"]["label"] in {"low", "medium", "high"}
-    assert {m["criterion"] for m in estimate["missing"]} >= {"structure", "piezometric_depth"}
+    assert {m["criterion"] for m in estimate["missing"]} >= {
+        "lineaments",
+        "bedding_dip",
+        "piezometric_depth",
+    }
     assert outside.status_code == 404
     assert outside.json()["code"] == "outside_built_area"
     assert tile.status_code == 200

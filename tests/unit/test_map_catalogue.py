@@ -9,8 +9,10 @@ import yaml
 
 from subphora.api.map import MapConfig, map_config
 from subphora.api.national import NationalMap, national_map
+from subphora.api.parcel import ParcelAnswer
 from subphora.config import load_settings
 from subphora.domain.aoi import AreaOfInterest, SearchAnswer
+from subphora.domain.parcel_map import ParcelExplanation
 from subphora.domain.potential import CellExplanation
 from tests.national_support import small_settings
 
@@ -199,3 +201,14 @@ def test_the_browser_test_fixtures_match_the_api() -> None:
     assert national.layers == national_map(small_settings(), None).layers
     explained = CellExplanation.model_validate_json((fixtures / "explain-madrid.json").read_bytes())
     assert explained.estimate.kind == "index"
+    # The detailed maps of the Daimiel point and the Campos enclosure on the synthetic Spain.
+    queued = ParcelAnswer.model_validate_json((fixtures / "parcel-queued.json").read_bytes())
+    assert queued.job.state == "queued"
+    for name in ("parcel-daimiel.json", "parcel-campos.json"):
+        done = ParcelAnswer.model_validate_json((fixtures / name).read_bytes())
+        assert done.job.analysis is not None
+        assert [layer.id for layer in done.layers] == load_settings().parcel.layers
+    tapped = ParcelExplanation.model_validate_json(
+        (fixtures / "explain-parcel-daimiel.json").read_bytes()
+    )
+    assert tapped.area_id == queued.job.id

@@ -487,3 +487,172 @@ export async function fetchExplanation(lon: number, lat: number, fetchFn: Fetch 
   const known = typeof code === "string" && (EXPLAIN_FAILURES as readonly string[]).includes(code);
   return { ok: false, failure: known ? (code as ExplainFailure) : "unexpected" };
 }
+
+/** What a candidate's legal status says; "not evaluated" until the legal filter exists. */
+export interface LegalStatus {
+  state: "not_evaluated" | "rules_not_loaded";
+  source: string;
+  assessed_at: string;
+  disclaimer: string;
+  reason: string | null;
+}
+
+/** A spot of the area worth a closer look, with everything that explains its score. */
+export interface Candidate {
+  rank: number;
+  longitude: number;
+  latitude: number;
+  local: { crs: string; x: number; y: number };
+  estimate: PotentialEstimate;
+  legal: LegalStatus;
+  depth: "not_estimated";
+}
+
+export interface CriterionSummary {
+  criterion: string;
+  weight: number;
+  mean_share: number;
+  mean_contribution: number;
+  /** The share of the scored cells where the input is present. */
+  present_share: number;
+  source: InputSource;
+}
+
+/** The area's mean index and confidence, and what forms them. */
+export interface AreaSummary {
+  kind: "index";
+  cells: number;
+  scored_cells: number;
+  mean_index: number | null;
+  mean_confidence: Confidence | null;
+  contributions: CriterionSummary[];
+  missing: MissingInput[];
+}
+
+export interface AreaAnalysis {
+  id: string;
+  label: string | null;
+  crs: string;
+  cell_m: number;
+  /** West, south, east, north: where the layers' images lie. */
+  bbox: [number, number, number, number];
+  area_m2: number;
+  built_at: string;
+  layers: string[];
+  summary: AreaSummary;
+  candidates: Candidate[];
+  no_candidates: "no_score" | "low_confidence" | null;
+  sources: Record<string, InputSource>;
+  terrain_model: string;
+}
+
+export type JobState = "queued" | "running" | "done" | "failed";
+
+export const PARCEL_FAILURES = [
+  "invalid_area",
+  "too_large",
+  "outside_coverage",
+  "unknown_job",
+  "not_ready",
+  "outside_grid",
+  "unknown_layer",
+  "upstream_error",
+  "upstream_timeout",
+  "computing_failed",
+  "unreadable",
+  "network",
+  "unexpected",
+] as const;
+
+export type ParcelFailure = (typeof PARCEL_FAILURES)[number];
+
+export interface ParcelJob {
+  id: string;
+  state: JobState;
+  failure: ParcelFailure | null;
+  detail: string | null;
+  /** When to ask again while the job is queued or running. */
+  poll_after_s: number;
+  analysis: AreaAnalysis | null;
+}
+
+/** A layer of the detailed map: one image over the area (a relative route). */
+export interface ParcelLayer {
+  id: string;
+  variable: string;
+  image: string;
+  opacity: number;
+  visible: boolean;
+  unit: string;
+  legend: LegendClass[];
+}
+
+export interface ParcelAnswer {
+  job: ParcelJob;
+  layers: ParcelLayer[];
+}
+
+export type ParcelResult = { ok: true; answer: ParcelAnswer } | { ok: false; failure: ParcelFailure };
+
+export interface ParcelExplanation {
+  longitude: number;
+  latitude: number;
+  area_id: string;
+  cell_m: number;
+  built_at: string;
+  estimate: PotentialEstimate;
+}
+
+export type ParcelExplainResult = { ok: true; explanation: ParcelExplanation } | { ok: false; failure: ParcelFailure };
+
+/** The body of an answer of /api/parcel, or its failure code. Never throws. */
+async function askParcel(request: () => Promise<Response>): Promise<{ ok: true; body: unknown } | { ok: false; failure: ParcelFailure }> {
+  let response: Response;
+  try {
+    response = await request();
+  } catch {
+    return { ok: false, failure: "network" };
+  }
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, failure: "unexpected" };
+  }
+  if (response.ok) {
+    return { ok: true, body };
+  }
+  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
+  const known = typeof code === "string" && (PARCEL_FAILURES as readonly string[]).includes(code);
+  return { ok: false, failure: known ? (code as ParcelFailure) : "unexpected" };
+}
+
+/** Start (or find) the detailed map of an area. */
+export async function startParcel(area: AreaOfInterest, fetchFn: Fetch = fetch): Promise<ParcelResult> {
+  const answer = await askParcel(() =>
+    fetchFn("/api/parcel", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(area),
+    }),
+  );
+  return answer.ok ? { ok: true, answer: answer.body as ParcelAnswer } : answer;
+}
+
+/** The job of a detailed map, as it stands. */
+export async function fetchParcel(id: string, fetchFn: Fetch = fetch): Promise<ParcelResult> {
+  const answer = await askParcel(() => fetchFn(`/api/parcel/${encodeURIComponent(id)}`));
+  return answer.ok ? { ok: true, answer: answer.body as ParcelAnswer } : answer;
+}
+
+/** The detailed map's estimate at (lon, lat), explained. */
+export async function fetchParcelExplanation(
+  id: string,
+  lon: number,
+  lat: number,
+  fetchFn: Fetch = fetch,
+): Promise<ParcelExplainResult> {
+  const query = new URLSearchParams({ lon: lon.toFixed(7), lat: lat.toFixed(7) });
+  const answer = await askParcel(() => fetchFn(`/api/parcel/${encodeURIComponent(id)}/explain?${query.toString()}`));
+  return answer.ok ? { ok: true, explanation: answer.body as ParcelExplanation } : answer;
+}

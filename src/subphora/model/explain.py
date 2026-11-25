@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
-from subphora.config.model import BreaksLookup, ModelSettings
+from subphora.config.model import BreaksLookup, ConfidenceSettings, ModelSettings
 from subphora.domain.potential import (
     ComponentId,
     Confidence,
@@ -25,25 +25,17 @@ from subphora.domain.potential import (
 )
 from subphora.model.evaluate import ABSENT, Category, InputGrids, Quality, evaluate, label
 
-# Variables that are distances, capped at the build's buffer ("at least this far").
-DISTANCES: frozenset[Variable] = frozenset(
-    {Variable.DRAINAGE_DISTANCE_M, Variable.WATER_POINT_DISTANCE_M}
-)
-
 
 def _value(
     variable: Variable,
     raw: float,
     unit: str | None,
     categories: Sequence[Category],
-    distance_cap_m: float,
+    distance_caps_m: Mapping[Variable, float],
 ) -> InputValue:
     if unit is not None:
-        return InputValue(
-            number=raw,
-            unit=unit,
-            at_least=variable in DISTANCES and raw >= distance_cap_m,
-        )
+        cap = distance_caps_m.get(variable)
+        return InputValue(number=raw, unit=unit, at_least=cap is not None and raw >= cap)
     code = int(raw)
     if code == ABSENT:
         return InputValue(absent=True)
@@ -58,10 +50,11 @@ def explain_cell(
     quality: Mapping[str, Quality],
     sources: Mapping[str, InputSource],
     evidence_distance_m: float,
-    distance_cap_m: float,
+    distance_caps_m: Mapping[Variable, float],
 ) -> PotentialEstimate:
-    """``values`` are the cell's raw inputs (NaN where none); ``quality`` and ``sources``
-    are per criterion with an input."""
+    """``values`` are the cell's raw inputs (NaN where none; a variable left out has no
+    input at this scale); ``quality`` and ``sources`` are per criterion whose variable is
+    among them; a distance at its cap in ``distance_caps_m`` is "at least" that far."""
     grids = InputGrids(
         values={v: np.array([value], dtype=np.float64) for v, value in values.items()},
         categories=categories,
@@ -70,7 +63,7 @@ def explain_cell(
     present = [
         c
         for c in model.criteria
-        if c.variable is not None and not math.isnan(float(result.suitability[c.id][0]))
+        if c.id in result.suitability and not math.isnan(float(result.suitability[c.id][0]))
     ]
     present_weight = sum(c.weight for c in present)
     contributions = []
@@ -91,7 +84,7 @@ def explain_cell(
                     values[variable],
                     unit,
                     categories.get(variable, ()),
-                    distance_cap_m,
+                    distance_caps_m,
                 ),
                 suitability=suit,
                 contribution=share * suit,
@@ -103,26 +96,36 @@ def explain_cell(
         MissingInput(
             criterion=c.id,
             weight=c.weight,
-            reason=MissingReason.NO_DATASET if c.variable is None else MissingReason.NO_DATA,
+            reason=MissingReason.NO_DATASET
+            if c.variable is None or c.variable not in values
+            else MissingReason.NO_DATA,
         )
         for c in model.criteria
         if c.id not in present_ids
     )
-    settings = model.confidence
+    score = sum(c.contribution for c in contributions) if contributions else None
+    return PotentialEstimate(
+        score=score,
+        confidence=confidence_of(
+            {component: float(grid[0]) for component, grid in result.components.items()},
+            model.confidence,
+        ),
+        contributions=tuple(contributions),
+        missing=missing,
+    )
+
+
+def confidence_of(values: Mapping[ComponentId, float], settings: ConfidenceSettings) -> Confidence:
+    """The confidence of its component values: their weighted sum and its label. The
+    model's skill is not measured until session 07."""
     components = tuple(
         ConfidenceComponent(
             id=component,
             weight=settings.weights[component],
-            value=float(grid[0]),
+            value=value,
             measured=component is not ComponentId.SKILL,
         )
-        for component, grid in result.components.items()
+        for component, value in values.items()
     )
     value = sum(c.weight * c.value for c in components)
-    score = sum(c.contribution for c in contributions) if contributions else None
-    return PotentialEstimate(
-        score=score,
-        confidence=Confidence(value=value, label=label(value, settings), components=components),
-        contributions=tuple(contributions),
-        missing=missing,
-    )
+    return Confidence(value=value, label=label(value, settings), components=components)

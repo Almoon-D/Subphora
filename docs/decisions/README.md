@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0029](0029-detailed-map-per-area.md) | The detailed map of an area: a cached job at 5 m, structure from MAGNA | accepted |
 | [0028](0028-national-build-and-tiles.md) | The national build: per-province grids in a process pool, PMTiles served by the API | accepted |
 | [0027](0027-national-model-v0.md) | The national model v0: nine criteria, seven with nationwide data, confidence that says so | accepted |
 | [0026](0026-search-and-area-of-interest.md) | One area of interest from every search, checked on land by SIGPAC | accepted |

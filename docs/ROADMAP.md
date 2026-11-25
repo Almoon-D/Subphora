@@ -12,8 +12,8 @@
 | 03ba | `docs/sessions/done/03ba-regional-evidence.md` | Opus 5.5, high | done |
 | 04 | `docs/sessions/done/04-search.md` | Opus 5.5, medium | done |
 | 05 | `docs/sessions/done/05-national-map.md` | Opus 5.5, high | done |
-| 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | next |
-| 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
+| 06 | `docs/sessions/done/06-parcel-detail.md` | Opus 5.5, high | done |
+| 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | next |
 | 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | planned |
 | 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | planned |
 | 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | planned |
@@ -50,7 +50,9 @@
 - VERIFY-LIVE(igme-geode-download): the GEODE vector download route and size. Queued by 01;
   the national model (05) needed none; session 06 or 08 if it reads GEODE in bulk.
 - VERIFY-LIVE(cnig-mdt02-coverage): MDT02 coverage and download route (the CNIG download
-  centre is a JavaScript app). Queued by 01; session 06.
+  centre is a JavaScript app). Queued by 01; session 06 reads MDT05 from the WCS meanwhile
+  (`parcel.yaml` terrain `model`); unblocked by a browser look at the download centre, then
+  a session that reads MDT02 where it covers the area.
 - VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
   cloud; read it before session 15 uses EGMS. Queued by 01.
 - VERIFY-LIVE(regional-hosts-unreached): the spatial data services of Aragón, Asturias,
@@ -107,14 +109,14 @@
 - A parcel larger than the view at zoom 15 (big rustic ones) shows no cadastral layer until
   the owner zooms in; the hint says so. (02)
 - The lithostratigraphic legend is a 3,648×4,423 image (800 KB) shown scaled in the panel
-  with a link to full size; a better legend (by unit, from the tap) can come with the
-  parcel view (session 06). (03)
+  with a link to full size; a better legend (by unit, from the tap) is still open: the
+  detailed map (06) did not need one. (03, 06)
 - The file cache never deletes an expired entry; with the tile proxy it grows with every
   view. Session 13 (deployment) adds a size cap or a sweep. (03)
 - `/api/layers/*` answers anyone who reaches the server: fine on `localhost`; session 13
   puts the whole API behind the owner's access control before it is exposed. (03)
-- SoilGrids gives no value on a tap; the parcel view (session 06) reads clay and sand from
-  its WCS at the parcel, everywhere in Spain alike. (03)
+- SoilGrids gives no value on a tap; the detailed map (06) reads its clay from the WCS over
+  the area and explains it per cell; sand is not a criterion of the model. (03, 06)
 - Regional layers: eight qualify and are drawn (03b, 03ba); every surveyed cell has a
   verdict; the open ones wait on the VERIFY-LIVE items above. (03, 03b, 03ba)
 - CH Duero zones its groundwater bodies in two horizons; only the general one (52 bodies,
@@ -138,8 +140,8 @@
   was not checked on land. A finer check needs an official boundary per click. (04)
 - CartoCiudad candidate types not yet observed (place names, roads, kilometre points) are
   dropped until a session records their answers and maps them in `search.yaml`. (04)
-- A drawn polygon is one ring without holes, at most 200 vertices; how big an area the
-  parcel view (06) can analyse is that session's limit to set. (04)
+- A drawn polygon is one ring without holes, at most 200 vertices; the detailed map takes
+  areas up to its window limit (`parcel.yaml` `max_cells`). (04, 06)
 - The session's areas are kept in sessionStorage; several large municipalities (up to
   ~150 KB each) can fill it, and then the list lives only until the tab reloads. (04)
 - National model: structure and piezometric depth have no nationwide grid, so confidence
@@ -155,11 +157,35 @@
 - No elevation or relief layer is drawn: the IGN publishes its MDT as a map (WMS
   `EL.ElevationGridCoverage`, `servicios.idee.es/wms-inspire/mdt`); a hillshade layer could
   join the terrain layers in a later session. (05, owner)
+- The detailed map reuses the 100 m wetness classes at 5 m, though the index depends on the
+  DEM's cell (Sørensen and Seibert 2007); session 07's calibration should test them. (06)
+- The detailed map's flow sees 2 km beyond the area: a channel fed from farther upstream may
+  be missed near its edge, as on the national map (05). (06)
+- Areas larger than the window limit (`parcel.yaml` `max_cells`, about 4 km across with the
+  buffer) are refused: a municipality has only the national map. (06)
+- MAGNA lithology (free text per sheet) could refine permeability at 1:50,000 once a
+  classification of its legends exists; the detailed map uses the 1:200,000 classes. (06)
+- `data/parcels` keeps every area's result and images; the size cap of session 13 covers it.
+  The jobs' state lives in the server's memory: a restart forgets a failed or running job
+  (a finished one is read from disk), and the page asks again. (06)
 
 ## Session log
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 06 — Parcel-scale detail, explanation and candidate spots (2026-11-25, version 0.8.0)
+
+- Landed: `/api/parcel` jobs (queued, running, done, failed with the reason; cached per
+  area; process pool); the 5 m grid in the area's UTM zone from MDT05, MAGNA faults (lineament
+  density) and bedding dips, and the national inputs; structure split into `lineaments` and
+  `bedding_dip` (decision 0029); the area's mean with its contributions; ranked candidates
+  with "not evaluated" legal status (`domain/legal.py`); the panel, layer images, numbered
+  markers, tap-to-explain and the comparison table.
+- Live: four real areas (Daimiel, Huesca, Tierra de Campos, Santiago) computed in 9-19 s
+  each, through `subphora serve` too; findings in `igme.md` and `ign-cnig.md`.
+- Deferred: MDT02 (VERIFY-LIVE(cnig-mdt02-coverage)); depth on candidates (07).
+- Prompt edits: 07 (reads the detailed map's candidates and decision 0029).
 
 ### 05 — National water-potential map v0 (2026-11-25, version 0.7.0)
 

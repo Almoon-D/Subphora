@@ -13,6 +13,9 @@ drilling-cost range.
 
 - `docs/MASTER_PLAN.md` § 4.3 (validation, depth and cost).
 - `docs/knowledge/`: IGME water points, MITECO and basin piezometry (`water-authorities.md`).
+- Decision 0029 and the detailed map it extends: `subphora.services.parcel_compute` (where
+  candidates are made), `subphora.domain.parcel_map` (`Candidate.depth` is "not_estimated"
+  until this session), and the confidence's `skill` component in `subphora.model`.
 
 ## Build
 

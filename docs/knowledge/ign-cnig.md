@@ -36,6 +36,12 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   served; 2 m is not** (MDT02 is a download only). `(GetCapabilities, 2026-11-24)`
 - `Elevacion25830_5` covers x −19,452.5 … 1,140,352.5, y 3,901,197.5 … 4,865,682.5 (EPSG:25830)
   at 5 m: mainland Spain and the Balearics in one coverage. `(DescribeCoverage, 2026-11-24)`
+- `Elevacion4083_5` (the Canaries at 5 m) covers x 188,197.5 … 662,002.5, y 3,060,497.5 …
+  3,255,102.5 (EPSG:4083). `(DescribeCoverage, 2026-11-25)`
+- The detailed map of an area (session 06) reads `Elevacion25830_5` / `Elevacion4083_5` by
+  5 km windows: a point's 250 m disc plus a 2 km buffer took 9-19 s in all (every input,
+  computed), its MDT05 windows a few MB; the same areas again come from the file cache.
+  `(GetCoverage, 2026-11-25)`
 - A GetCoverage of a 500 m square (`subset=x(676500,677000)&subset=y(4613000,4613500)`,
   near Zaragoza, `format=image/tiff`) returns a small GeoTIFF. The national grid (session 05) and the
   parcel grid (06) can read the terrain from this WCS by windows instead of downloading
@@ -55,7 +61,8 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   application (the landing page is 5 KB of HTML); product lists and file sizes for MDT02,
   MDT05 and MDT25 were not readable without a browser. MDT02 (second LiDAR coverage) is
   downloaded by sheet; its coverage and the existence of a bulk route stay unverified:
-  `VERIFY-LIVE(cnig-mdt02-coverage)`. `(GET /CentroDescargas/, 2026-11-24)`
+  `VERIFY-LIVE(cnig-mdt02-coverage)`. Until then the detailed map reads MDT05 everywhere
+  and says so. `(GET /CentroDescargas/, 2026-11-24)`
 
 ## CartoCiudad geocoder
 

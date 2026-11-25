@@ -7,6 +7,22 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.8.0] - 2026-11-25
+
+- A detailed map of any selected area: "Calcular el mapa detallado" computes the potential
+  index at 5 m over the parcel, enclosure, drawn polygon or a 250 m disc around a point,
+  shows the job while it runs, and keeps the result for the next time.
+- The detailed map adds the faults and the dip of the layers mapped on MAGNA 1:50,000, and
+  reads slope, drainage and wetness from the 5 m terrain model; it says which inputs are
+  missing there and what the area's mean index and confidence rest on.
+- Its index, confidence, slope, drainage and wetness layers are drawn over the area, with
+  their legends; a tap inside the area explains that cell.
+- Ranked candidate spots: the best cells with at least medium confidence, kept apart,
+  numbered on the map, each with its explanation, "legal status: not evaluated" and the
+  "guidance, not legal advice" note.
+- Two or more analysed areas are compared side by side: size, mean index and confidence,
+  and their best candidates.
+
 ## [0.7.0] - 2026-11-25
 
 - A national map of groundwater potential: when the app opens, every province built is

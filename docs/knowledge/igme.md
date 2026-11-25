@@ -62,6 +62,27 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
   1,000-row limit, so at least 1,000 of the 1,114 sheets carry them. Example, sheet 1023:
   "Estratificación", direction 49°, dip 30°.
   `(GET /IGME_MAGNA_50/MapServer/5/query, 2026-11-24)`
+- MAGNA REST layers (2026-11-25): 0 sheets, 1 structural-measurement annotations, 5
+  "Medidas estructurales" (polylines: each measurement is a short symbol line, e.g. two
+  vertices 200 m apart, its middle at the measurement), 8 folds, **9 "Contactos y fallas"**
+  (polylines, fields `HOJA`, `ID`, `TIPO`), 10 and 11 lithology (polygons, `DLO`: a
+  free-text description per sheet, no permeability class). `(GET /MapServer?f=json,
+  /9?f=json, /11?f=json, 2026-11-25)`
+- Layer 9 `TIPO` counts over Spain (`outStatistics` grouped by `TIPO`): contacts dominate
+  (discordant 851,880, concordant 301,132), then "Falla conocida" 477,521, "Borde de hoja"
+  132,406, "Contacto mecánico" 86,242, "Masas de agua" 58,772, "Falla supuesta" 54,931,
+  "Cabalgamiento conocido" 47,819, many fault, thrust and fracture variants, and
+  "Contacto mecánico por solifluxión" / "…Bloques deslizados" (landslides). The detailed
+  map counts as faults the types that start with Falla, Fractura, Cabalgamiento,
+  Retrocabalgamiento, Contacto mecánico or "Diaclasas y fallas", less those two
+  (`config/defaults/parcel.yaml`). `(query outStatistics, 2026-11-25)`
+- Layer 5 `NOMBRE`: 349 measurement types; bedding is "Estratificación" 122,210,
+  "…invertida" 6,887, "…subvertical" 5,974, "…subhorizontal" 3,453 and a few more; the
+  rest are cleavages, foliations, lineations, joints, photogeology classes and
+  palaeocurrents. Density is low: 55 measurements in a 20 km square of the Pre-Pyrenees
+  (x 700-720 km, y 4,660-4,680 km, EPSG:25830), 48 of them bedding. Both layers answer
+  `inSR`/`outSR` 25830 GeoJSON with x first, like the other IGME layers.
+  `(query, 2026-11-25)`
 - GEODE layer 3 "Buzamientos" (points) is drawn but its query is refused ("Requested
   operation is not supported by this service"). `(GET /IGME_Geode_50/MapServer/3/query, 2026-11-24)`
 - The 1:200,000 geological and lithostratigraphic maps have "Medidas estructurales" and

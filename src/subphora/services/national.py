@@ -14,29 +14,26 @@ region politely, compute its grids in a worker process, then render the map's ti
 import asyncio
 import logging
 import math
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Sequence
 from concurrent.futures import Executor
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from subphora.config import Settings
 from subphora.config.national import GridSettings
-from subphora.config.sources import Service
 from subphora.countries.es.areas import all_provinces, ign_province_code, provinces_of
 from subphora.domain.potential import InputSource
 from subphora.geo.grid import (
     Bounds,
-    GridWindow,
     buffered,
     geometry_bounds,
     transform_bounds,
     window_around,
 )
 from subphora.geo.tiles import tiles_covering
-from subphora.model.quality import ground_resolution_m
-from subphora.services.fetching import CachedFetcher, Fetched, UpstreamFailure
+from subphora.services.fetching import Fetched
+from subphora.services.inputs import InputFailure, InputFetcher
 from subphora.services.national_compute import (
     RegionInputs,
     RegionJob,
@@ -46,19 +43,7 @@ from subphora.services.national_compute import (
     render_tiles,
 )
 from subphora.sources import CatalogueClient
-from subphora.sources.boundaries import BoundaryParseError, boundary_params, parse_boundary
-from subphora.sources.client import Params
-from subphora.sources.national import (
-    InputParseError,
-    Page,
-    arcgis_query_params,
-    check_tiff,
-    parse_arcgis_page,
-    parse_wfs_page,
-    soilgrids_params,
-    wcs_params,
-    wfs_page_params,
-)
+from subphora.sources.boundaries import boundary_params, parse_boundary
 from subphora.store import FileCache
 from subphora.store.file_cache import Clock, utc_now
 from subphora.store.national import (
@@ -74,8 +59,6 @@ from subphora.store.national import (
 _log = logging.getLogger(__name__)
 
 _LON_LAT = "EPSG:4326"
-# A paged query that keeps saying "more" past this many pages is refused, not followed.
-_MAX_PAGES = 2000
 # Tiles per worker job.
 _TILE_BATCH = 64
 
@@ -165,10 +148,6 @@ def resolve_region(settings: Settings, spec: str) -> list[BuildRegion]:
     raise RegionSpecError(f"{spec!r} does not lie within one territory of Spain")
 
 
-def _oldest(fetched: Sequence[Fetched]) -> datetime | None:
-    return min((f.provenance.retrieved_at for f in fetched), default=None)
-
-
 class NationalBuilder:
     def __init__(
         self,
@@ -178,7 +157,7 @@ class NationalBuilder:
         root: Path,
         clock: Clock = utc_now,
     ) -> None:
-        self._fetcher = CachedFetcher(client, cache, clock)
+        self._inputs = InputFetcher(client, settings, cache, clock)
         self._settings = settings
         self._national = settings.national
         self._root = root
@@ -188,34 +167,9 @@ class NationalBuilder:
     def output(self) -> Path:
         return self._national.build.output_path(self._root)
 
-    def _service(self, service_id: str) -> Service:
-        return self._settings.sources.service(service_id)
-
-    async def _get(
-        self, service: Service, url: str, params: Params, check: Callable[[bytes], Any]
-    ) -> tuple[Any, Fetched]:
-        """Fetch, parse with ``check`` and cache only an answer that parses. A failure the
-        service reports as its own is asked again, like a transport error."""
-        client = self._settings.sources.client
-        attempts = client.retries + 1
-        for attempt in range(1, attempts + 1):
-            fetched = await self._fetcher.fetch(service, url, params)
-            try:
-                parsed = check(fetched.content)
-            except InputParseError as exc:
-                if not exc.transient or attempt == attempts:
-                    raise BuildFailure(f"{service.publisher}: {exc}") from exc
-                await asyncio.sleep(client.retry_backoff_s * attempt)
-                continue
-            except BoundaryParseError as exc:
-                raise BuildFailure(f"{service.publisher}: {exc}") from exc
-            await self._fetcher.store(service, fetched)
-            return parsed, fetched
-        raise AssertionError("unreachable")  # pragma: no cover
-
     async def _boundary(self, region: BuildRegion) -> tuple[list[dict[str, Any]], Bounds]:
         source = self._settings.regional.boundaries.sources["region"]
-        service = self._service(source.service)
+        service = self._inputs.service(source.service)
         if region.boundary_code is None:  # pragma: no cover - only provinces have one
             raise BuildFailure(f"{region.id} has no official boundary")
         params = boundary_params(
@@ -225,136 +179,19 @@ class NationalBuilder:
             source.namespaces,
             source.output_format,
         )
-        geometries, _ = await self._get(service, service.base_url, params, parse_boundary)
+        geometries, _ = await self._inputs.get(service, service.base_url, params, parse_boundary)
         shapes = [g for g in geometries if isinstance(g, dict)]
         return shapes, geometry_bounds(shapes)
 
-    async def _pages(
-        self,
-        service: Service,
-        url: str,
-        params_of: Callable[[int], Params],
-        parse: Callable[[bytes], Page],
-        page_size: int,
-    ) -> tuple[list[dict[str, Any]], list[Fetched]]:
-        features: list[dict[str, Any]] = []
-        fetched: list[Fetched] = []
-        for number in range(_MAX_PAGES):
-            page, answer = await self._get(service, url, params_of(number * page_size), parse)
-            features.extend(page.features)
-            fetched.append(answer)
-            if not page.more:
-                return features, fetched
-        raise BuildFailure(f"{service.publisher}: more than {_MAX_PAGES} pages")
-
-    async def _arcgis(
-        self,
-        dataset_path: str,
-        service_id: str,
-        window: GridWindow,
-        fields: list[str],
-        page_size: int,
-        generalise: float | None,
-    ) -> tuple[list[dict[str, Any]], list[Fetched]]:
-        service = self._service(service_id)
-        return await self._pages(
-            service,
-            service.base_url + dataset_path,
-            lambda offset: arcgis_query_params(
-                window.bounds, window.crs, fields, offset, page_size, generalise
-            ),
-            parse_arcgis_page,
-            page_size,
-        )
-
-    async def _bodies(self, window: GridWindow) -> tuple[list[dict[str, Any]], list[Fetched]]:
-        dataset = self._national.datasets.groundwater_bodies
-        service = self._service(dataset.service)
-        bounds = transform_bounds(window.bounds, window.crs, dataset.srs)
-        return await self._pages(
-            service,
-            service.base_url,
-            lambda start: wfs_page_params(
-                dataset.type_name,
-                dataset.srs,
-                bounds,
-                dataset.code_field,
-                start,
-                dataset.page_size,
-            ),
-            lambda content: parse_wfs_page(content, dataset.page_size),
-            dataset.page_size,
-        )
-
-    async def _terrain(
-        self, grid: GridSettings, window: GridWindow
-    ) -> tuple[list[bytes], list[Fetched]]:
-        dataset = self._national.datasets.terrain
-        service = self._service(dataset.service)
-        coverage = grid.terrain
-        west, south, east, north = transform_bounds(window.bounds, window.crs, coverage.crs)
-        e_west, e_south, e_east, e_north = coverage.extent
-        size = dataset.window_m
-        boxes = []
-        x = math.floor(max(west, e_west) / size) * size
-        while x < min(east, e_east):
-            y = math.floor(max(south, e_south) / size) * size
-            while y < min(north, e_north):
-                boxes.append(
-                    (
-                        max(e_west, x - dataset.overlap_m),
-                        max(e_south, y - dataset.overlap_m),
-                        min(e_east, x + size + dataset.overlap_m),
-                        min(e_north, y + size + dataset.overlap_m),
-                    )
-                )
-                y += size
-            x += size
-        return await self._rasters(service, [wcs_params(coverage.coverage, box) for box in boxes])
-
-    async def _soil(self, window: GridWindow) -> tuple[list[bytes], list[Fetched]]:
-        dataset = self._national.datasets.soil
-        service = self._service(dataset.service)
-        west, south, east, north = transform_bounds(window.bounds, window.crs, _LON_LAT)
-        size = dataset.window_deg
-        params = []
-        x = math.floor(west / size) * size
-        while x < east:
-            y = math.floor(south / size) * size
-            while y < north:
-                params.append(soilgrids_params(dataset.coverage, (x, y, x + size, y + size)))
-                y += size
-            x += size
-        return await self._rasters(service, params)
-
-    async def _rasters(
-        self, service: Service, requests: Sequence[Params]
-    ) -> tuple[list[bytes], list[Fetched]]:
-        answers = await asyncio.gather(
-            *(self._get(service, service.base_url, params, check_tiff) for params in requests)
-        )
-        return [fetched.content for _, fetched in answers], [fetched for _, fetched in answers]
-
     def _source(self, dataset_name: str, fetched: Sequence[Fetched]) -> InputSource:
         dataset = self._national.datasets.all()[dataset_name]
-        service = self._service(dataset.service)
-        retrieved = _oldest(fetched) or self._clock()
-        return InputSource(
-            service_id=service.id,
-            publisher=service.publisher,
-            attribution=service.attribution,
-            retrieved_at=retrieved,
-            detail=dataset.detail,
-            resolution_m=ground_resolution_m(
-                dataset.detail, self._settings.regional.rule.metres_per_scale_unit
-            ),
-        )
+        return self._inputs.source(dataset.service, dataset.detail, fetched)
 
     async def prepare(self, region: BuildRegion) -> RegionJob:
         """Download everything one region needs; raises BuildFailure."""
         try:
             return await self._prepare(region)
-        except UpstreamFailure as exc:
+        except InputFailure as exc:
             raise BuildFailure(exc.detail) from exc
 
     async def _prepare(self, region: BuildRegion) -> RegionJob:
@@ -371,25 +208,35 @@ class NationalBuilder:
         _log.info(
             "%s: downloading the inputs of %d x %d cells", region.id, window.width, window.height
         )
+        inputs = self._inputs
+        terrain_dataset = datasets.terrain
         permeability, terrain, soil, bodies, points = await asyncio.gather(
-            self._arcgis(
-                datasets.permeability.path,
+            inputs.arcgis(
                 datasets.permeability.service,
-                window,
+                datasets.permeability.path,
+                window.bounds,
+                window.crs,
                 [datasets.permeability.class_field, datasets.permeability.label_field],
                 datasets.permeability.page_size,
                 datasets.permeability.generalise_m,
             ),
-            self._terrain(grid, window),
-            self._soil(window),
-            self._bodies(window),
-            self._arcgis(
-                datasets.water_points.path,
+            inputs.terrain(
+                terrain_dataset.service,
+                grid.terrain,
+                terrain_dataset.window_m,
+                terrain_dataset.overlap_m,
+                window.bounds,
+                window.crs,
+            ),
+            inputs.soil(datasets.soil, window.bounds, window.crs),
+            inputs.bodies(datasets.groundwater_bodies, window.bounds, window.crs),
+            inputs.arcgis(
                 datasets.water_points.service,
-                window,
+                datasets.water_points.path,
+                window.bounds,
+                window.crs,
                 [datasets.water_points.kind_field],
                 datasets.water_points.page_size,
-                None,
             ),
         )
         return RegionJob(

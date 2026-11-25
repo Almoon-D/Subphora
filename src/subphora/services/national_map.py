@@ -17,6 +17,7 @@ from subphora.domain.potential import (
     CellExplanation,
     NationalError,
     NationalFailure,
+    PotentialEstimate,
     Variable,
 )
 from subphora.geo import tile_exists
@@ -99,20 +100,8 @@ class NationalMapService:
         for manifest in await self._manifests():
             if not _holds(manifest.bbox, lon, lat):
                 continue
-            window = GridWindow(
-                crs=manifest.crs,
-                cell_m=manifest.cell_m,
-                west=manifest.west,
-                north=manifest.north,
-                width=manifest.width,
-                height=manifest.height,
-            )
-            cell = window.cell_of(*transform_xy(lon, lat, _LON_LAT, manifest.crs))
-            if cell is None:
-                continue
-            values = await asyncio.to_thread(read_cell, self._root, manifest, *cell)
-            inputs = {v: value for v, value in values.items() if v not in RESULTS}
-            if all(math.isnan(value) for value in inputs.values()):
+            estimate = await asyncio.to_thread(estimate_at, self._root, manifest, lon, lat)
+            if estimate is None:
                 continue  # outside the region's boundary
             return CellExplanation(
                 longitude=lon,
@@ -122,23 +111,43 @@ class NationalMapService:
                 region_name=manifest.name,
                 cell_m=manifest.cell_m,
                 built_at=manifest.built_at,
-                estimate=explain_cell(
-                    manifest.model,
-                    inputs,
-                    {
-                        v: [Category(cls=c.cls, label=c.label) for c in items]
-                        for v, items in manifest.categories.items()
-                        if v in CATEGORICAL
-                    },
-                    {
-                        k: Quality(resolution=q.resolution, age=q.age)
-                        for k, q in manifest.quality.items()
-                    },
-                    manifest.sources,
-                    values[Variable.WATER_POINT_DISTANCE_M],
-                    manifest.distance_cap_m,
-                ),
+                estimate=estimate,
             )
         raise NationalError(
             NationalFailure.OUTSIDE_BUILT_AREA, "no region of the national map holds that point"
         )
+
+
+def estimate_at(
+    root: Path, manifest: RegionManifest, lon: float, lat: float
+) -> PotentialEstimate | None:
+    """The estimate of the stored grid's cell under a point, explained with the settings
+    and sources of its own build; None outside the grid or where it has no input. Blocks."""
+    window = GridWindow(
+        crs=manifest.crs,
+        cell_m=manifest.cell_m,
+        west=manifest.west,
+        north=manifest.north,
+        width=manifest.width,
+        height=manifest.height,
+    )
+    cell = window.cell_of(*transform_xy(lon, lat, _LON_LAT, manifest.crs))
+    if cell is None:
+        return None
+    values = read_cell(root, manifest, *cell)
+    inputs = {v: value for v, value in values.items() if v not in RESULTS}
+    if all(math.isnan(value) for value in inputs.values()):
+        return None
+    return explain_cell(
+        manifest.model,
+        inputs,
+        {
+            v: [Category(cls=c.cls, label=c.label) for c in items]
+            for v, items in manifest.categories.items()
+            if v in CATEGORICAL
+        },
+        {k: Quality(resolution=q.resolution, age=q.age) for k, q in manifest.quality.items()},
+        manifest.sources,
+        values[Variable.WATER_POINT_DISTANCE_M],
+        manifest.caps(),
+    )

@@ -16,7 +16,13 @@ import numpy as np
 from numpy.typing import NDArray
 
 from subphora.config.model import ClassesLookup, ModelSettings
-from subphora.config.national import VARIABLE_DATASET, NationalSettings
+from subphora.config.national import (
+    VARIABLE_DATASET,
+    GroundwaterBodiesDataset,
+    NationalSettings,
+    PermeabilityDataset,
+    WaterPointsDataset,
+)
 from subphora.domain.potential import InputSource, Variable
 from subphora.geo.grid import GridWindow, transform_bounds, transform_geometry
 from subphora.geo.raster import (
@@ -132,19 +138,26 @@ def _text(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
 
-def _permeability(job: RegionJob) -> tuple[FloatGrid, list[Category]]:
-    dataset = job.national.datasets.permeability
+def permeability_grid(
+    window: GridWindow, features: Sequence[dict[str, Any]], dataset: PermeabilityDataset
+) -> tuple[FloatGrid, list[Category]]:
+    """Permeability polygons (in the window's CRS) burnt as class codes."""
 
     def key(properties: dict[str, Any]) -> tuple[str, str] | None:
         cls = _text(properties.get(dataset.class_field))
         return (cls, _text(properties.get(dataset.label_field))) if cls else None
 
-    return _categorical(job.window, job.inputs.permeability, key, lambda _c: 0, job.window.crs)
+    return _categorical(window, features, key, lambda _c: 0, window.crs)
 
 
-def _groundwater(job: RegionJob) -> tuple[FloatGrid, list[Category]]:
-    dataset = job.national.datasets.groundwater_bodies
-    lookup = _classes_of(job.model, Variable.GROUNDWATER_STATUS)
+def groundwater_grid(
+    window: GridWindow,
+    features: Sequence[dict[str, Any]],
+    dataset: GroundwaterBodiesDataset,
+    model: ModelSettings,
+) -> tuple[FloatGrid, list[Category]]:
+    """Groundwater bodies (in the dataset's ``srs``) burnt as status codes."""
+    lookup = _classes_of(model, Variable.GROUNDWATER_STATUS)
 
     def key(properties: dict[str, Any]) -> tuple[str, str]:
         name = _text(properties.get(dataset.name_field))
@@ -157,7 +170,7 @@ def _groundwater(job: RegionJob) -> tuple[FloatGrid, list[Category]]:
         suitability = lookup.get(category.cls) if lookup else None
         return 2.0 if suitability is None else -suitability
 
-    return _categorical(job.window, job.inputs.groundwater_bodies, key, order, dataset.srs)
+    return _categorical(window, features, key, order, dataset.srs)
 
 
 def _classes_of(model: ModelSettings, variable: Variable) -> dict[str, float] | None:
@@ -167,9 +180,10 @@ def _classes_of(model: ModelSettings, variable: Variable) -> dict[str, float] | 
     return None
 
 
-def _warped(
+def warped(
     window: GridWindow, tiffs: Sequence[bytes], nodata: float, resampling: Resampling
 ) -> FloatGrid:
+    """GeoTIFF windows of one raster resampled onto the grid; NaN where none covers it."""
     grid = empty(window)
     for content in tiffs:
         raster = read_geotiff(content)
@@ -177,11 +191,13 @@ def _warped(
     return grid
 
 
-def _water_points(job: RegionJob) -> FloatGrid:
-    dataset = job.national.datasets.water_points
+def water_point_positions(
+    features: Sequence[dict[str, Any]], dataset: WaterPointsDataset
+) -> list[tuple[float, float]]:
+    """The water points' positions, without the kinds that are not groundwater."""
     excluded = set(dataset.exclude_kinds)
     points = []
-    for feature in job.inputs.water_points:
+    for feature in features:
         properties = feature.get("properties") or {}
         geometry = feature.get("geometry") or {}
         coordinates = geometry.get("coordinates") if isinstance(geometry, dict) else None
@@ -189,6 +205,11 @@ def _water_points(job: RegionJob) -> FloatGrid:
             continue
         if isinstance(coordinates, list) and len(coordinates) >= 2:
             points.append((float(coordinates[0]), float(coordinates[1])))
+    return points
+
+
+def _water_points(job: RegionJob) -> FloatGrid:
+    points = water_point_positions(job.inputs.water_points, job.national.datasets.water_points)
     mask = points_mask(job.window, points)
     return distance_to(mask, job.window.cell_m, job.national.buffer_m)
 
@@ -197,7 +218,8 @@ def _quality(job: RegionJob) -> dict[str, Quality]:
     settings = job.model.confidence
     result = {}
     for criterion in job.model.criteria:
-        if criterion.variable is None:
+        # No nationwide input for it (the faults and dips of the parcel scale, or none).
+        if criterion.variable not in VARIABLE_DATASET:
             continue
         dataset = job.national.datasets.all()[VARIABLE_DATASET[criterion.variable]]
         result[criterion.id] = dataset_quality(
@@ -215,9 +237,13 @@ def compute_region(job: RegionJob) -> RegionResult:
     """Every grid of one region, scored and written to its stack and manifest."""
     window = job.window
     datasets = job.national.datasets
-    permeability, permeability_categories = _permeability(job)
-    groundwater, groundwater_categories = _groundwater(job)
-    elevation = _warped(
+    permeability, permeability_categories = permeability_grid(
+        window, job.inputs.permeability, datasets.permeability
+    )
+    groundwater, groundwater_categories = groundwater_grid(
+        window, job.inputs.groundwater_bodies, datasets.groundwater_bodies, job.model
+    )
+    elevation = warped(
         window, job.inputs.terrain, float(datasets.terrain.sea_value), Resampling.average
     )
     terrain = derive(
@@ -227,7 +253,7 @@ def compute_region(job: RegionJob) -> RegionResult:
         datasets.terrain.min_slope_deg,
         job.national.buffer_m,
     )
-    clay = _warped(window, job.inputs.soil, float(datasets.soil.nodata_value), Resampling.nearest)
+    clay = warped(window, job.inputs.soil, float(datasets.soil.nodata_value), Resampling.nearest)
     grids: dict[Variable, FloatGrid] = {
         Variable.PERMEABILITY_CLASS: permeability,
         Variable.ELEVATION_M: elevation,
@@ -256,7 +282,7 @@ def compute_region(job: RegionJob) -> RegionResult:
     criterion_sources = {
         c.id: job.sources[VARIABLE_DATASET[c.variable]]
         for c in job.model.criteria
-        if c.variable is not None
+        if c.variable in VARIABLE_DATASET
     }
     manifest = RegionManifest(
         region_id=job.region_id,

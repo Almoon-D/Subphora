@@ -7,6 +7,24 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.6.0] - 2026-11-25
+
+- One search box for every way to name a place: a cadastral or SIGPAC reference (parcel or
+  enclosure), an address, a town or municipality, or coordinates in decimal degrees,
+  degrees-minutes-seconds or UTM, with a decimal point or comma.
+- When a text reads several ways (UTM without its zone, six bare numbers, a name shared by
+  many places) the app asks which one was meant, and offers only readings that fall on
+  land in Spain.
+- A point or a polygon drawn on the map becomes the selected area; while drawing, a click
+  on the map adds to the drawing instead of asking the layers.
+- Every found or drawn place becomes the same "area of interest": its outline or point,
+  province, area, centre in the local CRS, and the official source and date that named it,
+  which the map's attribution also credits.
+- Coordinates outside Spain, at sea, or in the wrong UTM zone or band are refused with a
+  plain message; Ceuta and Melilla, which SIGPAC does not cover, say so on the card.
+- The areas selected in a browser tab are listed to switch between them; they stay in that
+  tab only, never on the server.
+
 ## [0.5.0] - 2026-11-24
 
 - Five more regional layers on the map, each inside its official boundary: Catalonia's

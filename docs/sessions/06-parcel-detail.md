@@ -12,6 +12,9 @@ point when tapped, ranks candidate spots, and compares several selected areas si
 - `docs/MASTER_PLAN.md` § 4.3 (in full), § 4.2.
 - `docs/decisions/` 0006 and session 05's decisions.
 - `docs/knowledge/`: IGN/CNIG (MDT02/MDT05), IGME (MAGNA, faults).
+- `src/subphora/domain/aoi.py` (decision 0026): a selected area is an `AreaOfInterest`, an
+  outline or a point (an address, coordinates, a drawn point); the session's list of them
+  lives in the browser (`web/src/search/areas.ts`).
 
 ## Build
 

@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0026](0026-search-and-area-of-interest.md) | One area of interest from every search, checked on land by SIGPAC | accepted |
 | [0025](0025-national-editions-per-part.md) | A national layer published in parts is compared by its parts over the area | accepted |
 | [0024](0024-regional-layers-clipped-in-the-browser.md) | Regional layers: the rule as data, official boundaries on one grid, clipped in the browser | accepted; extended by 0025 |
 | [0023](0023-regional-detail-national-baseline.md) | Regional detail first, the national service as baseline and fallback | accepted |

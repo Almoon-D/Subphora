@@ -55,6 +55,20 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   `muniCode` (50297), `type` (`poblacion`, `Municipio`, `callejero`…), `address`, `lat`,
   `lng`, `refCatastral`. For a place-name candidate `lat`/`lng` are 0.0: a second call
   (`find`) resolves it. CORS `*`. `(GET /candidates, 2026-11-24)`
+- Candidate types observed: `Municipio`, `poblacion` (towns and industrial estates),
+  `callejero` (streets, roads by name), `portal` (a doorway, with `portalNumber` and
+  `refCatastral`), `Codpost` (a postal code). Nothing found: `[]`. A municipality's id may
+  lose its leading zero (Badajoz: `"6015"`, its `muniCode` `"06015"`).
+  `(GET /candidates, 2026-11-25)`
+- `find?id=&type=` answers one object with a WKT `geom`: a municipality or town as
+  `MULTIPOLYGON` (Daimiel 20 KB, Zaragoza 91 KB, Cáceres 103 KB, the town of Daimiel
+  150 KB), a street as `MULTILINESTRING`, a doorway as `POINT`; `lat` and `lng` are its
+  centre and `provinceCode` its INE province. The id must be the candidate's exactly:
+  `id=06015&type=Municipio` answers HTTP 500; an unknown id answers HTTP 204 with no body;
+  `type=provincia` answers HTTP 500. `(GET /find, 2026-11-25)`
+- `reverseGeocode?lon=&lat=` finds only an address near the point: it answered HTTP 204 for
+  a rural point in Granada (37.0 N, 3.0 W) as for Lisbon, so it cannot tell whether a
+  point is in Spain. `(GET /reverseGeocode, 2026-11-25)`
 
 ## Licence and attribution
 

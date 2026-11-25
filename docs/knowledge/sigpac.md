@@ -36,6 +36,24 @@ Findings observed on 2026-11-24.
   SIGPAC → Catastro is not always filled. Session 04 must not rely on it.
   `(refcatparcela, 2026-11-24)`
 
+## The query service for search (session 04)
+
+- `.geojson` answers of `recinfo` and `recinfoparc` are a FeatureCollection, one Polygon
+  feature per enclosure, in EPSG:4258 with longitude first, the CRS in a `crs` member
+  (`{"type":"EPSG","properties":{"code":"4258"}}`); `superficie` is hectares and the codes
+  are numbers (`"provincia": 34`). Parcel 29:15:0:0:167:21 has 13 enclosures (one of
+  1,745 ha). `(recinfo, recinfoparc, 2026-11-25)`
+- Not found in GeoJSON: HTTP 200 `{"type":"FeatureCollection","features":[],"crs":""}`.
+  `(recinfo 29/15/0/0/167/99999/1.geojson, 2026-11-25)`
+- `recinfobypoint/4258/{lon}/{lat}.json` answers the enclosure under any point of land,
+  urban (`ZU`, Madrid's centre: one 4,189 ha enclosure with a 76 KB WKT) and rural alike,
+  in the Canaries too; an empty list `[]` at sea (36.3 N, 2.5 W), in Portugal (Lisbon),
+  in Andorra, and in **Ceuta and Melilla**, which SIGPAC does not cover. Subphora uses it
+  as the land check of typed and drawn places and to name their province.
+  `(recinfobypoint, 2026-11-25)`
+- The municipality code is the INE's: Daimiel answers province 13, municipality 39 (INE
+  13039). The answer carries no municipality name. `(recinfobypoint, 2026-11-25)`
+
 ## WMS — `https://sigpac-hubcloud.es/wms`
 
 - Layers `AU.Sigpac:recinto`, `AU.Sigpac:cultivo_declarado`, `AU.Sigpac:e_paisaje`

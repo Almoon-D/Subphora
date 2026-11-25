@@ -38,6 +38,8 @@ export function formatQuantity(value: number, unit: string): string {
       return value >= 1000 ? `${formatNumber(value / 1000, 1)} km` : `${number} m`;
     case "pct":
       return `${number} %`;
+    case "km_km2":
+      return `${number} km/km²`;
     default:
       return number;
   }

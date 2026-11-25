@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The page: one search box (with an explicit choice when the text reads several ways), the
-// drawing tools, the selected area and this session's others, the layer panel, what a tap
-// found, and the map.
+// drawing tools, the selected area with its detailed map and this session's others, their
+// comparison, the layer panel, what a tap found, and the map.
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import {
@@ -15,19 +15,34 @@ import {
   fetchFeatureInfo,
   fetchMapConfig,
   fetchNational,
+  fetchParcel,
+  fetchParcelExplanation,
   type Interpretation,
   type MapConfig,
   type NationalMap,
+  type ParcelExplainResult,
   type Position,
   resolveArea,
   searchText,
+  startParcel,
 } from "./api.ts";
 import { formatArea, formatDate, formatNumber, lookup, t } from "./i18n/index.ts";
 import { InfoPanel, type Tap } from "./map/InfoPanel.tsx";
 import { LayerPanel } from "./map/LayerPanel.tsx";
 import { initialLayers, type MapLayers, queryableOverlays } from "./map/layers.ts";
-import { type Draft, MapView } from "./map/MapView.tsx";
+import { type Draft, MapView, type ParcelDrawing } from "./map/MapView.tsx";
 import { nationalAnswersTap } from "./map/national.ts";
+import { Comparison } from "./parcel/Comparison.tsx";
+import {
+  analysisOf,
+  comparable,
+  initialParcelLayer,
+  onAnalysis,
+  type ParcelView,
+  pollDelay,
+  withParcelResult,
+} from "./parcel/parcel.ts";
+import { ParcelPanel } from "./parcel/ParcelPanel.tsx";
 import {
   areaHeading,
   areaKey,
@@ -207,6 +222,9 @@ export function App() {
   const [zoom, setZoom] = useState(0);
   const [tapped, setTapped] = useState<Position | null>(null);
   const [tap, setTap] = useState<Tap>({ state: "idle" });
+  // Each area's detailed map, by area key; and the layer of it drawn (undefined: the default).
+  const [parcels, setParcels] = useState<Record<string, ParcelView>>({});
+  const [parcelLayer, setParcelLayer] = useState<string | null | undefined>(undefined);
   // Only the answers to the latest tap, and to the latest search, are shown.
   const tapCount = useRef(0);
   const searchCount = useRef(0);
@@ -228,6 +246,36 @@ export function App() {
     saveSession(session);
   }, [session]);
 
+  // Ask again for every job still queued or running, when its answer says to.
+  useEffect(() => {
+    const timers = Object.entries(parcels).flatMap(([key, view]) => {
+      const delay = pollDelay(view);
+      if (delay === null || view.state !== "answered") {
+        return [];
+      }
+      const id = view.answer.job.id;
+      return [
+        setTimeout(() => {
+          void fetchParcel(id).then((result) => {
+            setParcels((current) => withParcelResult(current, key, result));
+          });
+        }, delay),
+      ];
+    });
+    return () => {
+      for (const timer of timers) {
+        clearTimeout(timer);
+      }
+    };
+  }, [parcels]);
+
+  async function onStartParcel(target: AreaOfInterest) {
+    const key = areaKey(target);
+    setParcels((current) => ({ ...current, [key]: { state: "asking" } }));
+    const result = await startParcel(target);
+    setParcels((current) => withParcelResult(current, key, result));
+  }
+
   async function onTap(lon: number, lat: number, tapZoom: number) {
     if (!config || !layers) {
       return;
@@ -235,19 +283,24 @@ export function App() {
     setTapped([lon, lat]);
     const asked = queryableOverlays(config, layers, lon, lat, tapZoom);
     const askNational = nationalAnswersTap(national, layers, lon, lat);
+    const detailed = onAnalysis(selectedAnalysis, lon, lat) ? selectedAnalysis : null;
     const count = ++tapCount.current;
-    if (asked.length === 0 && !askNational) {
+    if (asked.length === 0 && !askNational && !detailed) {
       setTap({ state: "nothing" });
       return;
     }
     setTap({ state: "loading" });
     const explained: Promise<ExplainResult | null> = askNational ? fetchExplanation(lon, lat) : Promise.resolve(null);
-    const [nationalResult, results] = await Promise.all([
+    const parcelExplained: Promise<ParcelExplainResult | null> = detailed
+      ? fetchParcelExplanation(detailed.id, lon, lat)
+      : Promise.resolve(null);
+    const [nationalResult, parcelResult, results] = await Promise.all([
       explained,
+      parcelExplained,
       Promise.all(asked.map((o) => fetchFeatureInfo(o.id, lon, lat, tapZoom))),
     ]);
     if (count === tapCount.current) {
-      setTap({ state: "done", results, national: nationalResult });
+      setTap({ state: "done", results, national: nationalResult, parcel: parcelResult });
     }
   }
 
@@ -320,6 +373,13 @@ export function App() {
   }
 
   const area = selectedArea(session);
+  const parcelView = area ? parcels[areaKey(area)] : undefined;
+  const selectedAnalysis = analysisOf(parcelView);
+  const parcelLayers = parcelView?.state === "answered" ? parcelView.answer.layers : [];
+  const chosenLayer = parcelLayer === undefined ? initialParcelLayer(parcelLayers) : parcelLayer;
+  const drawing: ParcelDrawing | null = selectedAnalysis
+    ? { analysis: selectedAnalysis, layer: parcelLayers.find((l) => l.id === chosenLayer) ?? null }
+    : null;
   const searching = search.state === "searching";
   return (
     <div className="app">
@@ -411,6 +471,16 @@ export function App() {
           </p>
         )}
         {area && <AreaCard area={area} />}
+        {area && (
+          <ParcelPanel
+            view={parcelView}
+            layer={chosenLayer}
+            onStart={() => {
+              void onStartParcel(area);
+            }}
+            onLayer={setParcelLayer}
+          />
+        )}
         <SessionList
           session={session}
           onSelect={(index) => {
@@ -418,6 +488,7 @@ export function App() {
             setSession((current) => ({ ...current, selected: index }));
           }}
         />
+        <Comparison rows={comparable(session.areas, parcels)} />
         {config && layers && (
           <>
             <InfoPanel tap={tap} />
@@ -436,6 +507,7 @@ export function App() {
             config={config}
             national={national}
             area={area}
+            parcel={drawing}
             layers={layers}
             tapped={tapped}
             draft={draft}

@@ -97,7 +97,7 @@ test("a tap explains the index with its confidence, inputs and missing data", as
   await expect(explanation.locator(".score")).toContainText("Confianza media (0,67)");
   await expect(explanation.locator('[data-criterion="permeability"]')).toContainText("ALTA (CARBONATADAS-ALTA)");
   await expect(explanation.locator('[data-criterion="groundwater_body"]')).toContainText("Malo");
-  await expect(explanation.locator('[data-missing="no_dataset"]')).toHaveCount(2);
+  await expect(explanation.locator('[data-missing="no_dataset"]')).toHaveCount(3);
   await expect(explanation.locator('[data-component="skill"]')).toContainText("sin medir todavía");
   await expect(explanation).toContainText("No es una probabilidad");
   const [asked] = mocks.explained;

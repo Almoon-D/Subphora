@@ -1,7 +1,9 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The map: a base map (PNOA or the IGN maps), the official layers as tiles (each theme's
 // regional layers clipped to their areas over its national one), Catastro's parcels as one
-// image per view, the selected area on top (an outline or a point), and what is being drawn.
+// image per view, the selected area's detailed map (one image of its chosen layer, and its
+// numbered candidate spots), the selected area on top (an outline or a point), and what is
+// being drawn.
 import type { Feature, FeatureCollection } from "geojson";
 import {
   addProtocol,
@@ -22,14 +24,17 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState } from "react";
 
 import {
+  type AreaAnalysis,
   type AreaBoundary,
   type AreaOfInterest,
   fetchArea,
   type MapConfig,
   type NationalMap,
+  type ParcelLayer,
   type Position,
 } from "../api.ts";
 import { lookup, t } from "../i18n/index.ts";
+import { describeParcel } from "../parcel/parcel.ts";
 import { areaHeading } from "../search/areas.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
 import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
@@ -48,6 +53,7 @@ const nationalId = (id: string) => `national-${id}`;
 const CADASTRE = "cadastre";
 const AREA = "area";
 const AREA_COLOUR = "#ffd400";
+const PARCEL = "parcel";
 const DRAFT = "draft";
 const DRAFT_COLOUR = "#ff3b30";
 
@@ -57,11 +63,18 @@ export interface Draft {
   vertices: Position[];
 }
 
+/** The selected area's detailed map: its analysis and the layer drawn (none: null). */
+export interface ParcelDrawing {
+  analysis: AreaAnalysis;
+  layer: ParcelLayer | null;
+}
+
 interface Props {
   config: MapConfig;
   /** The national map; its layers are drawn only once it is built. */
   national: NationalMap | null;
   area: AreaOfInterest | null;
+  parcel: ParcelDrawing | null;
   layers: MapLayers;
   /** The last tapped point, marked on the map. */
   tapped: Position | null;
@@ -196,6 +209,51 @@ function viewCorners(map: MaplibreMap): [[number, number], [number, number], [nu
 }
 
 const visibility = (visible: boolean): "visible" | "none" => (visible ? "visible" : "none");
+
+/** Draw the chosen layer of a detailed map as one image over its box, under the area's
+ * outline; none removes it. */
+function showParcelLayer(map: MaplibreMap, analysis: AreaAnalysis | null, layer: ParcelLayer | null): void {
+  if (map.getLayer(PARCEL)) {
+    map.removeLayer(PARCEL);
+  }
+  if (map.getSource(PARCEL)) {
+    map.removeSource(PARCEL);
+  }
+  if (!analysis || !layer) {
+    return;
+  }
+  const [west, south, east, north] = analysis.bbox;
+  map.addSource(PARCEL, {
+    type: "image",
+    url: `${window.location.origin}${layer.image}`,
+    coordinates: [
+      [west, north],
+      [east, north],
+      [east, south],
+      [west, south],
+    ],
+  });
+  map.addLayer(
+    {
+      id: PARCEL,
+      type: "raster",
+      source: PARCEL,
+      paint: { "raster-opacity": layer.opacity, "raster-resampling": "nearest", "raster-fade-duration": 0 },
+    },
+    map.getLayer(`${AREA}-fill`) ? `${AREA}-fill` : undefined,
+  );
+}
+
+/** A numbered marker per candidate spot. */
+function candidateMarkers(map: MaplibreMap, analysis: AreaAnalysis | null): Marker[] {
+  return (analysis?.candidates ?? []).map((candidate) => {
+    const element = document.createElement("div");
+    element.className = "candidate-marker";
+    element.textContent = String(candidate.rank);
+    element.title = t("detailed.candidate", { rank: candidate.rank });
+    return new Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map);
+  });
+}
 
 /** Ask for one cadastral image of the current view, or hide the layer when off or zoomed out.
  * Returns whether the zoom allows the parcels to be drawn. */
@@ -347,10 +405,11 @@ function initialStyle(config: MapConfig, national: NationalMap | null, layers: M
   return { version: 8, sources, layers: styleLayers };
 }
 
-export function MapView({ config, national, area, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
+export function MapView({ config, national, area, parcel, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
+  const candidatesRef = useRef<Marker[]>([]);
   // The handlers registered once read the latest choices and callbacks through these.
   const layersRef = useRef(layers);
   const onZoomRef = useRef(onZoom);
@@ -509,6 +568,31 @@ export function MapView({ config, national, area, layers, tapped, draft, onZoom,
     );
   }, [area, loaded, config]);
 
+  // The detailed map drawn: redrawn only when its analysis or its layer changes.
+  const analysis = parcel?.analysis ?? null;
+  const parcelLayer = parcel?.layer ?? null;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
+      return;
+    }
+    showParcelLayer(map, analysis, parcelLayer);
+  }, [analysis, parcelLayer, loaded]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
+      return;
+    }
+    candidatesRef.current = candidateMarkers(map, analysis);
+    return () => {
+      for (const marker of candidatesRef.current) {
+        marker.remove();
+      }
+      candidatesRef.current = [];
+    };
+  }, [analysis, loaded]);
+
   const label = area ? areaHeading(area) : t("app.tagline");
   return (
     <div className="map-wrapper">
@@ -523,6 +607,7 @@ export function MapView({ config, national, area, layers, tapped, draft, onZoom,
         data-overlays={loaded ? describeOverlays(config, layers) : ""}
         data-regional={loaded ? describeRegional(config, layers) : ""}
         data-national={loaded ? describeNational(national, layers) : ""}
+        data-parcel={loaded ? describeParcel(analysis, parcelLayer?.id ?? null) : ""}
       />
       {loaded && layers.cadastre.visible && !cadastreReached && <p className="map-hint">{t("map.cadastreHidden")}</p>}
       {missingAreas.length > 0 && <p className="map-hint">{t("map.areaMissing", { areas: missingAreas.map((id) => lookup(`area.${id}`, id)).join(", ") })}</p>}

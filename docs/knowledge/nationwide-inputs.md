@@ -9,7 +9,7 @@ unknown. Details and evidence in each service's knowledge file. Observed on 2026
 | Lithology | IGME `IGME_Litoestratigrafico_200`, REST query | the same extent | 1:200,000 | polygons, paged likewise | not stated |
 | Geology (detail) | IGME MAGNA 1:50,000 / GEODE | 1,114 MAGNA sheets; GEODE continuous | 1:50,000 | REST query per area; GEODE vector download route unverified | per sheet |
 | Bedding dip | IGME MAGNA REST layer 5 | ≥ 1,000 of 1,114 sheets | points per sheet | 251,654 measurements, paged | per sheet |
-| Terrain | IGN WCS `servicios.idee.es/wcs-inspire/mdt` | mainland + Balearics (`Elevacion25830_*`), Canaries (`Elevacion4083_*`) | 5 m, 25 m, 200 m, 500 m, 1,000 m | GeoTIFF windows on request; no bulk download needed for a 100 m grid | MDT05 from the first LiDAR coverage |
+| Terrain | IGN WCS `servicios.idee.es/wcs-inspire/mdt` | mainland + Balearics (`Elevacion25830_*`), Canaries (`Elevacion4083_*`) | 5 m, 25 m, 200 m, 500 m, 1,000 m | GeoTIFF windows on request; no bulk download needed for a 100 m grid | PNOA-LiDAR, first (2009-2015) or second (2015-2021) coverage: the WCS does not say which |
 | Groundwater bodies, status, risk | MITECO WFS `estado_masas_aguasub_2027`, `masas_aguasub_riesgo_2027` | all districts | body polygons | GeoJSON by bbox | plan cycle 2022-2027, status assessed 2016-2019 |
 | Water points | IGME `IGME_PuntosAgua` REST layers 0 and 1 | all of Spain | points | 139,699 points per layer, paged | 1966 to now; no levels or dry flag |
 | Historical boreholes with level | IGME `IGME_SondeosIRYDA` | areas studied by IRYDA | points | REST query | historical |

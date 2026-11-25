@@ -40,6 +40,15 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   near Zaragoza, `format=image/tiff`) returns a small GeoTIFF. The national grid (session 05) and the
   parcel grid (06) can read the terrain from this WCS by windows instead of downloading
   sheets. `(GetCoverage, 2026-11-24)`
+- **Editions**: the IDEE catalogue holds two MDT25 records, "Modelo Digital del Terreno de
+  1ª cobertura (2009-2015)" (`spaignMDT25`) and "de 2º cobertura (2015-2021)"
+  (`spaignMDT25-2`). The WCS capabilities say only "procedentes de sensores LiDAR
+  aerotransportados del proyecto PNOA-LiDAR", not which coverage `Elevacion25830_25` and
+  `Elevacion4083_25` serve: `VERIFY-LIVE(national-editions)`. `(GetCapabilities, IDEE CSW
+  GetRecords, 2026-11-25)`
+- MDT means bare ground (the LiDAR points classified as ground); the IGN's surface model
+  (MDS) keeps trees and roofs and would give false slopes and channels, so the model reads
+  the MDT only.
 - WMS `https://servicios.idee.es/wms-inspire/mdt`: layers `EL.ElevationGridCoverage`,
   `EL.ContourLine`, `EL.SpotElevation`; EPSG:3857 offered. `(GetCapabilities, 2026-11-24)`
 - The download centre `https://centrodedescargas.cnig.es/CentroDescargas/` is a JavaScript

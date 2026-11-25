@@ -35,10 +35,20 @@ make setup     # entorno de Python y del front end
 make dev       # arranca la API y la web; abre http://localhost:5173
 ```
 
-Escribe una referencia catastral (por ejemplo `0910001QD3101S`, el teatro romano de Mérida)
-y pulsa *Buscar*: la parcela aparece perfilada en amarillo sobre la ortofoto PNOA, con el
-plano catastral encima al acercarte. `Ctrl-C` para ambos servidores. Las respuestas de
-Catastro se guardan una semana en `data/cache/` (no se sube al repositorio).
+En la caja de búsqueda escribe cualquiera de estas cosas y pulsa *Buscar*:
+
+- una referencia catastral: `0910001QD3101S` (el teatro romano de Mérida);
+- una referencia SIGPAC, de parcela o de recinto: `34:48:0:0:13:12:1` (también `34:48:13:12:1`);
+- una dirección o un municipio: `calle mayor 1 zaragoza`, `Daimiel`;
+- unas coordenadas: `39.0675, -3.6115`, `40°25'0"N 3°42'13"O` o UTM `30 440000 4474000`
+  (sin huso, la aplicación prueba los de España y se queda con los que caen en tierra).
+
+Si el texto admite varias lecturas, te pregunta cuál querías. También puedes **dibujar un
+punto o un polígono** en el mapa con los botones de debajo de la caja. El lugar elegido
+aparece en amarillo sobre la ortofoto PNOA, con su ficha (provincia, superficie, fuente y
+fecha); las áreas de la sesión quedan en una lista para volver a ellas (solo en esa
+pestaña del navegador). `Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC
+y CartoCiudad se guardan en `data/cache/` (no se sube al repositorio).
 
 ## Comandos
 

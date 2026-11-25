@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The map: a base map (PNOA or the IGN maps), the official layers as tiles (each theme's
 // regional layers clipped to their areas over its national one), Catastro's parcels as one
-// image per view, and the parcel found by the search outlined on top.
+// image per view, the selected area on top (an outline or a point), and what is being drawn.
+import type { Feature, FeatureCollection } from "geojson";
 import {
   addProtocol,
   type GeoJSONSource,
@@ -20,8 +21,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef, useState } from "react";
 
-import { type AreaBoundary, fetchArea, type MapConfig, type Parcel, type Position } from "../api.ts";
+import { type AreaBoundary, type AreaOfInterest, fetchArea, type MapConfig, type Position } from "../api.ts";
 import { lookup, t } from "../i18n/index.ts";
+import { areaHeading } from "../search/areas.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
 import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
 import { describeOverlays, describeRegional, type MapLayers, overlayTiles } from "./layers.ts";
@@ -35,17 +37,132 @@ const baseId = (id: string) => `base-${id}`;
 const overlayId = (id: string) => `overlay-${id}`;
 const regionalId = (id: string) => `regional-${id}`;
 const CADASTRE = "cadastre";
-const PARCEL = "parcel";
-const PARCEL_COLOUR = "#ffd400";
+const AREA = "area";
+const AREA_COLOUR = "#ffd400";
+const DRAFT = "draft";
+const DRAFT_COLOUR = "#ff3b30";
+
+/** What is being drawn: a point (the next click) or a polygon's vertices so far. */
+export interface Draft {
+  mode: "point" | "polygon";
+  vertices: Position[];
+}
 
 interface Props {
   config: MapConfig;
-  parcel: Parcel | null;
+  area: AreaOfInterest | null;
   layers: MapLayers;
   /** The last tapped point, marked on the map. */
   tapped: Position | null;
+  /** While drawing, a click on the map belongs to the drawing, not to the tap. */
+  draft: Draft | null;
   onZoom: (zoom: number) => void;
   onTap: (lon: number, lat: number, zoom: number) => void;
+  onDraw: (lon: number, lat: number) => void;
+}
+
+const EMPTY: FeatureCollection = { type: "FeatureCollection", features: [] };
+
+/** The drawing so far: its vertices, the line through them, and the closing side. */
+function draftFeatures(draft: Draft | null): FeatureCollection {
+  if (!draft || draft.vertices.length === 0) {
+    return EMPTY;
+  }
+  const vertices = draft.vertices.map((v): [number, number] => [v[0], v[1]]);
+  const features: Feature[] = vertices.map((coordinates) => ({
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Point", coordinates },
+  }));
+  const first = vertices[0];
+  if (vertices.length > 1 && first) {
+    const line = vertices.length > 2 ? [...vertices, first] : vertices;
+    features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line } });
+  }
+  return { type: "FeatureCollection", features };
+}
+
+function areaFeature(area: AreaOfInterest | null): FeatureCollection {
+  if (!area) {
+    return EMPTY;
+  }
+  const geometry =
+    area.geometry.type === "Point"
+      ? { type: "Point" as const, coordinates: [area.geometry.coordinates[0], area.geometry.coordinates[1]] }
+      : {
+          type: "MultiPolygon" as const,
+          coordinates: area.geometry.coordinates.map((polygon) => polygon.map((ring) => ring.map((p) => [p[0], p[1]]))),
+        };
+  return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry }] };
+}
+
+const AREA_LAYERS = [`${AREA}-fill`, `${AREA}-line`, `${AREA}-point`];
+
+/** Show the selected area, its source credited in the map's attribution. A GeoJSON source
+ * takes its attribution only when added, so the area's source is replaced each time; its
+ * layers go back above the cadastre and below the drawing. */
+function showArea(map: MaplibreMap, area: AreaOfInterest | null): void {
+  for (const id of AREA_LAYERS) {
+    if (map.getLayer(id)) {
+      map.removeLayer(id);
+    }
+  }
+  if (map.getSource(AREA)) {
+    map.removeSource(AREA);
+  }
+  const attribution = area ? [...new Set(area.sources.map((s) => s.attribution))].join(", ") : "";
+  map.addSource(AREA, { type: "geojson", data: areaFeature(area), ...(attribution ? { attribution } : {}) });
+  const below = map.getLayer(`${DRAFT}-line`) ? `${DRAFT}-line` : undefined;
+  map.addLayer(
+    {
+      id: `${AREA}-fill`,
+      type: "fill",
+      source: AREA,
+      filter: ["==", ["geometry-type"], "Polygon"],
+      paint: { "fill-color": AREA_COLOUR, "fill-opacity": 0.15 },
+    },
+    below,
+  );
+  map.addLayer(
+    {
+      id: `${AREA}-line`,
+      type: "line",
+      source: AREA,
+      filter: ["==", ["geometry-type"], "Polygon"],
+      paint: { "line-color": AREA_COLOUR, "line-width": 3 },
+    },
+    below,
+  );
+  map.addLayer(
+    {
+      id: `${AREA}-point`,
+      type: "circle",
+      source: AREA,
+      filter: ["==", ["geometry-type"], "Point"],
+      paint: { "circle-radius": 8, "circle-color": AREA_COLOUR, "circle-stroke-color": "#000", "circle-stroke-width": 2 },
+    },
+    below,
+  );
+}
+
+/** The selected area (none yet) and the drawing, on top of every raster layer. */
+function addVectorLayers(map: MaplibreMap): void {
+  showArea(map, null);
+  map.addSource(DRAFT, { type: "geojson", data: EMPTY });
+  map.addLayer({
+    id: `${DRAFT}-line`,
+    type: "line",
+    source: DRAFT,
+    filter: ["==", ["geometry-type"], "LineString"],
+    paint: { "line-color": DRAFT_COLOUR, "line-width": 2, "line-dasharray": [2, 1] },
+  });
+  map.addLayer({
+    id: `${DRAFT}-vertex`,
+    type: "circle",
+    source: DRAFT,
+    filter: ["==", ["geometry-type"], "Point"],
+    paint: { "circle-radius": 5, "circle-color": DRAFT_COLOUR, "circle-stroke-color": "#fff", "circle-stroke-width": 2 },
+  });
 }
 
 function mercatorBox(map: MaplibreMap): MercatorBox {
@@ -97,7 +214,7 @@ function refreshCadastre(map: MaplibreMap, cadastre: MapConfig["cadastre"], laye
         source: CADASTRE,
         paint: { "raster-fade-duration": 0, "raster-opacity": layers.cadastre.opacity },
       },
-      map.getLayer(`${PARCEL}-fill`) ? `${PARCEL}-fill` : undefined,
+      map.getLayer(`${AREA}-fill`) ? `${AREA}-fill` : undefined,
     );
   }
   return true;
@@ -186,7 +303,7 @@ function initialStyle(config: MapConfig, layers: MapLayers): StyleSpecification 
   return { version: 8, sources, layers: styleLayers };
 }
 
-export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props) {
+export function MapView({ config, area, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
@@ -194,6 +311,8 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
   const layersRef = useRef(layers);
   const onZoomRef = useRef(onZoom);
   const onTapRef = useRef(onTap);
+  const onDrawRef = useRef(onDraw);
+  const drawingRef = useRef(draft !== null);
   const [loaded, setLoaded] = useState(false);
   const [cadastreReached, setCadastreReached] = useState(false);
   // Areas whose boundary could not be read: their regional layers are not drawn.
@@ -224,6 +343,8 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
     layersRef.current = layers;
     onZoomRef.current = onZoom;
     onTapRef.current = onTap;
+    onDrawRef.current = onDraw;
+    drawingRef.current = draft !== null;
   });
 
   useEffect(() => {
@@ -260,9 +381,14 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
       }, cadastre.refresh_delay_ms);
     });
     map.on("click", (event) => {
-      onTapRef.current(event.lngLat.lng, event.lngLat.lat, map.getZoom());
+      if (drawingRef.current) {
+        onDrawRef.current(event.lngLat.lng, event.lngLat.lat);
+      } else {
+        onTapRef.current(event.lngLat.lng, event.lngLat.lat, map.getZoom());
+      }
     });
     map.on("load", () => {
+      addVectorLayers(map);
       setLoaded(true);
       onZoomRef.current(map.getZoom());
       setCadastreReached(refreshCadastre(map, cadastre, layersRef.current));
@@ -298,46 +424,48 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
     markerRef.current = map && tapped ? new Marker().setLngLat([tapped[0], tapped[1]]).addTo(map) : null;
   }, [tapped, loaded]);
 
+  // The drawing: its vertices on the map, a crosshair, and no zoom on a double click.
+  const drawing = draft !== null;
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded) {
       return;
     }
-    const source = map.getSource<GeoJSONSource>(PARCEL);
-    if (!parcel) {
-      // A failed or new search: no outline of a parcel the card no longer shows.
-      void source?.setData({ type: "FeatureCollection", features: [] });
+    void map.getSource<GeoJSONSource>(DRAFT)?.setData(draftFeatures(draft));
+    map.getCanvas().style.cursor = drawing ? "crosshair" : "";
+    if (drawing) {
+      map.doubleClickZoom.disable();
+    } else {
+      map.doubleClickZoom.enable();
+    }
+  }, [draft, drawing, loaded]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
       return;
     }
-    const data = { type: "Feature" as const, properties: {}, geometry: parcel.geometry };
-    if (source) {
-      void source.setData(data);
-    } else {
-      map.addSource(PARCEL, { type: "geojson", data: data as never });
-      map.addLayer({
-        id: `${PARCEL}-fill`,
-        type: "fill",
-        source: PARCEL,
-        paint: { "fill-color": PARCEL_COLOUR, "fill-opacity": 0.15 },
-      });
-      map.addLayer({
-        id: `${PARCEL}-line`,
-        type: "line",
-        source: PARCEL,
-        paint: { "line-color": PARCEL_COLOUR, "line-width": 3 },
-      });
+    // A failed search or a cleared selection leaves no outline the card no longer shows.
+    showArea(map, area);
+    if (!area) {
+      return;
     }
-    const [west, south, east, north] = parcel.bbox;
+    const maxZoom = Math.max(...config.base_maps.map((b) => b.max_zoom));
+    if (area.geometry.type === "Point") {
+      map.jumpTo({ center: [area.centre[0], area.centre[1]], zoom: Math.min(config.point_zoom, maxZoom) });
+      return;
+    }
+    const [west, south, east, north] = area.bbox;
     map.fitBounds(
       [
         [west, south],
         [east, north],
       ],
-      { padding: config.parcel_padding_px, maxZoom: Math.max(...config.base_maps.map((b) => b.max_zoom)), animate: false },
+      { padding: config.area_padding_px, maxZoom, animate: false },
     );
-  }, [parcel, loaded, config]);
+  }, [area, loaded, config]);
 
-  const label = parcel ? t("parcel.heading", { reference: parcel.reference }) : t("app.tagline");
+  const label = area ? areaHeading(area) : t("app.tagline");
   return (
     <div className="map-wrapper">
       <div
@@ -345,7 +473,8 @@ export function MapView({ config, parcel, layers, tapped, onZoom, onTap }: Props
         className="map"
         role="region"
         aria-label={label}
-        data-parcel={parcel?.reference ?? ""}
+        data-area={area ? `${area.origin}:${area.label ?? ""}` : ""}
+        data-draft={draft ? `${draft.mode}:${String(draft.vertices.length)}` : ""}
         data-base={loaded ? layers.base : ""}
         data-overlays={loaded ? describeOverlays(config, layers) : ""}
         data-regional={loaded ? describeRegional(config, layers) : ""}

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { readFileSync } from "node:fs";
 
-import { INFO_FAILURES, LOOKUP_FAILURES, type MapConfig } from "../api.ts";
+import { type AoiOrigin, INFO_FAILURES, type MapConfig, SEARCH_FAILURES } from "../api.ts";
 import { es } from "./es.ts";
 import { formatArea, formatNumber, lookup, t } from "./index.ts";
 
@@ -26,12 +26,33 @@ describe("t", () => {
   });
 
   it("has a message for every failure the server can send", () => {
-    for (const failure of LOOKUP_FAILURES) {
+    for (const failure of SEARCH_FAILURES) {
       expect(Object.keys(es)).toContain(`error.${failure}`);
     }
     for (const failure of INFO_FAILURES) {
       expect(Object.keys(es)).toContain(`info.error.${failure}`);
     }
+  });
+
+  it("names every kind of area, every CRS a reading is in and every service that can fail", () => {
+    const origins: AoiOrigin[] = [
+      "cadastral",
+      "sigpac_enclosure",
+      "sigpac_parcel",
+      "municipality",
+      "place",
+      "street",
+      "address",
+      "coordinates",
+      "drawn_point",
+      "drawn_polygon",
+    ];
+    const keys = [
+      ...origins.map((o) => `origin.${o}`),
+      ...["OGC:CRS84", "EPSG:4083", "EPSG:25829", "EPSG:25830", "EPSG:25831"].map((c) => `crs.${c}`),
+      ...["catastro-wfs-parcels", "sigpac-queries", "cartociudad"].map((s) => `service.${s}`),
+    ];
+    expect(keys.filter((key) => !(key in es))).toEqual([]);
   });
 
   it("names every base map, group and layer the map serves", () => {

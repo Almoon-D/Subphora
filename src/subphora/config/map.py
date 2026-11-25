@@ -139,7 +139,8 @@ class Overlays(Section):
 
 class MapSettings(Section):
     initial_view: InitialView
-    parcel_padding_px: int = Field(ge=0)
+    area_padding_px: int = Field(ge=0)
+    point_zoom: float = Field(ge=0, le=22)
     # The first is shown when the map opens.
     base_maps: list[BaseMap] = Field(min_length=1)
     cadastre: CadastreLayer

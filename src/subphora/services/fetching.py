@@ -7,7 +7,7 @@ page or an empty answer is asked again next time.
 """
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import urlencode
@@ -45,8 +45,18 @@ class CachedFetcher:
         self._cache = cache
         self._clock = clock
 
-    async def fetch(self, service: Service, url: str, params: Mapping[str, str]) -> Fetched:
-        """The cached answer if fresh, else the service's; raises UpstreamFailure."""
+    async def fetch(
+        self,
+        service: Service,
+        url: str,
+        params: Mapping[str, str],
+        empty_statuses: Collection[int] = (),
+    ) -> Fetched:
+        """The cached answer if fresh, else the service's; raises UpstreamFailure.
+
+        An answer with a status in ``empty_statuses`` (a service's "nothing here") comes
+        back with an empty body, for the caller's parser to read as such.
+        """
         key = _request_key(url, params)
         lifetime = service.politeness.cache_lifetime_s
         hit = await asyncio.to_thread(self._cache.get, service.id, key, lifetime)
@@ -58,9 +68,12 @@ class CachedFetcher:
             raise UpstreamFailure(f"{service.publisher}: {exc}", timeout=True) from exc
         except SourceError as exc:
             raise UpstreamFailure(f"{service.publisher}: {exc}") from exc
-        if response.status_code != _HTTP_OK:
+        content = response.content
+        if response.status_code in empty_statuses:
+            content = b""
+        elif response.status_code != _HTTP_OK:
             raise UpstreamFailure(f"{service.publisher}: HTTP {response.status_code}")
-        return Fetched(response.content, provenance(service, self._clock()), key, False)
+        return Fetched(content, provenance(service, self._clock()), key, False)
 
     async def store(self, service: Service, fetched: Fetched) -> None:
         """Cache an answer the caller found usable (a no-op for one read from the cache)."""

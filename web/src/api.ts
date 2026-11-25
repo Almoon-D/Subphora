@@ -94,7 +94,15 @@ export interface AreaBoundary {
 
 export interface MapConfig {
   initial_view: { longitude: number; latitude: number; zoom: number };
-  parcel_padding_px: number;
+  area_padding_px: number;
+  /** The zoom a selected point is shown at. */
+  point_zoom: number;
+  search: {
+    /** The browser stops adding vertices to a drawn polygon here. */
+    max_vertices: number;
+    /** How many of this session's areas the panel lists. */
+    session_areas: number;
+  };
   /** The first is the default. */
   base_maps: BaseMap[];
   cadastre: {
@@ -130,46 +138,148 @@ export interface FeatureInfo {
   fallbacks: { layer_id: string; reason: FallbackReason }[];
 }
 
-/** Why a lookup failed: the server's codes, then the two the browser adds. */
-export const LOOKUP_FAILURES = [
+export type AoiOrigin =
+  | "cadastral"
+  | "sigpac_enclosure"
+  | "sigpac_parcel"
+  | "municipality"
+  | "place"
+  | "street"
+  | "address"
+  | "coordinates"
+  | "drawn_point"
+  | "drawn_polygon";
+
+export type AoiGeometry =
+  | { type: "Point"; coordinates: Position }
+  | { type: "MultiPolygon"; coordinates: Position[][][] };
+
+/** The area the rest of the app analyses, whatever found it (src/subphora/domain/aoi.py). */
+export interface AreaOfInterest {
+  origin: AoiOrigin;
+  /** A reference, an address, typed coordinates; null for a drawn polygon. */
+  label: string | null;
+  geometry: AoiGeometry;
+  bbox: readonly [number, number, number, number];
+  centre: Position;
+  centre_local: { crs: string; x: number; y: number };
+  /** Null for a point. */
+  area_m2: number | null;
+  municipality: string | null;
+  province: string;
+  province_code: string;
+  region_code: string;
+  /** False where only the territory's box placed the point (Ceuta, Melilla). */
+  land_checked: boolean;
+  sources: Provenance[];
+  parcel: Parcel | null;
+}
+
+/** One reading of the search text; `resolve` is the API path that returns its area. */
+export interface Interpretation {
+  kind: "cadastral" | "sigpac" | "coordinates" | "place";
+  origin: AoiOrigin;
+  label: string;
+  detail: string | null;
+  position: Position | null;
+  resolve: string;
+}
+
+/** Why a search, a choice or a drawing gave no area: the server's codes, then the two the
+ * browser adds. */
+export const SEARCH_FAILURES = [
+  "empty_query",
   "malformed_reference",
+  "malformed_sigpac",
+  "malformed_coordinates",
+  "wrong_utm_zone",
+  "outside_country",
+  "invalid_polygon",
   "territory_not_supported",
-  "parcel_not_found",
+  "not_found",
+  "no_match",
   "upstream_timeout",
   "upstream_error",
   "network",
   "unexpected",
 ] as const;
 
-export type LookupFailure = (typeof LOOKUP_FAILURES)[number];
+export type SearchFailure = (typeof SEARCH_FAILURES)[number];
 
-export type ParcelResult = { ok: true; parcel: Parcel } | { ok: false; failure: LookupFailure };
+/** A failure, and the service it came from when one is named (`catastro-wfs-parcels`…). */
+export interface Failed {
+  ok: false;
+  failure: SearchFailure;
+  source: string | null;
+}
+
+export type SearchResult = { ok: true; interpretations: Interpretation[] } | Failed;
+export type AreaResult = { ok: true; area: AreaOfInterest } | Failed;
 
 type Fetch = typeof fetch;
 
-function isFailure(code: unknown): code is LookupFailure {
-  return typeof code === "string" && (LOOKUP_FAILURES as readonly string[]).includes(code);
+function isFailure(code: unknown): code is SearchFailure {
+  return typeof code === "string" && (SEARCH_FAILURES as readonly string[]).includes(code);
 }
 
-/** The parcel with this reference, or why there is none. Never throws. */
-export async function fetchParcel(reference: string, fetchFn: Fetch = fetch): Promise<ParcelResult> {
+/** The body of a successful answer, or the failure it reports. Never throws. */
+async function ask(request: () => Promise<Response>): Promise<{ ok: true; body: unknown } | Failed> {
   let response: Response;
   try {
-    response = await fetchFn(`/api/parcels/${encodeURIComponent(reference.trim())}`);
+    response = await request();
   } catch {
-    return { ok: false, failure: "network" };
+    return { ok: false, failure: "network", source: null };
   }
   let body: unknown;
   try {
     body = await response.json();
   } catch {
-    return { ok: false, failure: "unexpected" };
+    return { ok: false, failure: "unexpected", source: null };
   }
   if (response.ok) {
-    return { ok: true, parcel: body as Parcel };
+    return { ok: true, body };
   }
-  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
-  return { ok: false, failure: isFailure(code) ? code : "unexpected" };
+  const record = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const source = typeof record.source === "string" ? record.source : null;
+  return { ok: false, failure: isFailure(record.code) ? record.code : "unexpected", source };
+}
+
+/** Every reading of what was typed. */
+export async function searchText(text: string, fetchFn: Fetch = fetch): Promise<SearchResult> {
+  const answer = await ask(() => fetchFn(`/api/search?${new URLSearchParams({ q: text.trim() }).toString()}`));
+  if (!answer.ok) {
+    return answer;
+  }
+  return { ok: true, interpretations: (answer.body as { interpretations: Interpretation[] }).interpretations };
+}
+
+/** The area an interpretation resolves to; only the API's own /api/aoi/ paths are asked. */
+export async function resolveArea(path: string, fetchFn: Fetch = fetch): Promise<AreaResult> {
+  if (!path.startsWith("/api/aoi/")) {
+    return { ok: false, failure: "unexpected", source: null };
+  }
+  const answer = await ask(() => fetchFn(path));
+  return answer.ok ? { ok: true, area: answer.body as AreaOfInterest } : answer;
+}
+
+/** A point clicked on the map while drawing one. */
+export function drawnPoint(lon: number, lat: number, fetchFn: Fetch = fetch): Promise<AreaResult> {
+  const query = new URLSearchParams({ crs: "OGC:CRS84", x: String(lon), y: String(lat), origin: "drawn_point" });
+  return resolveArea(`/api/aoi/point?${query.toString()}`, fetchFn);
+}
+
+/** A polygon drawn on the map: its vertices, the ring closed here. */
+export async function drawnPolygon(vertices: readonly Position[], fetchFn: Fetch = fetch): Promise<AreaResult> {
+  const first = vertices[0];
+  const ring = first ? [...vertices, first] : [];
+  const answer = await ask(() =>
+    fetchFn("/api/aoi/polygon", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "Polygon", coordinates: [ring] }),
+    }),
+  );
+  return answer.ok ? { ok: true, area: answer.body as AreaOfInterest } : answer;
 }
 
 export async function fetchMapConfig(fetchFn: Fetch = fetch): Promise<MapConfig> {

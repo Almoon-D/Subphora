@@ -9,7 +9,7 @@ import yaml
 
 from subphora.api.map import MapConfig, map_config
 from subphora.config import load_settings
-from subphora.domain.parcels import CadastralParcel
+from subphora.domain.aoi import AreaOfInterest, SearchAnswer
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -177,7 +177,16 @@ def test_layers_switched_on_at_start_are_marked_visible(config_dir: Path) -> Non
 def test_the_browser_test_fixtures_match_the_api() -> None:
     """web/e2e/fixtures/ stand in for the API in Playwright: they must keep its shape."""
     fixtures = ROOT / "web" / "e2e" / "fixtures"
-    parcel = CadastralParcel.model_validate_json((fixtures / "parcel-santiago.json").read_bytes())
-    assert parcel.reference == "7279701NH3477G"
+    areas = [
+        AreaOfInterest.model_validate_json(path.read_bytes())
+        for path in sorted(fixtures.glob("area-*.json"))
+    ]
+    assert [area.origin for area in areas] == [
+        "municipality",
+        "coordinates",
+        "cadastral",
+        "sigpac_enclosure",
+    ]
+    assert SearchAnswer.model_validate_json((fixtures / "search-daimiel.json").read_bytes())
     served = MapConfig.model_validate_json((fixtures / "map.json").read_bytes())
     assert served == map_config(load_settings())

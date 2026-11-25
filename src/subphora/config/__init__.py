@@ -14,6 +14,7 @@ from pydantic import model_validator
 from subphora.config.base import Section
 from subphora.config.map import Legend, MapSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
+from subphora.config.search import SearchSettings
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
 
@@ -27,6 +28,7 @@ __all__ = [
     "CoreSettings",
     "MapSettings",
     "RegionalSettings",
+    "SearchSettings",
     "Section",
     "Settings",
     "SourcesSettings",
@@ -48,6 +50,7 @@ class Settings(Section):
     store: StoreSettings
     map: MapSettings
     regional: RegionalSettings
+    search: SearchSettings
 
     @model_validator(mode="after")
     def _map_layers_are_drawable(self) -> Self:
@@ -118,6 +121,12 @@ class Settings(Section):
             )
             if failures:
                 raise ValueError(f"{key} does not qualify: {'; '.join(failures)}")
+        return self
+
+    @model_validator(mode="after")
+    def _search_services_catalogued(self) -> Self:
+        self._catalogued("search.sigpac", self.search.sigpac.service, "rest")
+        self._catalogued("search.cartociudad", self.search.cartociudad.service, "rest")
         return self
 
     @staticmethod

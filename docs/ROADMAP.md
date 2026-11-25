@@ -10,8 +10,8 @@
 | 03 | `docs/sessions/done/03-official-layers.md` | Opus 5.5, high | done |
 | 03b | `docs/sessions/done/03b-regional-detail.md` | Opus 5.5, high | done |
 | 03ba | `docs/sessions/done/03ba-regional-evidence.md` | Opus 5.5, high | done |
-| 04 | `docs/sessions/04-search.md` | Opus 5.5, medium | next |
-| 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | planned |
+| 04 | `docs/sessions/done/04-search.md` | Opus 5.5, medium | done |
+| 05 | `docs/sessions/05-national-map.md` | Opus 5.5, high | next |
 | 06 | `docs/sessions/06-parcel-detail.md` | Opus 5.5, high | planned |
 | 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | planned |
 | 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | planned |
@@ -125,6 +125,15 @@
   inside the area once it is sure the regional one covers it. (03b)
 - The file cache keeps each area's rounded boundary (up to ~1 MB) for 30 days: the size cap
   of session 13 covers it too. (03b)
+- Ceuta and Melilla have no SIGPAC: a typed or drawn point there is placed by the
+  territory's box alone (which holds a strip of Morocco beside Ceuta) and the card says it
+  was not checked on land. A finer check needs an official boundary per click. (04)
+- CartoCiudad candidate types not yet observed (place names, roads, kilometre points) are
+  dropped until a session records their answers and maps them in `search.yaml`. (04)
+- A drawn polygon is one ring without holes, at most 200 vertices; how big an area the
+  parcel view (06) can analyse is that session's limit to set. (04)
+- The session's areas are kept in sessionStorage; several large municipalities (up to
+  ~150 KB each) can fill it, and then the list lives only until the tab reloads. (04)
 - The owner should add the `main` ruleset of `docs/GITHUB_SETTINGS.md` → public projects:
   `main` is unprotected and a commit reached it without a pull request. (00)
 
@@ -132,6 +141,21 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 04 — More ways to search (2026-11-25, version 0.6.0)
+
+- Landed: one search box (`GET /api/search`) that reads cadastral and SIGPAC references,
+  addresses and municipalities (CartoCiudad), and coordinates in degrees, DMS or UTM, with
+  an explicit choice when a text reads several ways; drawn points and polygons; every
+  result is one `AreaOfInterest` (`/api/aoi/…`); the session's areas listed in the browser
+  to switch between; `/api/parcels` folded into `/api/aoi/cadastral`; decision 0026.
+- Live (real services, `make dev`): each search type and a drawn polygon land on the map;
+  zone-less UTM keeps only the zone on land; Lisbon is refused by the SIGPAC land check.
+- Live findings: SIGPAC's point query covers all of Spain but Ceuta and Melilla;
+  CartoCiudad's `find` needs the candidate's id verbatim and answers 204 when unknown; its
+  reverse geocoder and the IGN's administrative-units WFS cannot check a point per click.
+- Prompt edits: 06 (reads the area of interest).
+- No VERIFY-LIVE items: every new behaviour was checked against the live services.
 
 ### 03ba — The regional layers still waiting for evidence (2026-11-24, version 0.5.0)
 

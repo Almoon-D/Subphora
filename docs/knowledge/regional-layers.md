@@ -201,6 +201,10 @@ did not answer from the cloud.
   `34100000000`); GeoJSON in EPSG:4326, longitude first; full detail: Navarra 1.4 MB,
   Catalonia 15 MB (150,000 vertices, 745 polygons), Valencian Community 6.8 MB;
   no CORS; CC BY 4.0 ign.es. `(GetFeature, 2026-11-24)`
+- The same service takes an `fes:Intersects` filter with a `gml:Point` (its `gml:id` must
+  not start with a digit, else HTTP 403 with an exception report) but ignores
+  `PROPERTYNAME`: a point in Granada answered Andalusia's whole full-detail geometry, too
+  heavy to ask per click. `(GetFeature, 2026-11-25)`
 - **River-basin districts**: MITECO, `https://gis.miteco.gob.es/geoserver/agua/demarhidro_2027/ows`,
   `agua:demarhidro_2027` filtered by `cod_ddhh`; coordinates already rounded to four
   decimals (ES060 1.4 MB, ES040 3.6 MB, ES020 3.4 MB). `(GetFeature, 2026-11-24)`

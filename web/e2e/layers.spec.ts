@@ -7,7 +7,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const fixture = (name: string) => readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf-8");
 const MAP = fixture("map.json");
-const PARCEL = fixture("parcel-santiago.json");
+const SANTIAGO = fixture("area-santiago.json");
 const REFERENCE = "7279701NH3477G";
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
@@ -80,8 +80,25 @@ async function mockEverything(
       ? route.fulfill({ contentType: "application/json", body: JSON.stringify(navarra(0.05)) })
       : route.fulfill({ status: 502, contentType: "application/json", body: '{"code":"upstream_error"}' });
   });
-  await page.route("**/api/parcels/**", (route) =>
-    route.fulfill({ contentType: "application/json", body: PARCEL }),
+  await page.route("**/api/search?*", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        interpretations: [
+          {
+            kind: "cadastral",
+            origin: "cadastral",
+            label: REFERENCE,
+            detail: null,
+            position: null,
+            resolve: `/api/aoi/cadastral/${REFERENCE}`,
+          },
+        ],
+      }),
+    }),
+  );
+  await page.route("**/api/aoi/cadastral/**", (route) =>
+    route.fulfill({ contentType: "application/json", body: SANTIAGO }),
   );
   await page.route("**/api/layers/*/tiles/**", (route) => {
     mocks.urls.push(route.request().url());
@@ -115,9 +132,9 @@ function emptyInfo(layer: string) {
 
 async function showParcel(page: Page): Promise<void> {
   await page.goto("/");
-  await page.getByLabel("Referencia catastral").fill(REFERENCE);
-  await page.getByRole("button", { name: "Buscar" }).click();
-  await expect(page.locator(".map")).toHaveAttribute("data-parcel", REFERENCE);
+  await page.getByLabel("Buscar un lugar").fill(REFERENCE);
+  await page.getByRole("button", { name: "Buscar", exact: true }).click();
+  await expect(page.locator(".map")).toHaveAttribute("data-area", `cadastral:${REFERENCE}`);
 }
 
 /** The requests that drew `overlay`: to its service, or to the API's proxy. */

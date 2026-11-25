@@ -74,9 +74,11 @@
 - VERIFY-LIVE(national-all): the owner runs `uv run subphora national build --all` on a
   machine with ~5 GB free (estimate: ~2 GB of grids, 2-3 GB of cached terrain windows) and
   records the time, the size and any region that failed. Two provinces were built live (05).
-- VERIFY-LIVE(national-editions): the MDT25's edition and the groundwater bodies' scale are
-  not stated by their services; their confidence uses the "unknown" value until a record
-  states them (IGN, MITECO catalogues). Queued by 05.
+- VERIFY-LIVE(national-editions): which MDT25 coverage the IGN WCS serves (the IDEE
+  catalogue holds the first, 2009-2015, and the second, 2015-2021; the WCS names neither)
+  and the groundwater bodies' scale; their confidence uses the "unknown" value until a
+  record states them (IGN, MITECO). Queued by 05; unblocked by the IGN's answer or the
+  WCS's metadata naming its coverage.
 - VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
   until the owner's key exists (session 15). Queued by 01.
 
@@ -150,6 +152,9 @@
   a validation fold's wells out of both before measuring skill. (05)
 - `data/cache` grows with every build's terrain windows (476 MB for two provinces): the size
   cap of session 13 covers it. (05)
+- No elevation or relief layer is drawn: the IGN publishes its MDT as a map (WMS
+  `EL.ElevationGridCoverage`, `servicios.idee.es/wms-inspire/mdt`); a hillshade layer could
+  join the terrain layers in a later session. (05, owner)
 
 ## Session log
 

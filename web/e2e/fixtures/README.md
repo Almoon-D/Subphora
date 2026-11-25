@@ -2,13 +2,17 @@
 
 # Browser-test fixtures
 
-What the API answers, produced on 2026-11-24 by `create_app` over the recorded Catastro
-answers in `tests/fixtures/parcels/` (no network):
+What the API answers, produced on 2026-11-25 by `create_app` over the recorded answers in
+`tests/fixtures/parcels/` and `tests/fixtures/search/` (no network). Every place is public.
 
 | File | Request |
 |---|---|
-| `parcel-santiago.json` | `GET /api/parcels/7279701NH3477G`: the public parcel of the Praza do Obradoiro, Santiago de Compostela |
+| `area-santiago.json` | `GET /api/aoi/cadastral/7279701NH3477G`: the parcel of the Praza do Obradoiro, Santiago de Compostela |
+| `area-sigpac-campos.json` | `GET /api/aoi/sigpac/34:48:0:0:13:12:1`: an enclosure in Tierra de Campos |
+| `search-daimiel.json` | `GET /api/search?q=Daimiel`: CartoCiudad's towns, municipality and streets |
+| `area-daimiel.json` | `GET /api/aoi/place?type=Municipio&id=13039`: the municipality of Daimiel |
+| `area-point-daimiel.json` | `GET /api/aoi/point?crs=OGC:CRS84&x=-3.6115&y=39.0675&origin=coordinates` |
 | `map.json` | `GET /api/map` with the default configuration |
 
-`tests/unit/test_parcels_api.py` checks that both still match the API; regenerate them
-when it fails.
+`tests/unit/test_map_catalogue.py` checks that they still match the API's models (and
+`map.json` its answer); regenerate them when it fails.

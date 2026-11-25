@@ -1,60 +1,129 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 import { describe, expect, it } from "vitest";
 
-import { fetchFeatureInfo, fetchMapConfig, fetchParcel } from "./api.ts";
+import { drawnPoint, drawnPolygon, fetchFeatureInfo, fetchMapConfig, resolveArea, searchText } from "./api.ts";
 
 function answering(status: number, body: string): typeof fetch {
   return () => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
 }
 
-describe("fetchParcel", () => {
-  it("returns the parcel", async () => {
-    const result = await fetchParcel("7279701NH3477G", answering(200, '{"reference":"7279701NH3477G"}'));
-    expect(result).toEqual({ ok: true, parcel: { reference: "7279701NH3477G" } });
+describe("searchText", () => {
+  it("returns the readings", async () => {
+    const result = await searchText("Daimiel", answering(200, '{"interpretations":[{"label":"Daimiel"}]}'));
+    expect(result).toEqual({ ok: true, interpretations: [{ label: "Daimiel" }] });
   });
 
-  it("asks for the trimmed, escaped reference", async () => {
+  it("asks for the trimmed, escaped text", async () => {
     let asked = "";
     const spy: typeof fetch = (input) => {
       asked = input instanceof Request ? input.url : input.toString();
-      return Promise.resolve(new Response("{}", { status: 200 }));
+      return Promise.resolve(new Response('{"interpretations":[]}', { status: 200 }));
     };
-    await fetchParcel("  7279701 NH3477G/x ", spy);
-    expect(asked).toBe("/api/parcels/7279701%20NH3477G%2Fx");
+    await searchText("  40°25'N 3°42'O / x ", spy);
+    expect(asked).toBe("/api/search?q=40%C2%B025%27N+3%C2%B042%27O+%2F+x");
   });
 
   it.each([
-    [400, "malformed_reference"],
-    [404, "parcel_not_found"],
-    [422, "territory_not_supported"],
-    [502, "upstream_error"],
-    [504, "upstream_timeout"],
-  ])("passes on the server's reason (%i)", async (status, code) => {
-    const result = await fetchParcel("x", answering(status, JSON.stringify({ code, detail: "…" })));
-    expect(result).toEqual({ ok: false, failure: code });
+    [400, "malformed_coordinates", null],
+    [404, "no_match", "cartociudad"],
+    [422, "wrong_utm_zone", null],
+    [502, "upstream_error", "sigpac-queries"],
+    [504, "upstream_timeout", "catastro-wfs-parcels"],
+  ])("passes on the server's reason (%i %s)", async (status, code, source) => {
+    const result = await searchText("x", answering(status, JSON.stringify({ code, detail: "…", source })));
+    expect(result).toEqual({ ok: false, failure: code, source });
   });
 
-  it("calls an unknown code unexpected", async () => {
-    expect(await fetchParcel("x", answering(500, '{"code":"boom"}'))).toEqual({ ok: false, failure: "unexpected" });
-    expect(await fetchParcel("x", answering(500, '"text"'))).toEqual({ ok: false, failure: "unexpected" });
-  });
-
-  it("calls a body that is not JSON unexpected", async () => {
-    expect(await fetchParcel("x", answering(502, "<html>Bad gateway</html>"))).toEqual({
-      ok: false,
-      failure: "unexpected",
-    });
+  it("calls an unknown code or a body that is not JSON unexpected", async () => {
+    const unexpected = { ok: false, failure: "unexpected", source: null };
+    expect(await searchText("x", answering(500, '{"code":"boom"}'))).toEqual(unexpected);
+    expect(await searchText("x", answering(500, '"text"'))).toEqual(unexpected);
+    expect(await searchText("x", answering(502, "<html>Bad gateway</html>"))).toEqual(unexpected);
   });
 
   it("reports an unreachable server", async () => {
     const offline: typeof fetch = () => Promise.reject(new TypeError("Failed to fetch"));
-    expect(await fetchParcel("x", offline)).toEqual({ ok: false, failure: "network" });
+    expect(await searchText("x", offline)).toEqual({ ok: false, failure: "network", source: null });
+  });
+});
+
+describe("resolveArea", () => {
+  it("returns the area", async () => {
+    expect(await resolveArea("/api/aoi/sigpac/1:1:0:0:1:1", answering(200, '{"origin":"sigpac_parcel"}'))).toEqual({
+      ok: true,
+      area: { origin: "sigpac_parcel" },
+    });
+  });
+
+  it("asks only the API's own area paths", async () => {
+    let called = false;
+    const spy: typeof fetch = () => {
+      called = true;
+      return Promise.resolve(new Response("{}"));
+    };
+    expect(await resolveArea("https://elsewhere.example/api/aoi/x", spy)).toEqual({
+      ok: false,
+      failure: "unexpected",
+      source: null,
+    });
+    expect(called).toBe(false);
+  });
+});
+
+describe("drawing", () => {
+  it("asks for a drawn point in WGS 84", async () => {
+    let asked = "";
+    const spy: typeof fetch = (input) => {
+      asked = input instanceof Request ? input.url : input.toString();
+      return Promise.resolve(new Response('{"origin":"drawn_point"}'));
+    };
+    await drawnPoint(-3.6, 39.1, spy);
+    expect(asked).toBe("/api/aoi/point?crs=OGC%3ACRS84&x=-3.6&y=39.1&origin=drawn_point");
+  });
+
+  it("posts a drawn polygon as a closed GeoJSON ring", async () => {
+    let sent: RequestInit | undefined;
+    const spy: typeof fetch = (_input, init) => {
+      sent = init;
+      return Promise.resolve(new Response('{"origin":"drawn_polygon"}'));
+    };
+    const result = await drawnPolygon(
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+      ],
+      spy,
+    );
+    expect(result.ok).toBe(true);
+    expect(sent?.method).toBe("POST");
+    expect(JSON.parse(sent?.body as string)).toEqual({
+      type: "Polygon",
+      coordinates: [
+        [
+          [0, 0],
+          [1, 0],
+          [1, 1],
+          [0, 0],
+        ],
+      ],
+    });
+  });
+
+  it("sends an empty ring for no vertices, for the server to refuse", async () => {
+    let sent: RequestInit | undefined;
+    const spy: typeof fetch = (_input, init) => {
+      sent = init;
+      return Promise.resolve(new Response('{"code":"invalid_polygon"}', { status: 400 }));
+    };
+    expect(await drawnPolygon([], spy)).toEqual({ ok: false, failure: "invalid_polygon", source: null });
+    expect(JSON.parse(sent?.body as string)).toEqual({ type: "Polygon", coordinates: [[]] });
   });
 });
 
 describe("fetchMapConfig", () => {
   it("returns the configuration", async () => {
-    expect(await fetchMapConfig(answering(200, '{"parcel_padding_px":60}'))).toEqual({ parcel_padding_px: 60 });
+    expect(await fetchMapConfig(answering(200, '{"area_padding_px":60}'))).toEqual({ area_padding_px: 60 });
   });
 
   it("throws when the server fails", async () => {

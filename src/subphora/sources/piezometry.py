@@ -5,10 +5,13 @@
 The file is read with mdbtools' ``mdb-export`` (``brew install mdbtools`` or
 ``apt install mdbtools``), which prints a table as CSV; dates are asked as ISO dates, since
 its default prints two-digit years. A ``.zip`` is unpacked to a temporary folder first.
-Nothing here touches the network.
+
+The basin authorities' spreadsheets (also hand downloads) are ``.xlsx`` workbooks, alone or
+inside a zip, read row by row with openpyxl. Nothing here touches the network.
 """
 
 import csv
+import fnmatch
 import hashlib
 import io
 import subprocess
@@ -17,6 +20,9 @@ import zipfile
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from zipfile import BadZipFile
+
+from openpyxl import load_workbook
 
 _ACCESS_SUFFIXES = (".accdb", ".mdb")
 _DATE_FORMAT = "%Y-%m-%d"
@@ -72,3 +78,39 @@ def export_table(database: Path, table: str, mdb_export: str) -> Iterator[dict[s
         raise PiezometryReadError(f"{mdb_export} could not read {table}: {detail}")
     text = result.stdout.decode("utf-8", "replace")
     yield from csv.DictReader(io.StringIO(text))
+
+
+def zip_members(path: Path, pattern: str) -> list[str]:
+    """The names inside the zip ``path`` that match the glob ``pattern``, sorted."""
+    if not path.is_file():
+        raise PiezometryReadError(f"{path} does not exist: download it by hand first")
+    if not zipfile.is_zipfile(path):
+        raise PiezometryReadError(f"{path.name} is not a zip")
+    with zipfile.ZipFile(path) as archive:
+        return sorted(n for n in archive.namelist() if fnmatch.fnmatch(Path(n).name, pattern))
+
+
+def workbook_rows(
+    path: Path, sheet: str | None = None, member: str | None = None
+) -> Iterator[tuple[object, ...]]:
+    """The rows of one sheet (the first when ``sheet`` is None) of the workbook ``path``,
+    or of the workbook ``member`` inside the zip ``path``, as tuples of cell values."""
+    if not path.is_file():
+        raise PiezometryReadError(f"{path} does not exist: download it by hand first")
+    name = member or path.name
+    try:
+        if member is None:
+            book = load_workbook(path, read_only=True, data_only=True)
+        else:
+            with zipfile.ZipFile(path) as archive:
+                content = io.BytesIO(archive.read(member))
+            book = load_workbook(content, read_only=True, data_only=True)
+    except (BadZipFile, KeyError, OSError, ValueError) as exc:
+        raise PiezometryReadError(f"{name} is not a readable .xlsx workbook: {exc}") from None
+    try:
+        if sheet is not None and sheet not in book.sheetnames:
+            raise PiezometryReadError(f"{name} has no sheet {sheet!r} (it has {book.sheetnames})")
+        worksheet = book[sheet] if sheet is not None else book.worksheets[0]
+        yield from worksheet.iter_rows(values_only=True)
+    finally:
+        book.close()

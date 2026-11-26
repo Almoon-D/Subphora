@@ -22,6 +22,7 @@ SOURCE = LevelsSource(
     publisher="MITECO",
     attribution="MITECO",
     file_name="basedatospiezometria.zip",
+    sha256="0" * 64,
     imported_at=datetime(2026, 11, 26, tzinfo=UTC),
     levels_from=date(2020, 1, 1),
     levels_to=date(2024, 12, 31),
@@ -31,7 +32,13 @@ BODY = ("ES040MSBT000030607", "Sierra de Altomira")
 
 def piezometer(x: float, level: float, body: str = BODY[0], spread: float = 1.0) -> PiezometerPoint:
     return PiezometerPoint(
-        x=x, y=0.0, body=body, level_m=level, low_m=level - spread, high_m=level + spread
+        x=x,
+        y=0.0,
+        body=body,
+        level_m=level,
+        low_m=level - spread,
+        high_m=level + spread,
+        sources=(SOURCE.service_id,),
     )
 
 
@@ -41,9 +48,11 @@ def depth(
     ground: float = 700.0,
     body: tuple[str, str] | None = BODY,
     karst: bool = False,
-    source: LevelsSource | None = SOURCE,
+    sources: dict[str, LevelsSource] | None = None,
+    imported: bool = True,
 ) -> DepthEstimate:
-    return depth_at(x, 0.0, ground, body, points, TABLE, karst, source)
+    named = sources if sources is not None else ({SOURCE.service_id: SOURCE} if imported else None)
+    return depth_at(x, 0.0, ground, body, points, TABLE, karst, named)
 
 
 def test_the_water_table_weighs_the_nearer_piezometer_more() -> None:
@@ -92,7 +101,7 @@ def test_depth_is_ground_minus_water_table_with_its_range() -> None:
     assert result.low_m == pytest.approx(100 - 3)
     assert result.high_m == pytest.approx(100 + 3)
     assert result.ground_m == 700
-    assert result.source == SOURCE
+    assert result.sources == (SOURCE,)
     assert not result.karst
 
 
@@ -113,7 +122,7 @@ def test_karst_is_flagged_on_an_estimate_and_on_an_unknown() -> None:
 @pytest.mark.parametrize(
     ("change", "reason"),
     [
-        ({"source": None}, DepthUnknown.NOT_IMPORTED),
+        ({"imported": False}, DepthUnknown.NOT_IMPORTED),
         ({"body": None}, DepthUnknown.OUTSIDE_BODIES),
         ({"ground": math.nan}, DepthUnknown.NO_GROUND_ELEVATION),
     ],
@@ -127,7 +136,7 @@ def test_an_unknown_depth_says_why(change: dict[str, object], reason: DepthUnkno
 def test_an_estimated_depth_has_every_figure_and_an_unknown_none() -> None:
     body = depth([piezometer(1000, 600)]).model_dump()
     with pytest.raises(ValidationError, match="every figure"):
-        DepthEstimate.model_validate({**body, "source": None})
+        DepthEstimate.model_validate({**body, "sources": ()})
     with pytest.raises(ValidationError, match="inside its range"):
         DepthEstimate.model_validate({**body, "depth_m": 500})
     with pytest.raises(ValidationError, match="says why"):
@@ -175,3 +184,30 @@ def test_a_cost_range_is_ordered() -> None:
     assert cost is not None
     with pytest.raises(ValidationError, match="at most"):
         DrillingCost.model_validate({**cost.model_dump(), "low": cost.high + 1})
+
+
+def test_a_depth_names_only_the_sources_of_the_piezometers_it_used() -> None:
+    basin = SOURCE.model_copy(update={"service_id": "chj-piezometry", "file_name": "F71.zip"})
+    unused = SOURCE.model_copy(update={"service_id": "chguadiana-piezometry"})
+    near = PiezometerPoint(
+        x=500,
+        y=0,
+        body=BODY[0],
+        level_m=600,
+        low_m=599,
+        high_m=601,
+        sources=("miteco-piezometry-db", "chj-piezometry"),
+    )
+    far = PiezometerPoint(
+        x=TABLE.max_distance_m + 10,
+        y=0,
+        body=BODY[0],
+        level_m=600,
+        low_m=599,
+        high_m=601,
+        sources=("chguadiana-piezometry",),
+    )
+    named = {s.service_id: s for s in (SOURCE, basin, unused)}
+    result = depth([near, far], sources=named)
+    assert result.sources == (SOURCE, basin)
+    assert depth([], sources=named).sources == ()

@@ -385,7 +385,7 @@ class ParcelMapService:
             sources=sources,
             validations=validations,
             piezometers=piezometers,
-            levels=None if levels is None else levels.source,
+            levels=None if levels is None else levels.source_map(),
             inputs=ParcelInputs(
                 permeability=permeability[0],
                 terrain=terrain[0],

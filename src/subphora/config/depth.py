@@ -5,7 +5,7 @@ table) and ``config/defaults/drilling.yaml`` (the drilling cost), MASTER_PLAN §
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 from pydantic import Field, PositiveFloat, PositiveInt, model_validator
 
@@ -47,6 +47,61 @@ class WaterTableSettings(Section):
     growth_m_per_km: float = Field(ge=0)
 
 
+class ChjColumns(Section):
+    code: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    x: str = Field(min_length=1)
+    y: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+    body_label: str = Field(min_length=1)
+    date: str = Field(min_length=1)
+    level: str = Field(min_length=1)
+
+
+class ChjBasin(Section):
+    """CH Júcar's download: a zip with the control points and their field measurements
+    (water-table elevations, m a.s.l.)."""
+
+    format: Literal["chj_f71"]
+    service: str = Field(min_length=1)
+    input: Path
+    crs: str = Field(min_length=1)
+    stations_member: str = Field(min_length=1)
+    # A glob over the zip's file names: the measurements come in several workbooks.
+    levels_members: str = Field(min_length=1)
+    # Prepended to the workbook's body codes ("080-114") to give the EU code.
+    body_prefix: str = Field(min_length=1)
+    columns: ChjColumns
+
+
+class GuadianaColumns(Section):
+    code: str = Field(min_length=1)
+    station_code: str = Field(min_length=1)
+    x: str = Field(min_length=1)
+    y: str = Field(min_length=1)
+    ground: str = Field(min_length=1)
+    body_label: str = Field(min_length=1)
+
+
+class GuadianaBasin(Section):
+    """CH Guadiana's monthly spreadsheet: one row per piezometer and one column per month,
+    holding the depth to water below the ground (m); the stations sheet gives the ground
+    elevation that turns a depth into a level."""
+
+    format: Literal["guadiana_monthly_depths"]
+    service: str = Field(min_length=1)
+    input: Path
+    crs: str = Field(min_length=1)
+    levels_sheet: str = Field(min_length=1)
+    # 1-based row of the levels sheet whose month cells are dates.
+    header_row: PositiveInt
+    stations_sheet: str = Field(min_length=1)
+    columns: GuadianaColumns
+
+
+BasinSettings = Annotated[ChjBasin | GuadianaBasin, Field(discriminator="format")]
+
+
 class PiezometrySettings(Section):
     service: str = Field(min_length=1)
     # Relative to the repository root unless absolute.
@@ -56,6 +111,11 @@ class PiezometrySettings(Section):
     tables: PiezometryTables
     columns: PiezometryColumns
     zones: dict[str, str] = Field(min_length=1)
+    # Characters some files use in a body code where the groundwater-bodies layer has
+    # `body_separator` ("ES080MSBT080.115" for "ES080MSBT080-115").
+    body_separator: str = Field(min_length=1, max_length=1)
+    body_separator_aliases: list[str]
+    basins: list[BasinSettings]
     summary: LevelSummary
     water_table: WaterTableSettings
     karst_labels: list[str]
@@ -65,6 +125,13 @@ class PiezometrySettings(Section):
 
     def output_path(self, root: Path) -> Path:
         return self.output if self.output.is_absolute() else root / self.output
+
+    def body_code(self, code: str) -> str:
+        """A body code written as the groundwater-bodies layer writes it."""
+        text = code.strip()
+        for alias in self.body_separator_aliases:
+            text = text.replace(alias, self.body_separator)
+        return text
 
     def is_karst(self, label: str) -> bool:
         upper = label.strip().upper()

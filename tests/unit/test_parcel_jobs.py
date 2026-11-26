@@ -24,7 +24,9 @@ from tests.parcel_support import parcel_settings, point_area, polygon_area, serv
 SQUARE = [(-3.702, 40.418), (-3.6985, 40.418), (-3.6985, 40.4207), (-3.702, 40.4207)]
 # The same size astride the meridian, where UTM zones 30 and 31 meet: its centre is in 31.
 ASTRIDE = [(-0.0015, 40.418), (0.002, 40.418), (0.002, 40.4207), (-0.0015, 40.4207)]
-_POLLS = 600
+# How long a job may take, in seconds: a loaded CI runner computes the small test areas
+# in several seconds, and a count of polls at the test settings' 0.01 s was too short.
+_DEADLINE_S = 120.0
 
 
 @pytest.fixture
@@ -38,7 +40,9 @@ async def start(client: httpx.AsyncClient, area: AreaOfInterest) -> httpx.Respon
 
 async def settle(client: httpx.AsyncClient, area_id: str) -> dict[str, Any]:
     """The job once it is done or failed, asked as the page asks."""
-    for _ in range(_POLLS):
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _DEADLINE_S
+    while loop.time() < deadline:
         body: dict[str, Any] = (await client.get(f"/api/parcel/{area_id}")).json()
         if body["job"]["state"] in {"done", "failed"}:
             return body
@@ -370,7 +374,7 @@ def _levels(settings: Settings, root: Path) -> None:
 
     def piezometer(key: int, lon: float, level: float, body: str) -> Piezometer:
         return Piezometer(
-            id=key,
+            id=str(key),
             code=str(key),
             name="Synthetic",
             body=body,
@@ -384,21 +388,24 @@ def _levels(settings: Settings, root: Path) -> None:
             measurements=12,
             first=date(2024, 1, 1),
             last=date(2024, 12, 1),
+            sources=("miteco-piezometry-db",),
         )
 
     write_piezometry(
         settings.piezometry.output_path(root),
         PiezometryDataset(
-            source=LevelsSource(
-                service_id="miteco-piezometry-db",
-                publisher="MITECO",
-                attribution="MITECO",
-                file_name="basedatospiezometria.zip",
-                imported_at=datetime(2026, 11, 26, tzinfo=UTC),
-                levels_from=date(2024, 1, 1),
-                levels_to=date(2024, 12, 1),
+            sources=(
+                LevelsSource(
+                    service_id="miteco-piezometry-db",
+                    publisher="MITECO",
+                    attribution="MITECO",
+                    file_name="basedatospiezometria.zip",
+                    imported_at=datetime(2026, 11, 26, tzinfo=UTC),
+                    levels_from=date(2024, 1, 1),
+                    levels_to=date(2024, 12, 1),
+                    sha256="0" * 64,
+                ),
             ),
-            sha256="0" * 64,
             piezometers_read=3,
             levels_read=36,
             left_out=0,

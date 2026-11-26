@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "subphora"
-version = "0.9.0"
+version = "0.10.0"
 description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"
@@ -23,6 +23,7 @@ dependencies = [
     "fastapi>=0.165,<1",
     "httpx>=0.28.1,<1",
     "numpy>=2.5,<3",
+    "openpyxl>=3.1.5,<4",
     "pillow>=13,<14",
     "pmtiles>=3.8.1,<4",
     "pydantic>=2.12,<3",
@@ -47,6 +48,7 @@ dev = [
     "pytest-xdist>=3.8",
     "respx>=0.23.1",
     "ruff>=0.14",
+    "types-openpyxl>=3.1.5.20261122",
     "types-PyYAML>=6.0.12",
 ]
 

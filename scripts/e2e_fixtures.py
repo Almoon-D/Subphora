@@ -51,7 +51,7 @@ def _levels(root: Path, path: Path) -> None:
         x, y = to_valley.transform(lon, lat)
         level = terrain_elevation(x, y) - DEPTH_BELOW_GROUND_M
         return Piezometer(
-            id=key,
+            id=str(key),
             code=f"SYN.{key}",
             name="Synthetic piezometer",
             body="ES030MSBT000",
@@ -65,21 +65,26 @@ def _levels(root: Path, path: Path) -> None:
             measurements=24,
             first=date(2023, 1, 15),
             last=date(2024, 12, 15),
+            sources=("miteco-piezometry-db",),
         )
 
     write_piezometry(
         root / path,
         PiezometryDataset(
-            source=LevelsSource(
-                service_id="miteco-piezometry-db",
-                publisher="Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
-                attribution="© MITECO, Red de seguimiento del estado cuantitativo",
-                file_name="basedatospiezometria.zip",
-                imported_at=datetime(2026, 11, 26, tzinfo=UTC),
-                levels_from=date(2023, 1, 15),
-                levels_to=date(2024, 12, 15),
+            sources=(
+                LevelsSource(
+                    service_id="miteco-piezometry-db",
+                    publisher=(
+                        "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)"
+                    ),
+                    attribution="© MITECO, Red de seguimiento del estado cuantitativo",
+                    file_name="basedatospiezometria.zip",
+                    imported_at=datetime(2026, 11, 26, tzinfo=UTC),
+                    levels_from=date(2023, 1, 15),
+                    levels_to=date(2024, 12, 15),
+                    sha256="0" * 64,
+                ),
             ),
-            sha256="0" * 64,
             piezometers_read=2,
             levels_read=48,
             left_out=0,

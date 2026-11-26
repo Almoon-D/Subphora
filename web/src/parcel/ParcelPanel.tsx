@@ -129,8 +129,8 @@ const metres = (value: number) => formatNumber(value, 0);
 const euros = (value: string) => formatNumber(Number(value), 0);
 
 function Depth({ depth }: { depth: DepthEstimate }) {
-  const { water_table: table, source } = depth;
-  if (depth.state === "unknown" || table === null || source === null || depth.depth_m === null) {
+  const { water_table: table, sources } = depth;
+  if (depth.state === "unknown" || table === null || sources.length === 0 || depth.depth_m === null) {
     return (
       <>
         <p className="note depth" data-depth="unknown" data-reason={depth.reason ?? ""}>
@@ -157,11 +157,19 @@ function Depth({ depth }: { depth: DepthEstimate }) {
           count: table.piezometers,
           body: table.body_label || table.body,
           nearest: `${formatNumber(table.nearest_m / 1000, 1)} km`,
-          from: formatDate(source.levels_from),
-          to: formatDate(source.levels_to),
-          attribution: source.attribution,
         })}
       </p>
+      <ul className="note sources">
+        {sources.map((source) => (
+          <li key={source.service_id} data-levels-source={source.service_id}>
+            {t("detailed.depthSource", {
+              from: formatDate(source.levels_from),
+              to: formatDate(source.levels_to),
+              attribution: source.attribution,
+            })}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

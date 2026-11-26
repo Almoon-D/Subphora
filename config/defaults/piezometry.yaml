@@ -28,6 +28,49 @@ columns:
   date: FechaP
   level: Cota_NP_msnm
 zones: {"30": "EPSG:25830", "31": "EPSG:25831"}
+# The national database writes some bodies with "." where the bodies layer has "-"
+# (ES080MSBT080.115): docs/knowledge/water-authorities.md.
+body_separator: "-"
+body_separator_aliases: ["."]
+
+# The basin authorities' spreadsheets (hand downloads into data/piezometry/basins/). Their
+# levels join the national database's by piezometer code (the same inventory codes), and
+# a piezometer only they hold is added with its own coordinates. A missing file is skipped.
+# A basin piezometer takes the national database's body when the national file holds it;
+# otherwise Júcar's own body code, or Guadiana's body name matched to the national names.
+basins:
+  - format: chj_f71
+    service: chj-piezometry
+    input: data/piezometry/basins/F71_Puntos_de_control_piezometrico.zip
+    crs: EPSG:25830
+    stations_member: F71_M10_Todas.xlsx
+    levels_members: "F71_D7_Medida en campo_*.xlsx"
+    body_prefix: ES080MSBT
+    columns:
+      code: "Cód. Punto"
+      name: Nombre
+      x: UTM ETRS89 X
+      y: UTM ETRS89 Y
+      body: "Cód. Masa PHJ22 Hidrog."
+      body_label: "Masa Subterránea PHJ22 Hidrog."
+      date: Fecha
+      # Static levels only: dynamic and affected ones are read while a well pumps.
+      level: "Niv. Valid. Estática (m.s.n.m.)"
+  - format: guadiana_monthly_depths
+    service: chguadiana-piezometry
+    input: "data/piezometry/basins/Red Oficial Guadiana OCTUBRE 2026.xlsx"
+    crs: EPSG:25830
+    levels_sheet: Red Oficial Guadiana
+    header_row: 2
+    stations_sheet: DATOS RED
+    columns:
+      code: "CÓDIGO PIEZÓMETRO"
+      station_code: "CÓDIGO OFICIAL"
+      x: X_ETRS89
+      y: Y_ETRS89
+      # The ground elevation from MDT05, which turns each depth into a level.
+      ground: Z (MDT 5 M)
+      body_label: MASA DE AGUA SUBTERRÁNEA
 
 # A piezometer's level: the median of its measurements in the `recent_years` before its
 # last one, with the quantiles below as its seasonal range. It is left out with fewer than

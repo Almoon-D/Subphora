@@ -111,9 +111,10 @@ async def test_a_point_gets_its_map_candidates_and_layers(
         assert legal["source"]
         assert legal["authority"]["district"] == "ES030"
         assert legal["body"]["quantitative_status"] == "Malo"
-        distance = next(f for f in legal["findings"] if f["rule_id"] == "rdph-87-2-distance")
+        # The Tajo plan's distance replaces the national one: 250 m at 7,000 m³/year.
+        distance = next(f for f in legal["findings"] if f["rule_id"] == "pht-22-distance")
         point = candidate["site"]["water_point"]["metres"]
-        assert distance["outcome"] == ("blocks" if point is not None and point < 100 else "clear")
+        assert distance["outcome"] == ("blocks" if point is not None and point < 250 else "clear")
         # No levels imported: the depth is unknown and says why; no depth, no cost.
         assert candidate["depth"]["state"] == "unknown"
         assert candidate["depth"]["reason"] == "not_imported"

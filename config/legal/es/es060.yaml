@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
 # Cuencas Mediterráneas Andaluzas (area ES060): the 2022-2027 basin plan (Real Decreto
 # 689/2023), normative content published by Orden de 9 de octubre de 2023 (BOJA no. 199,
-# 17/10/2023). Read on 2026-11-24 (docs/knowledge/legal-groundwater.md).
+# 17/10/2023). Read on 2026-11-24, re-read on 2026-11-26 (docs/knowledge/legal-groundwater.md).
 
 rules:
   - id: phcma-53-1-authorisation
@@ -21,7 +21,7 @@ rules:
       url: "https://www.juntadeandalucia.es/boja/2023/199/45"
       article: "art. 53.1"
       published: 2023-10-17
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: phcma-39-preventive
     area: ES060
@@ -38,7 +38,7 @@ rules:
       url: "https://www.juntadeandalucia.es/boja/2023/199/45"
       article: "art. 39 and Apéndice 15"
       published: 2023-10-17
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: phcma-53-5-distance
     area: ES060
@@ -60,4 +60,4 @@ rules:
       url: "https://www.juntadeandalucia.es/boja/2023/199/45"
       article: "art. 53.5"
       published: 2023-10-17
-      checked: 2026-11-24
+      checked: 2026-11-26

@@ -20,7 +20,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
       article: "art. 51.1"
       published: 2026-03-20
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: laa-51-2-well
     area: ES-AN
@@ -34,7 +34,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
       article: "art. 51.2"
       published: 2026-03-20
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: laa-51-2-well-state-basins
     area: ES-AN
@@ -51,4 +51,4 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
       article: "art. 51.2"
       published: 2026-03-20
-      checked: 2026-11-24
+      checked: 2026-11-26

@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Canarias (area ES-CN): Ley 12/1990, de 26 de julio, de Aguas. Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md); published: its last consolidated update.
+
+rules:
+  - id: lac-73-title
+    area: ES-CN
+    kind: authorisation
+    title:
+      en: "Opening any well needs a title from the Consejo Insular de Aguas: a simple authorisation for a small own-use abstraction, a concession otherwise"
+      es: "Abrir cualquier pozo necesita título del Consejo Insular de Aguas: autorización simple para un pequeño aprovechamiento de autoconsumo, concesión en los demás casos"
+    uncertain:
+      en: "Each island plan sets the yearly volume of the small abstraction; the national 7,000 m³ small-use regime is not the Canary one."
+      es: "Cada plan insular fija el volumen anual del pequeño aprovechamiento; el régimen estatal de 7.000 m³ no es el canario."
+    source:
+      name: "Ley 12/1990, de 26 de julio, de Aguas (Canarias)"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1990-23087"
+      article: "art. 73.2–73.3"
+      published: 2026-06-29
+      checked: 2026-11-26

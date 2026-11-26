@@ -1,0 +1,23 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Cantábrico Oriental (area ES017): the 2022-2027 basin plan, Real Decreto 35/2023, normative provisions in
+# its Annex I (BOE no. 35, 10/02/2023). Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md). The plan sets no distances of its own between wells:
+# the national ones (RDPH art. 87.2) apply.
+
+rules:
+  - id: phco-34-3-poor-body
+    area: ES017
+    kind: body_authorisation
+    poor_quantitative: true
+    title:
+      en: "In a body in poor status the authority may refuse a new abstraction"
+      es: "En una masa en mal estado el organismo puede denegar una captación nueva"
+    uncertain:
+      en: "The plan says poor quantitative or chemical status 'may justify' refusing the application; it is the authority's decision, not an automatic refusal. Chemical status is not checked here."
+      es: "El plan dice que el mal estado cuantitativo o químico «puede ser causa justificativa» de la denegación; decide el organismo, no es una denegación automática. Aquí no se comprueba el estado químico."
+    source:
+      name: "Plan Hidrológico del Cantábrico Oriental 2022-2027 (Real Decreto 35/2023), Annex I"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 34.3"
+      published: 2023-02-10
+      checked: 2026-11-26

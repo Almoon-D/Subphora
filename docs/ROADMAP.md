@@ -16,8 +16,8 @@
 | 07 | `docs/sessions/done/07-validation-depth-cost.md` | Opus 5.5, high | done |
 | 08 | `docs/sessions/done/08-cross-section.md` | Opus 5.5, high | done |
 | 09 | `docs/sessions/done/09-legal-filter.md` | Opus 5.5, high | done |
-| 09a | `docs/sessions/09a-legal-all-districts.md` | Opus 5.5, high | next |
-| 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | planned |
+| 09a | `docs/sessions/done/09a-legal-all-districts.md` | Opus 5.5, high | done |
+| 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | next |
 | 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | planned |
 | 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | planned |
 | 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | planned — version 1 |
@@ -29,16 +29,6 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
-
-- VERIFY-LIVE(legal-sources): re-read at the BOE, the regional gazettes and the basin
-  authorities the sources of `config/legal/es/` (read 2026-11-24) and read the normative
-  part of the 23 basin plans and the 18 regional water laws not loaded (`areas.yaml` says
-  which). Queued by 09: the cloud session's network refused every official host; session
-  09a, from a session with network access or the owner's computer.
-- VERIFY-LIVE(legal-taps): that a tap on `groundwater-status` answers the aliases
-  `legal.yaml` reads ("Cód. Masa de agua", "Estado cuantitativo") and that its body codes
-  match those of `groundwater-at-risk`, at Daimiel and Dalías. Queued by 09; `make dev` on
-  the owner's machine, or session 09a.
 
 - VERIFY-LIVE(magna-section): draw a section in `make dev` on the owner's test area and check
   that MAGNA layer 11 answers `DLO` per unit and that a contact's projected dip matches the
@@ -133,8 +123,12 @@
   then, in the maintenance session or the session running then (0011, 0016). (00, 02)
 - Commercial use: no sale before the owner has tested the finished project on his land
   (decision 0015); whom to contact then is kept in `docs/commercial-use.md`. (01)
-- Legal: the mining-safety rules for water boreholes were not read; every status lists the
-  mining authority's drilling permit as "not evaluated" until session 09a reads them. (01, 09)
+- Legal: four plans could not be read from the cloud (Galicia-Costa: the Xunta's hosts
+  reset the connection; Fuerteventura, La Palma, La Gomera: download service, scanned image,
+  decree only); read them from the owner's computer or a later session. Lanzarote and El
+  Hierro were searched, not read in full. Distances to monitoring networks, the Tajo's
+  appendix 11 sub-basins, the Catalan art. 43 safeguard and the Canary protection spaces
+  have no official layer and stay open questions. (09a)
 - Legal: the district of a point outside every mapped groundwater body is unknown ("rules
   not loaded"); a point query on `demarhidro_2027` would name it. Red Natura 2000 and the
   urban/rural land class are not read: the stricter distance applies, flagged. (09)
@@ -213,6 +207,18 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 09a — Every district's plan and every regional water law (2026-11-26, version 0.13.0)
+
+- Landed: plans of 17 districts in full and 4 Canary ones in part, every regional water law
+  (Canarias adds a rule, the rest none) and the mining-safety approval, all re-read or read
+  at the BOE, BOJA, BOIB, BOC and ACA on 2026-11-26 (decision 0035). New rule fields:
+  `where.bodies`, `applies_above_m3`/`applies_up_to_m3`, `when: always`, `volume_below_m3`,
+  `flow_up_to_l_s`. Still not loaded, with the reason: ES014, ES122, ES125, ES126.
+- Live: MITECO's status and at-risk layers answer the fields `legal.yaml` reads
+  (legal-taps closed); the layer's body codes differ from the plans' (hyphens, splits).
+- Deferred: the four unread plans and the unmapped distances (Follow-ups).
+- VERIFY-LIVE: legal-sources, legal-taps closed.
 
 ### 09 — Legal filter (2026-11-26, version 0.12.0)
 

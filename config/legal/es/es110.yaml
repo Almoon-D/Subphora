@@ -1,0 +1,62 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Illes Balears (area ES110): the 2022-2027 basin plan, approved by Real Decreto 49/2023; its
+# normative provisions published in BOIB no. 28 of 04/03/2023, read in the Govern's edition
+# (caib.es, "Normativa PHIB 2022-2027") on 2026-11-26 (docs/knowledge/legal-groundwater.md).
+
+rules:
+  - id: phib-113-title
+    area: ES110
+    kind: authorisation
+    title:
+      en: "Every new groundwater abstraction needs a title: an authorisation up to 7,000 m³/year and 1 l/s on the same estate, a concession above"
+      es: "Toda captación nueva de agua subterránea necesita título: autorización hasta 7.000 m³/año y 1 l/s en el mismo predio, concesión por encima"
+    uncertain:
+      en: "A drilling project is presented with the application (arts. 113.8, 125). Authorisations for homes in rural land are limited to 400 m³/year and 0.5 l/s (art. 114)."
+      es: "Con la solicitud se presenta un proyecto de la perforación (arts. 113.8 y 125). Las autorizaciones para viviendas en suelo rústico se limitan a 400 m³/año y 0,5 l/s (art. 114)."
+    source:
+      name: "Plan Hidrológico de las Illes Balears 2022-2027 (Real Decreto 49/2023), normativa"
+      url: "https://www.caib.es/eboibfront/pdf/es/2023/28/1130905"
+      article: "arts. 113.1–113.3"
+      published: 2023-03-04
+      checked: 2026-11-26
+
+  - id: phib-113-7-distance
+    area: ES110
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], flow_up_to_l_s: 0.15, distance_m: 20}
+      - {bodies: [any], flow_up_to_l_s: 0.5, distance_m: 100}
+      - {bodies: [any], flow_up_to_l_s: 1, distance_m: 200}
+      - {bodies: [any], flow_up_to_l_s: 2, distance_m: 350}
+      - {bodies: [any], flow_up_to_l_s: 5, distance_m: 500}
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 200}
+      - {bodies: [any], none_set: true}
+    title:
+      en: "Minimum distance to other abstractions, growing with the pump's flow (20 m to 500 m)"
+      es: "Distancia mínima a otras captaciones, que crece con el caudal de la bomba (de 20 m a 500 m)"
+    uncertain:
+      en: "Up to 0.15 l/s the distance is 10 m in urban land and 20 m in rural land; 20 m is used. With the flow unknown, a well of the authorisation regime (at most 1 l/s) is held to 200 m; above 5 l/s a study of effects decides. A shorter distance needs the earlier owner's written consent or proof of no effect."
+      es: "Hasta 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo rústico; se usan 20 m. Sin conocer el caudal, a un pozo del régimen de autorización (como mucho 1 l/s) se le aplican 200 m; por encima de 5 l/s decide un estudio de afecciones. Una distancia menor necesita el consentimiento escrito del titular anterior o acreditar que no le afecta."
+    source:
+      name: "Plan Hidrológico de las Illes Balears 2022-2027 (Real Decreto 49/2023), normativa"
+      url: "https://www.caib.es/eboibfront/pdf/es/2023/28/1130905"
+      article: "art. 113.7 (cuadro 20)"
+      published: 2023-03-04
+      checked: 2026-11-26
+
+  - id: phib-123-4-no-new
+    area: ES110
+    kind: no_new_concessions
+    title:
+      en: "No new authorisations or concessions in a body exploited beyond its available volume"
+      es: "No se otorgan autorizaciones ni concesiones nuevas en una masa explotada por encima de su volumen disponible"
+    uncertain:
+      en: "Poor quantitative status is read as 'exploited beyond the available volume' (the plan's annex 3 gives the volumes). Also forbidden: fresh or brackish groundwater within 800 m of the coast in Mallorca and 500 m in the other islands, unless the aquifer is shown not to be connected to the sea (art. 123.2–123.3), and wells for golf or polo fields (art. 123.1); the distance to the coast is not measured here."
+      es: "El mal estado cuantitativo se lee como «explotación superior al volumen disponible» (el anexo 3 del plan da los volúmenes). También se prohíbe captar agua dulce o salobre a menos de 800 m de la costa en Mallorca y 500 m en las demás islas, salvo que se demuestre que el acuífero no conecta con el mar (art. 123.2–123.3), y los pozos para campos de golf o polo (art. 123.1); aquí no se mide la distancia a la costa."
+    source:
+      name: "Plan Hidrológico de las Illes Balears 2022-2027 (Real Decreto 49/2023), normativa"
+      url: "https://www.caib.es/eboibfront/pdf/es/2023/28/1130905"
+      article: "art. 123.4"
+      published: 2023-03-04
+      checked: 2026-11-26

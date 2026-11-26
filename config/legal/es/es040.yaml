@@ -1,8 +1,9 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
-# Guadiana (area ES040): only the 2022-2027 plan's perimeters closed to new groundwater
-# abstractions (Real Decreto 35/2023, normative appendix 11.1), as CH Guadiana's map layer
-# draws them (docs/knowledge/regional-layers.md, read 2026-11-24). The plan's normative
-# text is not loaded (areas.yaml says why).
+# Guadiana (area ES040): the 2022-2027 basin plan of its Spanish part, Real Decreto 35/2023,
+# normative provisions in its Annex VI (BOE no. 35, 10/02/2023). Read at the BOE on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md). The perimeters of art. 23.3 (appendix
+# 11) are read through CH Guadiana's map layer (regional-layers.md). Art. 23.4.b
+# (authorisation in bodies declared at risk) restates RDPH art. 84.2.
 
 rules:
   - id: phgn-11-1-perimeters
@@ -17,8 +18,49 @@ rules:
       en: "Perimeters around wetlands, springs and piezometers where no new groundwater abstraction is authorised"
       es: "Perímetros alrededor de humedales, manantiales y piezómetros donde no se autorizan nuevas captaciones de agua subterránea"
     source:
-      name: "Plan Hidrológico del Guadiana 2022-2027 (Real Decreto 35/2023)"
+      name: "Plan Hidrológico del Guadiana 2022-2027 (Real Decreto 35/2023), Annex VI"
       url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
-      article: "normative appendix 11.1"
+      article: "art. 23.3 and appendix 11.1"
       published: 2023-02-10
-      checked: 2026-11-24
+      checked: 2026-11-26
+
+  - id: phgn-23-2-distance
+    area: ES040
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance between groundwater abstractions: 100 m"
+      es: "Distancia mínima entre captaciones de agua subterránea: 100 m"
+    uncertain:
+      en: "A different distance may be set by specific studies approved by the authority's Junta de Gobierno."
+      es: "La Junta de Gobierno del organismo puede fijar otra distancia mediante estudios específicos."
+    source:
+      name: "Plan Hidrológico del Guadiana 2022-2027 (Real Decreto 35/2023), Annex VI"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 23.2"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phgn-31-1-no-concessions
+    area: ES040
+    kind: no_new_concessions
+    when: always
+    applies_above_m3: 7000
+    where:
+      bodies: [ES040MSBT000030602, ES040MSBT000030603, ES040MSBT000030606, ES040MSBT000030607,
+               ES040MSBT000030608, ES040MSBT000030609, ES040MSBT000030610, ES040MSBT000030611,
+               ES040MSBT000030612, ES040MSBT000030614, ES040MSBT000030615]
+    title:
+      en: "No new groundwater concessions in the bodies at risk of not reaching good quantitative status"
+      es: "No se otorgan concesiones nuevas de agua subterránea en las masas en riesgo de no alcanzar el buen estado cuantitativo"
+    uncertain:
+      en: "Excepted: transformations of private rights, concessions under the Water Law's additional provision 14, and public supply, industry and livestock within the plan's allocations. In the Alto Guadiana subsystem no new surface or groundwater concessions are granted either (art. 31.2)."
+      es: "Se exceptúan las transformaciones de derechos privados, las concesiones de la disposición adicional 14.ª de la Ley de Aguas y el abastecimiento, la industria y la ganadería dentro de las asignaciones del plan. En el subsistema Alto Guadiana tampoco se otorgan concesiones nuevas, superficiales ni subterráneas (art. 31.2)."
+    source:
+      name: "Plan Hidrológico del Guadiana 2022-2027 (Real Decreto 35/2023), Annex VI"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 31.1 and appendix 5.4"
+      published: 2023-02-10
+      checked: 2026-11-26

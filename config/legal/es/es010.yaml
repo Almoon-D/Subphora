@@ -1,0 +1,27 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Miño-Sil (area ES010): the 2022-2027 basin plan of its Spanish part, Real Decreto 35/2023,
+# normative provisions in its Annex III (BOE no. 35, 10/02/2023). Read at the BOE on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md). Its art. 34.2 (authorisation in bodies
+# at risk) restates RDPH art. 84.2, which the national rules already carry.
+
+rules:
+  - id: phms-32-distance
+    area: ES010
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], volume_below_m3: 3650, flow_below_l_s: 0.15, distance_m: 20}
+      - {bodies: [any], volume_below_m3: 3650, flow_below_l_s: 1, distance_m: 50}
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance to other wells and springs: 100 m, 50 m for small wells (under 1 l/s and 3,650 m³/year)"
+      es: "Distancia mínima a otros pozos y manantiales: 100 m, 50 m para pozos pequeños (menos de 1 l/s y 3.650 m³/año)"
+    uncertain:
+      en: "Under 0.15 l/s and 3,650 m³/year the distance is 10 m in urban land, rural cores and developable land, 20 m elsewhere; the land class is not known, so 20 m is used. With the pump's flow unknown, 100 m. A shorter distance is allowed with proof of no harm to earlier legal wells or their owner's permission."
+      es: "Por debajo de 0,15 l/s y 3.650 m³/año la distancia es de 10 m en suelo urbano, núcleo rural o urbanizable y de 20 m en el resto; no se conoce la clase de suelo, así que se usan 20 m. Sin conocer el caudal de la bomba, 100 m. Se admite menos distancia si se acredita que no se afecta a pozos legales anteriores o con permiso de su titular."
+    source:
+      name: "Plan Hidrológico del Miño-Sil 2022-2027 (Real Decreto 35/2023), Annex III"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 32.2–32.6"
+      published: 2023-02-10
+      checked: 2026-11-26

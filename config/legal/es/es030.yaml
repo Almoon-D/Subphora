@@ -1,0 +1,105 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Tajo (area ES030): the 2022-2027 basin plan of its Spanish part, Real Decreto 35/2023,
+# normative provisions in its Annex V (BOE no. 35, 10/02/2023). Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md). Distances (art. 22, appendix 12) depend on the body
+# and the volume; MITECO's layer writes the plan's codes with a hyphen (ES030MSBT030-010).
+
+rules:
+  - id: pht-22-distance
+    area: ES030
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], volume_below_m3: 1000, distance_m: 100}
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 250}
+      - {bodies: [any], curve: [[7000, 250], [44500, 400]]}
+    title:
+      en: "Minimum distance to existing abstractions, growing with the volume"
+      es: "Distancia mínima a captaciones existentes, que crece con el volumen"
+    uncertain:
+      en: "Appendix 12 gives this scale (100 m under 1,000 m³/year, 250 m up to 7,000, then 4 m more per 1,000 m³ up to 400 m) in sub-basins where surface abstraction is barred more than four months a year (appendix 11 map, not loaded), and 100 m in the rest of the basin; the stricter is used. Any new well must also keep 400 m from the points of the quantitative monitoring network (art. 22.3), which no layer here measures."
+      es: "El apéndice 12 da esta escala (100 m por debajo de 1.000 m³/año, 250 m hasta 7.000 y luego 4 m más por cada 1.000 m³ hasta 400 m) en las subcuencas con más de cuatro meses al año sin extracción superficial (mapa del apéndice 11, no cargado), y 100 m en el resto de la cuenca; se aplica la más estricta. Todo pozo nuevo debe además estar a más de 400 m de los puntos de la red de control del estado cuantitativo (art. 22.3), que aquí ninguna capa mide."
+    source:
+      name: "Plan Hidrológico del Tajo 2022-2027 (Real Decreto 35/2023), Annex V"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 22 and appendix 12"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: pht-22-distance-torrelaguna
+    area: ES030
+    kind: well_distance
+    where: {bodies: [ES030MSBT030-004]}
+    supersedes: [rdph-87-2-distance, pht-22-distance]
+    cases:
+      - {bodies: [any], volume_below_m3: 1000, distance_m: 100}
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 250}
+      - {bodies: [any], curve: [[7000, 250], [157000, 400]]}
+    title:
+      en: "Minimum distance to existing abstractions in Torrelaguna: 100 m, 250 m from 1,000 m³/year, 1 m more per 1,000 m³ above 7,000 (up to 400 m)"
+      es: "Distancia mínima a captaciones existentes en Torrelaguna: 100 m, 250 m desde 1.000 m³/año, 1 m más por cada 1.000 m³ por encima de 7.000 (hasta 400 m)"
+    source:
+      name: "Plan Hidrológico del Tajo 2022-2027 (Real Decreto 35/2023), Annex V"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 22 and appendix 12"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: pht-22-distance-madrid
+    area: ES030
+    kind: well_distance
+    where: {bodies: [ES030MSBT030-010, ES030MSBT030-011, ES030MSBT030-012]}
+    supersedes: [rdph-87-2-distance, pht-22-distance]
+    cases:
+      - {bodies: [any], volume_below_m3: 1000, distance_m: 100}
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 250}
+      - {bodies: [any], curve: [[7000, 250], [57000, 400]]}
+    title:
+      en: "Minimum distance to existing abstractions in Madrid: Manzanares-Jarama, Guadarrama-Manzanares, Aldea del Fresno-Guadarrama: 100 m, 250 m from 1,000 m³/year, 3 m more per 1,000 m³ above 7,000 (up to 400 m)"
+      es: "Distancia mínima a captaciones existentes en Madrid: Manzanares-Jarama, Guadarrama-Manzanares, Aldea del Fresno-Guadarrama: 100 m, 250 m desde 1.000 m³/año, 3 m más por cada 1.000 m³ por encima de 7.000 (hasta 400 m)"
+    uncertain:
+      en: "In these three bodies a well for any use but public supply may not go deeper than 200 m nor carry a pump of more than 11 kW (art. 35.2)."
+      es: "En estas tres masas un pozo para un uso distinto del abastecimiento no puede superar los 200 m de profundidad ni llevar una bomba de más de 11 kW (art. 35.2)."
+    source:
+      name: "Plan Hidrológico del Tajo 2022-2027 (Real Decreto 35/2023), Annex V"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 22 and appendix 12"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: pht-22-distance-south
+    area: ES030
+    kind: well_distance
+    where: {bodies: [ES030MSBT030-018, ES030MSBT030-025, ES030MSBT030-026]}
+    supersedes: [rdph-87-2-distance, pht-22-distance]
+    cases:
+      - {bodies: [any], volume_below_m3: 1000, distance_m: 100}
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 250}
+      - {bodies: [any], curve: [[7000, 250], [37000, 400]]}
+    title:
+      en: "Minimum distance to existing abstractions in Ocaña, Algodor, Sonseca: 100 m, 250 m from 1,000 m³/year, 5 m more per 1,000 m³ above 7,000 (up to 400 m)"
+      es: "Distancia mínima a captaciones existentes en Ocaña, Algodor, Sonseca: 100 m, 250 m desde 1.000 m³/año, 5 m más por cada 1.000 m³ por encima de 7.000 (hasta 400 m)"
+    source:
+      name: "Plan Hidrológico del Tajo 2022-2027 (Real Decreto 35/2023), Annex V"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 22 and appendix 12"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: pht-35-at-risk-zones
+    area: ES030
+    kind: authorisation
+    applies_above_m3: 7000
+    where: {bodies: [ES030MSBT030-004, ES030MSBT030-010, ES030MSBT030-011, ES030MSBT030-012, ES030MSBT030-018, ES030MSBT030-025, ES030MSBT030-026]}
+    title:
+      en: "In this body at risk, new concessions are granted only for public supply or a few listed uses, depending on the zone"
+      es: "En esta masa en riesgo solo se otorgan concesiones nuevas para abastecimiento o algunos usos tasados, según la zona"
+    uncertain:
+      en: "Appendix 16 draws two kinds of zone (only public supply and uses of declared public interest; or also farming and industry), and only where no supply network can be reached. Its map is not loaded, so which zone the point is in is not known."
+      es: "El apéndice 16 dibuja dos tipos de zona (solo abastecimiento y usos de interés público declarado; o también agrarios e industriales), y siempre que no se pueda conectar a una red. Su mapa no está cargado, así que no se sabe en qué zona está el punto."
+    source:
+      name: "Plan Hidrológico del Tajo 2022-2027 (Real Decreto 35/2023), Annex V"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 35.1 and appendices 15–16"
+      published: 2023-02-10
+      checked: 2026-11-26

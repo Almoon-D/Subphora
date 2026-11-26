@@ -1,0 +1,58 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Segura (area ES070): the 2022-2027 basin plan, Real Decreto 35/2023, normative provisions in
+# its Annex X (BOE no. 35, 10/02/2023). Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md). Its rules on new volumes hold in the whole basin,
+# inside groundwater bodies or not (art. 45.1).
+
+rules:
+  - id: phs-46-1-distance
+    area: ES070
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance between wells, or a well and a spring: 100 m"
+      es: "Distancia mínima entre pozos, o entre un pozo y un manantial: 100 m"
+    uncertain:
+      en: "Above 15,000 m³/year a new well must also be 500 m or more from the official piezometric network's points (art. 46.6), which no layer here measures."
+      es: "Por encima de 15.000 m³/año un pozo nuevo debe además estar a 500 m o más de los puntos de la red piezométrica oficial (art. 46.6), que aquí ninguna capa mide."
+    source:
+      name: "Plan Hidrológico del Segura 2022-2027 (Real Decreto 35/2023), Annex X"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 46.1"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phs-45-3-no-new-volumes
+    area: ES070
+    kind: no_new_concessions
+    when: always
+    applies_above_m3: 7000
+    title:
+      en: "As a rule, no concession assigns new groundwater volumes anywhere in the basin"
+      es: "Con carácter general, ninguna concesión asigna volúmenes nuevos de agua subterránea en la cuenca"
+    uncertain:
+      en: "Excepted: existing public supply that no other resource can meet, the regularisation of consolidated abstractions (art. 36) and social irrigation in Albacete."
+      es: "Se exceptúan el abastecimiento existente que ningún otro recurso pueda atender, la regularización de aprovechamientos consolidados (art. 36) y los regadíos sociales de Albacete."
+    source:
+      name: "Plan Hidrológico del Segura 2022-2027 (Real Decreto 35/2023), Annex X"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 45.3–45.4"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phs-49-1-at-risk
+    area: ES070
+    kind: body_authorisation
+    declared_at_risk: true
+    max_volume_m3: 7000
+    title:
+      en: "In a body formally declared at risk, a small-use well needs an authorisation, which is refused for irrigation"
+      es: "En una masa declarada formalmente en riesgo, un pozo de uso privativo necesita autorización, que se deniega para regadío"
+    source:
+      name: "Plan Hidrológico del Segura 2022-2027 (Real Decreto 35/2023), Annex X"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 49"
+      published: 2023-02-10
+      checked: 2026-11-26

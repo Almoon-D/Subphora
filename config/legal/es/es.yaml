@@ -1,8 +1,9 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
-# National rules (area ES): the Water Law (TRLA, Real Decreto Legislativo 1/2001) and the
-# Public Water Domain Regulation (RDPH, Real Decreto 849/1986). Read at the BOE on
-# 2026-11-24 (docs/knowledge/legal-groundwater.md); published: the consolidated text's last
-# update. A basin plan's own distances replace RDPH art. 87.2 where it sets them.
+# National rules (area ES): the Water Law (TRLA, Real Decreto Legislativo 1/2001), the Public
+# Water Domain Regulation (RDPH, Real Decreto 849/1986) and the mining-safety rules for
+# boreholes (Real Decreto 863/1985). Read at the BOE on 2026-11-24 and 2026-11-26
+# (docs/knowledge/legal-groundwater.md); published: the consolidated text's last update. A
+# basin plan's own distances replace RDPH art. 87.2 where it sets them.
 
 rules:
   - id: rdph-85-notice
@@ -17,7 +18,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
       article: "arts. 84.2 and 85"
       published: 2026-06-03
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: rdph-87-1-concession
     area: ES
@@ -31,7 +32,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
       article: "art. 87.1"
       published: 2026-06-03
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: rdph-84-2-at-risk
     area: ES
@@ -46,7 +47,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
       article: "art. 84.2"
       published: 2026-06-03
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: rdph-87-2-distance
     area: ES
@@ -65,7 +66,7 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
       article: "art. 87.2"
       published: 2026-06-03
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: rdph-87-4-policia
     area: ES
@@ -83,4 +84,20 @@ rules:
       url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
       article: "arts. 9, 78 and 87.4"
       published: 2026-06-03
-      checked: 2026-11-24
+      checked: 2026-11-26
+
+  - id: rgnbsm-108-mining
+    area: ES
+    kind: authorisation
+    title:
+      en: "Prospecting for and abstracting groundwater needs a drilling project approved by the regional mining authority"
+      es: "Investigar y captar aguas subterráneas necesita un proyecto de sondeo aprobado por la autoridad minera autonómica"
+    uncertain:
+      en: "The works run under a facultative director named to the mining authority (ITC 06.0.01 and 06.0.07). Each region's mining department processes it; its own forms and fees are not evaluated here."
+      es: "Las obras se hacen bajo un director facultativo comunicado a la autoridad minera (ITC 06.0.01 y 06.0.07). Lo tramita el departamento de minas de cada comunidad; sus formularios y tasas no se evalúan aquí."
+    source:
+      name: "Reglamento General de Normas Básicas de Seguridad Minera (Real Decreto 863/1985); ITC 06.0.07 (Orden de 2 de octubre de 1985)"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1985-10836"
+      article: "arts. 108–109"
+      published: 2010-03-18
+      checked: 2026-11-26

@@ -1,0 +1,37 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Gran Canaria (area ES120): the island's 2022-2027 hydrological plan, Decreto 370/2023 (BOC
+# no. 191, 27/09/2023), read at the BOC on 2026-11-26 (docs/knowledge/legal-groundwater.md).
+# Under the Canary Water Law a well is not a 7,000 m³ small use: a small abstraction for the
+# owner's own use needs an authorisation, anything larger a concession (ES-CN).
+
+rules:
+  - id: phgc-73-small-use
+    area: ES120
+    kind: authorisation
+    applies_up_to_m3: 1500
+    title:
+      en: "A small abstraction for own use (up to 1,500 m³/year, works up to 25 m long) needs the Consejo Insular de Aguas' authorisation"
+      es: "Un pequeño aprovechamiento para autoconsumo (hasta 1.500 m³/año y obra de hasta 25 m) necesita autorización del Consejo Insular de Aguas"
+    uncertain:
+      en: "The application proves that no abstraction within 200 m is affected, and the owner installs a sealed meter. Around abstractions in use the plan sets a protection space of at least 2 km (art. 79), which no layer here maps."
+      es: "La solicitud acredita que no se afecta a ningún aprovechamiento en 200 m, y el titular instala un aforador precintado. Alrededor de los aprovechamientos en explotación el plan fija un espacio cautelar de protección de al menos 2 km (art. 79), que aquí ninguna capa cartografía."
+    source:
+      name: "Plan Hidrológico Insular de Gran Canaria, tercer ciclo (Decreto 370/2023)"
+      url: "https://www.gobiernodecanarias.org/boc/2023/191/001.html"
+      article: "art. 73"
+      published: 2023-09-27
+      checked: 2026-11-26
+
+  - id: phgc-76-concession
+    area: ES120
+    kind: concession
+    max_volume_m3: 1500
+    title:
+      en: "Above the small abstraction, a concession is needed, granted only if unused flows exist and no existing abstraction is harmed"
+      es: "Por encima del pequeño aprovechamiento hace falta una concesión, que solo se otorga si hay caudales sin utilizar y no se afecta a las explotaciones existentes"
+    source:
+      name: "Plan Hidrológico Insular de Gran Canaria, tercer ciclo (Decreto 370/2023)"
+      url: "https://www.gobiernodecanarias.org/boc/2023/191/001.html"
+      article: "arts. 73.1 and 76"
+      published: 2023-09-27
+      checked: 2026-11-26

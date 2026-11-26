@@ -1,0 +1,40 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Tenerife (area ES124): the island's 2022-2027 hydrological plan, Decreto 372/2023 (BOC no.
+# 191, 27/09/2023), read at the BOC on 2026-11-26 (docs/knowledge/legal-groundwater.md). Its
+# normative sections carry titles, not numbers. Under the Canary Water Law a small
+# abstraction for own use needs an authorisation, anything larger a concession (ES-CN).
+
+rules:
+  - id: phtf-small-use
+    area: ES124
+    kind: authorisation
+    applies_up_to_m3: 2000
+    title:
+      en: "A small abstraction for own use (under 2,000 m³/year and 20 m³/day, a well up to 25 m) needs the Consejo Insular de Aguas' authorisation"
+      es: "Un pequeño aprovechamiento para autoconsumo (menos de 2.000 m³/año y 20 m³/día, pozo de hasta 25 m) necesita autorización del Consejo Insular de Aguas"
+    uncertain:
+      en: "The water is used on the same cadastral estate; the application proves no effect on abstractions within 200 m; the authorisation lasts up to four years. Each existing abstraction has a protection space whose size grows with its flow, which no layer here maps."
+      es: "El agua se usa en la misma finca catastral; la solicitud acredita que no se afecta a aprovechamientos en 200 m; la autorización dura hasta cuatro años. Cada alumbramiento existente tiene un espacio cautelar de protección que crece con su caudal, que aquí ninguna capa cartografía."
+    source:
+      name: "Plan Hidrológico Insular de Tenerife, tercer ciclo (Decreto 372/2023)"
+      url: "https://www.gobiernodecanarias.org/boc/2023/191/003.html"
+      article: "Normativa, 'Autorizaciones de pequeños aprovechamientos de aguas subterráneas'"
+      published: 2023-09-27
+      checked: 2026-11-26
+
+  - id: phtf-concession
+    area: ES124
+    kind: concession
+    max_volume_m3: 2000
+    title:
+      en: "From 2,000 m³/year a concession of the Consejo Insular de Aguas is needed"
+      es: "Desde 2.000 m³/año hace falta una concesión del Consejo Insular de Aguas"
+    uncertain:
+      en: "The plan's small use is below 2,000 m³/year; a well of exactly 2,000 already needs a concession."
+      es: "El pequeño aprovechamiento del plan es inferior a 2.000 m³/año; un pozo de exactamente 2.000 ya necesita concesión."
+    source:
+      name: "Plan Hidrológico Insular de Tenerife, tercer ciclo (Decreto 372/2023)"
+      url: "https://www.gobiernodecanarias.org/boc/2023/191/003.html"
+      article: "Normativa, 'Concesiones de aprovechamiento de aguas subterráneas'"
+      published: 2023-09-27
+      checked: 2026-11-26

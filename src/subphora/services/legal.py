@@ -41,7 +41,8 @@ class LegalService:
                 layer_id, lon, lat, self._legal.tap_zoom
             )
         except LayerError as exc:
-            _log.warning("legal: %s at %.5f, %.5f: %s", layer_id, lon, lat, exc.detail)
+            # Never the place: an owner's spot is private data (hard rule 6).
+            _log.warning("legal: %s could not be read: %s", layer_id, exc.failure.value)
             return LayerAnswer(features=None)
         return LayerAnswer(features=features, covers=covers)
 

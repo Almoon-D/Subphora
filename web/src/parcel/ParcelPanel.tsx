@@ -14,6 +14,8 @@ import {
   ValidationNote,
 } from "../map/Explanation.tsx";
 import { legendText, percent } from "../map/national.ts";
+import { isBlocked } from "../legal/legal.ts";
+import { LegalStatusView } from "../legal/LegalPanel.tsx";
 import type { ParcelView } from "./parcel.ts";
 
 interface Props {
@@ -197,8 +199,11 @@ function Cost({ cost }: { cost: DrillingCost }) {
 function CandidateItem({ candidate }: { candidate: Candidate }) {
   const { local, estimate, legal } = candidate;
   return (
-    <li className="candidate" data-rank={candidate.rank}>
-      <h4>{t("detailed.candidate", { rank: candidate.rank })}</h4>
+    <li className="candidate" data-rank={candidate.rank} data-blocked={isBlocked(legal) || undefined}>
+      <h4>
+        {t("detailed.candidate", { rank: candidate.rank })}
+        {isBlocked(legal) && <span className="blocked"> · {t("detailed.blocked")}</span>}
+      </h4>
       <ScoreWithConfidence estimate={estimate} />
       <p className="note">
         {t("detailed.candidatePosition", {
@@ -209,9 +214,7 @@ function CandidateItem({ candidate }: { candidate: Candidate }) {
           lon: formatNumber(candidate.longitude, 5),
         })}
       </p>
-      <p className="legal" data-legal={legal.state}>
-        {lookup(`detailed.legal.${legal.state}`, legal.state)} {t("detailed.disclaimer")}
-      </p>
+      <LegalStatusView status={legal} />
       <Depth depth={candidate.depth} />
       {candidate.cost && <Cost cost={candidate.cost} />}
       <details>

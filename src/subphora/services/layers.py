@@ -229,6 +229,26 @@ class LayerService:
             empty = empty or result
         return await self._national_info(overlay, lon, lat, zoom, fallbacks, empty, failed)
 
+    async def features_at(
+        self, layer_id: str, lon: float, lat: float, zoom: float
+    ) -> tuple[tuple[dict[str, str], ...], bool]:
+        """The allowed fields of each feature of one layer (a national overlay or a regional
+        layer, by id) at the point, and whether the layer reaches it (a regional layer
+        outside its areas does not); raises LayerError."""
+        try:
+            regional = self._regional.layer(layer_id)
+        except KeyError:
+            drawn = self._national(self._theme(layer_id))
+        else:
+            if await self._holding_area(regional, lon, lat) is None:
+                return (), False
+            drawn = self._regional_drawn(regional)
+        if drawn.info is None:
+            raise LayerError(LayerFailure.NO_FEATURE_INFO, f"{layer_id} has no feature info")
+        self._check_zoom(drawn, zoom, tile=False)
+        found = await self._features(drawn, lon, lat, zoom)
+        return tuple({f.name: f.value for f in feature.fields} for feature in found.features), True
+
     async def _national_info(
         self,
         overlay: Overlay,

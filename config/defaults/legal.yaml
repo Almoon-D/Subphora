@@ -1,0 +1,60 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The legal filter (MASTER_PLAN §4.5, decision 0034). The rules themselves are data in
+# config/legal/<country>/, keyed by area (decision 0014); this file holds how a place is
+# read and what a status says. Owner overrides (the planned well) go in config/owner.yaml.
+
+country: es
+
+# A place is asked at this map zoom: about 2.4 m a pixel, so a tap's tolerance is a few
+# tens of metres around the point.
+tap_zoom: 16
+
+# The well the filter assumes. 7,000 m³/year is the most the small-use regime allows
+# (TRLA art. 54.2), so the distances read for it are the strictest of that regime. The
+# pump's maximum instantaneous flow is not known: the distances that depend on it take
+# their stricter value.
+planned:
+  volume_m3_year: 7000
+  max_flow_l_s: null
+
+# Where a place's groundwater body and its status are read: the national map layers'
+# feature info (map.yaml), by the field names their answers give.
+bodies:
+  status_layer: groundwater-status
+  code_field: "Cód. Masa de agua"
+  name_field: "Nombre masa de agua"
+  quantitative_field: "Estado cuantitativo"
+  poor_values: ["Malo"]
+  good_values: ["Bueno"]
+  at_risk_layer: groundwater-at-risk
+  at_risk_code_field: "Código de masa"
+  declaration_field: "Declaración de riesgo"
+  # MITECO's body codes start with their district's code: ES040MSBT000030606 is in ES040.
+  district_pattern: "^(ES\\d{3})"
+
+texts:
+  disclaimer: >-
+    Guidance, not legal advice: the competent water authority and the municipality decide
+    whether and how a well may be drilled.
+  source: >-
+    The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md),
+    evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.
+  not_evaluated: >-
+    Not assessed yet: the legal filter runs once the detailed map is computed.
+  no_body:
+    en: No groundwater body is mapped at this point, so its river-basin district is not known.
+    es: En este punto no hay ninguna masa de agua subterránea cartografiada, así que no se sabe su demarcación hidrográfica.
+  bodies_unread:
+    en: The groundwater-bodies layer could not be read, so the river-basin district is not known.
+    es: No se pudo leer la capa de masas de agua subterránea, así que no se sabe la demarcación hidrográfica.
+  unknown_district:
+    en: This river-basin district is not in the legal filter's list.
+    es: Esta demarcación hidrográfica no está en la lista del filtro legal.
+  unknown_region:
+    en: The region of this place is not in the legal filter's list.
+    es: La comunidad autónoma de este lugar no está en la lista del filtro legal.
+  permits:
+    - en: "A municipal licence for the works: needed; not evaluated."
+      es: "Licencia municipal de obras: necesaria; no evaluada."
+    - en: "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read."
+      es: "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."

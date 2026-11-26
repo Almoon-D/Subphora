@@ -52,6 +52,7 @@ from subphora.geo.raster import Geometry
 from subphora.geo.render import transparent_png
 from subphora.services.fetching import Fetched
 from subphora.services.inputs import Features, InputFailure, InputFetcher
+from subphora.services.legal import LegalService
 from subphora.services.national_map import estimate_at
 from subphora.services.parcel_compute import ParcelInputs, ParcelJobSpec, compute_parcel
 from subphora.services.piezometry import piezometer_points
@@ -59,7 +60,7 @@ from subphora.sources import CatalogueClient
 from subphora.store import FileCache
 from subphora.store.file_cache import Clock, utc_now
 from subphora.store.national import map_path, read_manifest, read_manifests
-from subphora.store.parcels import image_path, read_analysis
+from subphora.store.parcels import image_path, read_analysis, write_analysis
 from subphora.store.piezometry import read_piezometry
 
 _log = logging.getLogger(__name__)
@@ -81,6 +82,8 @@ class AreaPlan:
     area_bounds: Bounds
     window: GridWindow
     coverage: TerrainCoverage
+    # The region (ISO 3166-2) the search placed the area in: its water law applies.
+    region: str
 
 
 @dataclass(slots=True)
@@ -120,9 +123,11 @@ class ParcelMapService:
         cache: FileCache,
         root: Path,
         executor: Executor,
+        legal: LegalService,
         clock: Clock = utc_now,
     ) -> None:
         self._inputs = InputFetcher(client, settings, cache, clock)
+        self._legal = legal
         self._settings = settings
         self._parcel = settings.parcel
         self._root = settings.parcel.jobs.output_path(root)
@@ -137,6 +142,7 @@ class ParcelMapService:
                 __version__,
                 settings.parcel.model_dump_json(),
                 settings.model.model_dump_json(),
+                settings.legal.model_dump_json(),
                 settings.national.datasets.model_dump_json(),
                 settings.piezometry.model_dump_json(),
                 settings.drilling.model_dump_json(),
@@ -215,6 +221,7 @@ class ParcelMapService:
             area_bounds=bounds,
             window=window,
             coverage=coverage,
+            region=area.region_code,
         )
 
     def _answer(self, area_id: str, job: _Job) -> ParcelJob:
@@ -266,6 +273,7 @@ class ParcelMapService:
                 spec = await self._prepare(plan)
                 loop = asyncio.get_running_loop()
                 analysis = await loop.run_in_executor(self._executor, compute_parcel, spec)
+                analysis = await self._assessed(analysis, plan.region)
             except InputFailure as exc:
                 _log.warning("area %s: %s", plan.area_id, exc.detail)
                 job.state = JobState.FAILED
@@ -283,6 +291,17 @@ class ParcelMapService:
             else:
                 job.state = JobState.DONE
                 job.analysis = analysis
+
+    async def _assessed(self, analysis: AreaAnalysis, region: str) -> AreaAnalysis:
+        """The analysis with its candidates' legal status, written over the computed one.
+        A failure of the filter itself leaves them "not evaluated", never the map lost."""
+        try:
+            assessed = await self._legal.candidates(analysis, region)
+        except Exception:  # the map stands without its legal status
+            _log.exception("area %s: the legal filter failed", analysis.id)
+            return analysis
+        await asyncio.to_thread(write_analysis, self._root, assessed)
+        return assessed
 
     async def _prepare(self, plan: AreaPlan) -> ParcelJobSpec:
         """Download everything the area needs; raises InputFailure."""
@@ -381,6 +400,7 @@ class ParcelMapService:
             model=self._settings.model,
             piezometry=self._settings.piezometry,
             drilling=self._settings.drilling,
+            legal=self._settings.legal.texts,
             metres_per_scale_unit=self._settings.regional.rule.metres_per_scale_unit,
             sources=sources,
             validations=validations,

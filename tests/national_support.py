@@ -174,6 +174,8 @@ class FakeSpain:
             return self._bedding(request)
         if host == "mapas.igme.es" and path.endswith("IGME_MAGNA_50/MapServer/11/query"):
             return self._lithology(request)
+        if host == "gis.miteco.gob.es" and request.url.params.get("REQUEST") == "GetFeatureInfo":
+            return self._feature_info(request)
         if host == "gis.miteco.gob.es":
             return self._bodies(request)
         if host == "www.ign.es":
@@ -267,6 +269,26 @@ class FakeSpain:
                 _feature(_square(x, south, east, north), DLO="Areniscas"),
             ]
         )
+
+    @staticmethod
+    def _feature_info(request: httpx.Request) -> httpx.Response:
+        """A tap on MITECO's layers: the synthetic body, in poor quantitative status and
+        not declared at risk, everywhere; no public water domain."""
+        layer = request.url.params["LAYERS"]
+        features = []
+        if layer == "estado_masas_aguasub_2027":
+            features.append(
+                {
+                    "type": "Feature",
+                    "geometry": None,
+                    "properties": {
+                        "Cód. Masa de agua": "ES030MSBT000",
+                        "Nombre masa de agua": "Synthetic body",
+                        "Estado cuantitativo": "Malo",
+                    },
+                }
+            )
+        return httpx.Response(200, json={"type": "FeatureCollection", "features": features})
 
     def _bodies(self, request: httpx.Request) -> httpx.Response:
         raw = request.url.params["bbox"].split(",")

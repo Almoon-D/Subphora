@@ -8,6 +8,7 @@ tests/national_support.py (no network): ``uv run python scripts/e2e_fixtures.py`
 - The detailed maps of the Daimiel point and the Campos enclosure on that synthetic Spain:
   ``parcel-queued.json``, ``parcel-daimiel.json``, ``explain-parcel-daimiel.json`` and
   ``parcel-campos.json``. Campos lies outside both boxes and far from every piezometer.
+- The legal panel at the Daimiel point's centre: ``legal-daimiel.json``.
 - The cross-section under a 1.2 km line running east through the Daimiel point, across the
   synthetic fault: ``section-daimiel.json``.
 
@@ -144,6 +145,9 @@ async def main(root: Path) -> None:
                     "/api/national/explain", params={"lon": -3.70, "lat": 40.42}
                 )
                 _write("explain-madrid.json", explained.json())
+                lon, lat = point["centre"]
+                params = {"lon": lon, "lat": lat, "region": point["region_code"]}
+                _write("legal-daimiel.json", (await api.get("/api/legal", params=params)).json())
                 queued = (await api.post("/api/parcel", json=point)).json()
                 _write("parcel-queued.json", queued)
                 daimiel = await _settle(api, queued["job"]["id"])

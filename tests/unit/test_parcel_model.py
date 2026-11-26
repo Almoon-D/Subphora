@@ -27,6 +27,8 @@ from subphora.domain.parcel_map import (
     NoCandidates,
     ParcelFailure,
     ParcelJob,
+    Site,
+    SiteDistance,
 )
 from subphora.domain.parcels import LocalPoint
 from subphora.domain.potential import InputSource, MissingInput, MissingReason, Variable
@@ -59,6 +61,7 @@ SOURCE = InputSource(
 LEGAL = LegalStatus(
     state=LegalState.NOT_EVALUATED, source="not built", assessed_at=WHEN, disclaimer="Guidance"
 )
+SITE = Site(water_point=SiteDistance(reach_m=10000), channel=SiteDistance(metres=40, reach_m=2000))
 WINDOW = GridWindow(crs="EPSG:25830", cell_m=10, west=0, north=1000, width=100, height=100)
 UNVALIDATED = not_validated("none", "Outside every groundwater body", "No national map.")
 UNKNOWN_DEPTH = DepthEstimate(state="unknown", reason=DepthUnknown.NOT_IMPORTED)
@@ -233,6 +236,7 @@ def _candidate(rank: int = 1, estimate: Any = None) -> Candidate:
         local=LocalPoint(crs="EPSG:25830", x=0, y=0),
         estimate=estimate or _estimate(),
         legal=LEGAL,
+        site=SITE,
         depth=UNKNOWN_DEPTH,
         cost=None,
     )

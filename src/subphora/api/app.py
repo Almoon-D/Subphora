@@ -24,6 +24,9 @@
   and ranked candidates) and its layers once done.
 - ``GET /api/parcel/{id}/explain?lon=&lat=``: the detailed map's estimate at a point.
 - ``GET /api/parcel/{id}/layers/{layer}``: a layer of the detailed map as one PNG.
+- ``GET /api/legal?lon=&lat=&region=``: the legal status at a point of a region (ISO
+  3166-2): its water authority, groundwater body and status, the rules that apply there
+  with their sources and dates, the verdict and the disclaimer; an area's legal panel.
 - ``POST /api/section`` (a line's two ends): the interpretive geological cross-section
   under it, with the confidence of every cell and "unknown" below the evidence.
 """
@@ -49,6 +52,7 @@ from subphora.domain import DomainModel
 from subphora.domain.aoi import AoiOrigin, AreaOfInterest, SearchAnswer, SearchError, SearchFailure
 from subphora.domain.areas import AreaBoundary
 from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
+from subphora.domain.legal import LegalStatus
 from subphora.domain.parcel_map import JobState, ParcelError, ParcelExplanation, ParcelFailure
 from subphora.domain.parcels import Position
 from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
@@ -57,6 +61,7 @@ from subphora.geo import MAX_TILE_ZOOM
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
 from subphora.services.layers import LayerService
+from subphora.services.legal import LegalService
 from subphora.services.national_map import NationalMapService
 from subphora.services.parcel import ParcelMapService
 from subphora.services.parcels import ParcelService
@@ -165,7 +170,10 @@ def create_app(
             app.state.areas = AreaService(client, settings, cache)
             app.state.layers = LayerService(client, settings, cache, app.state.areas)
             app.state.national = NationalMapService(settings, root)
-            app.state.parcel = ParcelMapService(client, settings, cache, root, workers)
+            app.state.legal = LegalService(app.state.layers, settings)
+            app.state.parcel = ParcelMapService(
+                client, settings, cache, root, workers, app.state.legal
+            )
             app.state.section = SectionService(client, settings, cache, root)
             stack.callback(app.state.national.close)
             stack.push_async_callback(app.state.parcel.close)
@@ -364,6 +372,16 @@ def create_app(
             status_code=_SECTION_STATUS[exc.failure],
             content={"code": exc.failure.value, "detail": exc.detail},
         )
+
+    @app.get("/api/legal")
+    async def legal(
+        lon: Annotated[float, Query(ge=-180, le=180)],
+        lat: Annotated[float, Query(ge=-85, le=85)],
+        region: Annotated[str, Query(pattern=r"^[A-Z]{2}-[A-Z]{2}$")],
+        request: Request,
+    ) -> LegalStatus:
+        service: LegalService = request.app.state.legal
+        return await service.place(lon, lat, region)
 
     @app.post("/api/section")
     async def section(request: Request) -> CrossSection:

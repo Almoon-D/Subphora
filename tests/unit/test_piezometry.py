@@ -3,6 +3,7 @@
 read by mdb-export (a stand-in script here, printing excerpts of the real tables), the
 summary per piezometer, the UTM zone of each row, and every way the import fails."""
 
+import shutil
 import stat
 import sys
 import zipfile
@@ -229,6 +230,7 @@ def test_the_command_imports_and_reports(
     (owner / "defaults").mkdir(parents=True)
     for path in (Path(__file__).resolve().parents[2] / "config" / "defaults").glob("*.yaml"):
         (owner / "defaults" / path.name).write_text(path.read_text(encoding="utf-8"))
+    shutil.copytree(Path(__file__).resolve().parents[2] / "config" / "legal", owner / "legal")
     output = tmp_path / "levels.json"
     (owner / "owner.yaml").write_text(
         f"piezometry:\n  mdb_export: {fake_mdb_export}\n  output: {output}\n  basins: []\n",

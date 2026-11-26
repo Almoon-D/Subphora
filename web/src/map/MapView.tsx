@@ -39,6 +39,7 @@ import { areaHeading } from "../search/areas.ts";
 import { cadastreImageUrl, cadastreVisible, imageSize, type MercatorBox } from "./cadastre.ts";
 import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
 import { describeOverlays, describeRegional, type MapLayers, overlayTiles } from "./layers.ts";
+import { isBlocked } from "../legal/legal.ts";
 import { describeNational } from "./national.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
@@ -251,9 +252,12 @@ function showParcelLayer(map: MaplibreMap, analysis: AreaAnalysis | null, layer:
 function candidateMarkers(map: MaplibreMap, analysis: AreaAnalysis | null): Marker[] {
   return (analysis?.candidates ?? []).map((candidate) => {
     const element = document.createElement("div");
-    element.className = "candidate-marker";
+    const blocked = isBlocked(candidate.legal);
+    element.className = blocked ? "candidate-marker blocked" : "candidate-marker";
     element.textContent = String(candidate.rank);
-    element.title = t("detailed.candidate", { rank: candidate.rank });
+    element.title = blocked
+      ? `${t("detailed.candidate", { rank: candidate.rank })} · ${t("detailed.blocked")}`
+      : t("detailed.candidate", { rank: candidate.rank });
     return new Marker({ element }).setLngLat([candidate.longitude, candidate.latitude]).addTo(map);
   });
 }

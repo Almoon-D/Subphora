@@ -530,13 +530,103 @@ export async function fetchExplanation(lon: number, lat: number, fetchFn: Fetch 
   return { ok: false, failure: known ? (code as ExplainFailure) : "unexpected" };
 }
 
-/** What a candidate's legal status says; "not evaluated" until the legal filter exists. */
+// ── The legal filter (GET /api/legal, and every candidate) ─────────────────────────────
+
+export type LegalState = "not_evaluated" | "probably_not_allowed" | "conditions_apply" | "no_blocking_rule" | "rules_not_loaded";
+
+export type Outcome = "blocks" | "authorisation" | "check" | "notice" | "clear" | "not_applicable";
+
+/** A text in every language the server speaks, by language code ("en" always). */
+export type Translated = Readonly<Record<string, string>>;
+
+export interface RuleSource {
+  name: string;
+  url: string;
+  article: string;
+  published: string;
+  checked: string;
+}
+
+/** One rule evaluated at a place: `message` names its text (`legal.message.<message>`). */
+export interface Finding {
+  rule_id: string;
+  area: string;
+  title: Translated;
+  source: RuleSource;
+  outcome: Outcome;
+  message: string;
+  values: Readonly<Record<string, string | number>>;
+  uncertain: Translated | null;
+}
+
+export interface NotLoaded {
+  scope: "basin_plan" | "regional_law" | "district";
+  area: string | null;
+  reason: Translated;
+}
+
+export interface Authority {
+  district: string;
+  district_name: string;
+  name: string;
+  level: "state" | "regional";
+  note: Translated | null;
+}
+
+export interface BodyStatus {
+  code: string;
+  name: string;
+  quantitative_status: string | null;
+  /** Null when the at-risk layer could not be read. */
+  declared_at_risk: boolean | null;
+  declaration: string | null;
+}
+
+/** The legal status of a place or a candidate: never blank (hard rule 2). */
 export interface LegalStatus {
-  state: "not_evaluated" | "rules_not_loaded";
+  state: LegalState;
   source: string;
   assessed_at: string;
   disclaimer: string;
   reason: string | null;
+  region: string | null;
+  authority: Authority | null;
+  body: BodyStatus | null;
+  findings: Finding[];
+  not_loaded: NotLoaded[];
+  permits: Translated[];
+}
+
+export interface SiteDistance {
+  metres: number | null;
+  reach_m: number;
+}
+
+/** What the legal filter measured at a candidate. */
+export interface Site {
+  water_point: SiteDistance;
+  channel: SiteDistance | null;
+}
+
+export type LegalResult = { ok: true; status: LegalStatus } | { ok: false; failure: "network" | "unexpected" };
+
+/** The legal status at a point of a region (an area's legal panel). Never throws. */
+export async function fetchLegal(lon: number, lat: number, region: string, fetchFn: Fetch = fetch): Promise<LegalResult> {
+  const query = new URLSearchParams({ lon: lon.toFixed(7), lat: lat.toFixed(7), region });
+  let response: Response;
+  try {
+    response = await fetchFn(`/api/legal?${query.toString()}`);
+  } catch {
+    return { ok: false, failure: "network" };
+  }
+  if (!response.ok) {
+    return { ok: false, failure: "unexpected" };
+  }
+  try {
+    return { ok: true, status: (await response.json()) as LegalStatus };
+  } catch {
+    return { ok: false, failure: "unexpected" };
+  }
 }
 
 export type DepthUnknown = "not_imported" | "outside_bodies" | "no_piezometer_nearby" | "no_ground_elevation";
@@ -598,6 +688,7 @@ export interface Candidate {
   local: { crs: string; x: number; y: number };
   estimate: PotentialEstimate;
   legal: LegalStatus;
+  site: Site;
   depth: DepthEstimate;
   /** Exactly when the depth is estimated. */
   cost: DrillingCost | null;

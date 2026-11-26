@@ -44,6 +44,7 @@ import {
   pollDelay,
   withParcelResult,
 } from "./parcel/parcel.ts";
+import { LegalPanel } from "./legal/LegalPanel.tsx";
 import { ParcelPanel } from "./parcel/ParcelPanel.tsx";
 import { SectionPanel, type SectionView } from "./section/SectionPanel.tsx";
 import {
@@ -522,6 +523,7 @@ export function App() {
           </p>
         )}
         {area && <AreaCard area={area} />}
+        {area && <LegalPanel area={area} />}
         {area && (
           <ParcelPanel
             view={parcelView}

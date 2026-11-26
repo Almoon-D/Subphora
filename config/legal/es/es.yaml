@@ -1,0 +1,86 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# National rules (area ES): the Water Law (TRLA, Real Decreto Legislativo 1/2001) and the
+# Public Water Domain Regulation (RDPH, Real Decreto 849/1986). Read at the BOE on
+# 2026-11-24 (docs/knowledge/legal-groundwater.md); published: the consolidated text's last
+# update. A basin plan's own distances replace RDPH art. 87.2 where it sets them.
+
+rules:
+  - id: rdph-85-notice
+    area: ES
+    kind: notice
+    max_volume_m3: 7000
+    title:
+      en: "A small-use well (up to 7,000 m³/year) is notified to the water authority"
+      es: "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+    source:
+      name: "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
+      article: "arts. 84.2 and 85"
+      published: 2026-06-03
+      checked: 2026-11-24
+
+  - id: rdph-87-1-concession
+    area: ES
+    kind: concession
+    max_volume_m3: 7000
+    title:
+      en: "Above 7,000 m³/year per estate a concession is needed"
+      es: "Por encima de 7.000 m³/año por finca hace falta una concesión"
+    source:
+      name: "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
+      article: "art. 87.1"
+      published: 2026-06-03
+      checked: 2026-11-24
+
+  - id: rdph-84-2-at-risk
+    area: ES
+    kind: body_authorisation
+    declared_at_risk: true
+    max_volume_m3: 7000
+    title:
+      en: "In a body declared at risk, a new small-use well needs the basin authority's authorisation"
+      es: "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+    source:
+      name: "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
+      article: "art. 84.2"
+      published: 2026-06-03
+      checked: 2026-11-24
+
+  - id: rdph-87-2-distance
+    area: ES
+    kind: well_distance
+    cases:
+      - {bodies: [any], flow_below_l_s: 0.15, distance_m: 20}
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance to other wells, springs and control points (where the basin plan sets none)"
+      es: "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+    uncertain:
+      en: "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps."
+      es: "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+    source:
+      name: "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
+      article: "art. 87.2"
+      published: 2026-06-03
+      checked: 2026-11-24
+
+  - id: rdph-87-4-policia
+    area: ES
+    kind: water_domain
+    zones:
+      layer: public-water-domain
+      field: "Tipo Zona"
+      values: ["DPH Cartográfico", "Zona de Servidumbre", "Zona de Policía"]
+    distance_m: 100
+    title:
+      en: "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation"
+      es: "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+    source:
+      name: "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638"
+      article: "arts. 9, 78 and 87.4"
+      published: 2026-06-03
+      checked: 2026-11-24

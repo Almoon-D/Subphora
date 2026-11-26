@@ -118,10 +118,3 @@ jobs:
   poll_after_s: 2
   output_dir: data/parcels
 
-# The legal status of every candidate until the legal filter exists (hard rule 2).
-legal:
-  not_evaluated_source: >-
-    No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).
-  disclaimer: >-
-    Guidance, not legal advice: the competent water authority and the municipality decide
-    whether and how a well may be drilled.

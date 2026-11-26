@@ -15,7 +15,8 @@
 | 06 | `docs/sessions/done/06-parcel-detail.md` | Opus 5.5, high | done |
 | 07 | `docs/sessions/done/07-validation-depth-cost.md` | Opus 5.5, high | done |
 | 08 | `docs/sessions/done/08-cross-section.md` | Opus 5.5, high | done |
-| 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | next |
+| 09 | `docs/sessions/done/09-legal-filter.md` | Opus 5.5, high | done |
+| 09a | `docs/sessions/09a-legal-all-districts.md` | Opus 5.5, high | next |
 | 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | planned |
 | 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | planned |
 | 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | planned |
@@ -28,6 +29,16 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(legal-sources): re-read at the BOE, the regional gazettes and the basin
+  authorities the sources of `config/legal/es/` (read 2026-11-24) and read the normative
+  part of the 23 basin plans and the 18 regional water laws not loaded (`areas.yaml` says
+  which). Queued by 09: the cloud session's network refused every official host; session
+  09a, from a session with network access or the owner's computer.
+- VERIFY-LIVE(legal-taps): that a tap on `groundwater-status` answers the aliases
+  `legal.yaml` reads ("Cód. Masa de agua", "Estado cuantitativo") and that its body codes
+  match those of `groundwater-at-risk`, at Daimiel and Dalías. Queued by 09; `make dev` on
+  the owner's machine, or session 09a.
 
 - VERIFY-LIVE(magna-section): draw a section in `make dev` on the owner's test area and check
   that MAGNA layer 11 answers `DLO` per unit and that a contact's projected dip matches the
@@ -122,8 +133,11 @@
   then, in the maintenance session or the session running then (0011, 0016). (00, 02)
 - Commercial use: no sale before the owner has tested the finished project on his land
   (decision 0015); whom to contact then is kept in `docs/commercial-use.md`. (01)
-- Legal: the mining-safety rules for water boreholes and municipal licences were not read;
-  session 09 reads them at the source before "drilling permits" leaves "not evaluated". (01)
+- Legal: the mining-safety rules for water boreholes were not read; every status lists the
+  mining authority's drilling permit as "not evaluated" until session 09a reads them. (01, 09)
+- Legal: the district of a point outside every mapped groundwater body is unknown ("rules
+  not loaded"); a point query on `demarhidro_2027` would name it. Red Natura 2000 and the
+  urban/rural land class are not read: the stricter distance applies, flagged. (09)
 - The old SIGPAC hosts (`sigpac.mapa.gob.es`, `wms.mapa.gob.es/sigpac`) did not answer
   from the cloud; the catalogue uses `sigpac-hubcloud.es`. (01)
 - Google Maps dropped by the owner (decision 0020): no card, no key; PNOA and the IGN maps
@@ -199,6 +213,18 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 09 — Legal filter (2026-11-26, version 0.12.0)
+
+- Landed: `subphora.legal` with rules as data in `config/legal/es/` (decision 0034):
+  national TRLA/RDPH, Andalusian Water Law, Guadalquivir and Andalusian Mediterranean plans,
+  Guadiana closed perimeters and Duero zoning; all 25 districts and 19 regions listed.
+  `GET /api/legal`, the area's legal panel first, and every candidate assessed at its spot
+  (distances to the IGME inventory and the terrain's channels); blocked spots marked.
+- Live: none. The cloud network refused BOE, MITECO, Junta and every official host, and the
+  owner's computer was offline; the rules come from the sources read on 2026-11-24.
+- Deferred to 09a: the other 21 plans, 18 regional laws and the mining-safety rules.
+- VERIFY-LIVE: legal-sources, legal-taps (new).
 
 ### 08 — Interpretive geological cross-section (2026-11-26, version 0.11.0)
 

@@ -1,0 +1,59 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Guadalquivir (area ES050): the 2022-2027 basin plan, Real Decreto 35/2023, normative
+# provisions in its Annex VII (BOE no. 35, 10/02/2023). Read on 2026-11-24
+# (docs/knowledge/legal-groundwater.md).
+
+rules:
+  - id: phg-38-4-no-concessions
+    area: ES050
+    kind: no_new_concessions
+    above_volume_m3: 7000
+    title:
+      en: "No new concessions in a body in poor quantitative status"
+      es: "No se admiten concesiones nuevas en una masa en mal estado cuantitativo"
+    uncertain:
+      en: "The plan excepts replacements of existing concessions and public supply without a viable alternative."
+      es: "El plan exceptúa las sustituciones de concesiones existentes y el abastecimiento público sin alternativa viable."
+    source:
+      name: "Plan Hidrológico del Guadalquivir 2022-2027 (Real Decreto 35/2023), Annex VII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 38.4"
+      published: 2023-02-10
+      checked: 2026-11-24
+
+  - id: phg-50-2-at-risk
+    area: ES050
+    kind: body_authorisation
+    declared_at_risk: true
+    max_volume_m3: 7000
+    title:
+      en: "In a body declared at risk, a small-use well needs an authorisation"
+      es: "En una masa declarada en riesgo, un pozo de uso privativo necesita autorización"
+    source:
+      name: "Plan Hidrológico del Guadalquivir 2022-2027 (Real Decreto 35/2023), Annex VII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 50.2"
+      published: 2023-02-10
+      checked: 2026-11-24
+
+  - id: phg-50-3-distance
+    area: ES050
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      # Rural land: 50 m up to 1,000 m³/year, one metre more per 13.333 m³, 500 m at
+      # 7,000; in bodies in poor quantitative status 500 m is reached at 3,000.
+      - {bodies: [poor], curve: [[1000, 50], [3000, 500]]}
+      - {bodies: [good, outside], curve: [[1000, 50], [7000, 500]]}
+    title:
+      en: "Exclusion circle around existing wells and springs, growing with the volume"
+      es: "Círculo de exclusión alrededor de pozos y manantiales existentes, que crece con el volumen"
+    uncertain:
+      en: "Rural land is assumed (urbanised land: 10 or 100 m). In Red Natura 2000, which is not checked here, 500 m is reached at 3,000 m³/year as in poor bodies. The plan's 'suelo rural' and 'resto del territorio' overlap; the stricter is used."
+      es: "Se supone suelo rural (suelo urbanizado: 10 o 100 m). En Red Natura 2000, que aquí no se comprueba, los 500 m se alcanzan a 3.000 m³/año como en las masas en mal estado. Los apartados 'suelo rural' y 'resto del territorio' del plan se solapan; se aplica el más estricto."
+    source:
+      name: "Plan Hidrológico del Guadalquivir 2022-2027 (Real Decreto 35/2023), Annex VII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 50.3"
+      published: 2023-02-10
+      checked: 2026-11-24

@@ -73,11 +73,6 @@ class JobSettings(Section):
         return self.output_dir if self.output_dir.is_absolute() else root / self.output_dir
 
 
-class LegalSettings(Section):
-    not_evaluated_source: str = Field(min_length=1)
-    disclaimer: str = Field(min_length=1)
-
-
 class ParcelSettings(Section):
     resolution_m: PositiveFloat
     point_radius_m: PositiveFloat
@@ -91,7 +86,6 @@ class ParcelSettings(Section):
     layers: list[str] = Field(min_length=1)
     image_max_px: PositiveInt
     jobs: JobSettings
-    legal: LegalSettings
 
     @model_validator(mode="after")
     def _reach(self) -> Self:

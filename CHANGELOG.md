@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.15.0] - 2026-11-26
+
+- Offline packs: before going to a site, download a pack of the selected area and the map
+  works there with no coverage: PNOA orthophoto around it (zooms 10 to 18), the potential
+  index and its confidence, the detailed map's images, the parcel's outline and candidates.
+- Before downloading, the panel lists what the pack holds and what it leaves out with the
+  reason (the Catastro map never: its terms forbid it), and its estimated size; packs above
+  250 MB, or larger than the space left on the device, are refused.
+- A download shows its progress, can be paused, and resumes where it stopped after a lost
+  signal or a closed page, without downloading anything twice.
+- The app now opens and reloads with no coverage at all (a service worker keeps it), so
+  field mode and a pack's area keep working on site.
+- The packs on the device are listed with their size and date, to open again or delete.
+
 ## [0.14.0] - 2026-11-26
 
 - Field mode: a "Modo campo" button turns the panel into large, high-contrast controls with

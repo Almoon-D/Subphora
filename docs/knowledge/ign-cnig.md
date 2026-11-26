@@ -16,6 +16,11 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
 - Over open sea off Lanzarote, some GoogleMapsCompatible tiles near zoom 13 drew as a dark
   block while the neighbouring ones showed water: PNOA has no imagery there.
   `(GetTile, browser, 2026-11-24)`
+- Tile sizes for offline packs: 30 GoogleMapsCompatible JPEG tiles at zooms 12, 14, 16, 17
+  and 18 over Daimiel, Zaragoza and Sevilla averaged 19.2 KB, the largest 24.3 KB
+  (`config/defaults/packs.yaml` estimates 24,000 bytes a tile). A real pack over Santiago's
+  Praza do Obradoiro stored 202 tiles (zooms 10-18) in 3.3 MB, 16.5 KB a tile; every tile
+  carried CORS, so the browser stores and counts it. `(GetTile, browser, 2026-11-26)`
 - WMS `https://www.ign.es/wms-inspire/pnoa-ma`: layers `OI.OrthoimageCoverage`,
   `OI.MosaicElement`, `fondo`; EPSG:3857 offered; CORS `*`. `(GetCapabilities, 2026-11-24)`
 
@@ -95,6 +100,7 @@ Catalogue ids: `ign-pnoa-wmts`, `ign-pnoa-wms`, `ign-base-wmts`, `ign-mdt-wcs`,
   the map, e.g. "PNOA CC-BY 4.0 scne.es"; a derived work says "Obra derivada de MDT05
   CC-BY 4.0 scne.es". `(Condiciones_licenciaUso_IGN.pdf, 2026-11-24)`
 - CC BY 4.0 allows copying and storing: **caching PNOA and the base maps for offline packs
-  is allowed** with the attribution kept (session 11).
+  is allowed** with the attribution kept (session 11). The same licence covers CartoCiudad,
+  so a pack keeps an area found by it. `sources.yaml` marks these `offline: allowed`.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

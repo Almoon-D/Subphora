@@ -18,6 +18,7 @@ from subphora.config.legal import LegalSettings
 from subphora.config.map import Legend, MapSettings
 from subphora.config.model import BreaksLookup, ModelSettings
 from subphora.config.national import NationalSettings
+from subphora.config.packs import PacksSettings
 from subphora.config.parcel import ParcelSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.search import SearchSettings
@@ -41,6 +42,7 @@ __all__ = [
     "MapSettings",
     "ModelSettings",
     "NationalSettings",
+    "PacksSettings",
     "ParcelSettings",
     "PiezometrySettings",
     "RegionalSettings",
@@ -78,6 +80,7 @@ class Settings(Section):
     section: SectionSettings
     legal: LegalSettings
     field: FieldSettings
+    packs: PacksSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
@@ -294,6 +297,27 @@ class Settings(Section):
                 )
         if parcel.water_points_radius_m < self.model.confidence.evidence_none_beyond_m:
             raise ValueError("parcel.water_points_radius_m is below evidence_none_beyond_m")
+        return self
+
+    @model_validator(mode="after")
+    def _packs_carry_only_storable(self) -> Self:
+        """A pack carries only base maps whose service's terms allow storing them (hard
+        rule 4), and national tile layers that the detailed map also draws."""
+        bases = {base.id: base for base in self.map.base_maps}
+        for base in self.packs.base_maps:
+            key = f"packs.base_maps.{base.id}"
+            if base.id not in bases:
+                raise ValueError(f"{key}: not a map base map")
+            service = self.sources.service(bases[base.id].service)
+            if service.offline != "allowed":
+                raise ValueError(f"{key}: {service.id}'s terms do not allow storing it")
+        known = {layer.id for layer in self.national.tiles.layers}
+        unknown = sorted(set(self.packs.layers) - known)
+        if unknown:
+            raise ValueError(f"packs.layers: {unknown} are not national tile layers")
+        undrawn = sorted(set(self.packs.layers) - set(self.parcel.layers))
+        if undrawn:
+            raise ValueError(f"packs.layers: {undrawn} are not drawn by the detailed map")
         return self
 
     @staticmethod

@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0037](0037-offline-packs-and-service-worker.md) | Offline packs: planned in the browser, stored in Cache Storage, served by a service worker | accepted |
 | [0036](0036-field-records-and-outbox.md) | Field records: append-only on the device, an idempotent outbox, SQLite on the server | accepted |
 | [0035](0035-legal-rules-per-body-and-volume.md) | Rules narrowed to listed bodies and volume ranges; drilling needs the mining authority | accepted |
 | [0034](0034-legal-rules-as-data.md) | Legal rules as data, evaluated from the official layers at each spot | accepted |

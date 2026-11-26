@@ -46,6 +46,8 @@ import type { Fix, Target } from "../field/records.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
 setWorkerUrl(workerUrl);
+/** The map's worker script, which the service worker keeps for use with no coverage. */
+export const mapWorkerUrl: string = workerUrl;
 
 // Half the width of the EPSG:3857 world, in metres: MapLibre's mercator units are 0…1.
 const WEB_MERCATOR_HALF_EXTENT_M = 20037508.342789244;

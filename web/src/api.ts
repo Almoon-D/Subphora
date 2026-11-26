@@ -108,6 +108,35 @@ export interface FieldConfig {
   media_types: string[];
 }
 
+/** A map layer an offline pack does not carry, and why (hard rule 4). */
+export interface ExcludedLayer {
+  id: string;
+  kind: "base_map" | "cadastre" | "overlay" | "regional";
+  service_id: string;
+  /** Its terms forbid storing it, were not read for that use, or packs.yaml leaves it out. */
+  reason: "forbidden" | "not_evaluated" | "not_chosen";
+}
+
+/** Offline packs' settings (config/defaults/packs.yaml). */
+export interface PacksConfig {
+  buffer_m: number;
+  min_zoom: number;
+  max_zoom: number;
+  max_bytes: number;
+  base_maps: { id: string; tile_bytes: number }[];
+  /** National tile layers, stored as tiles and as the detailed map's images. */
+  layers: string[];
+  national_tile_bytes: number;
+  parcel_image_bytes: number;
+  concurrency: number;
+  retries: number;
+  progress_every: number;
+  network_timeout_ms: number;
+  /** An area's geometry is stored only when every source of it is one of these. */
+  storable_services: string[];
+  excluded: ExcludedLayer[];
+}
+
 export interface MapConfig {
   initial_view: { longitude: number; latitude: number; zoom: number };
   area_padding_px: number;
@@ -116,6 +145,7 @@ export interface MapConfig {
   /** How long a drawn cross-section's line may be, in metres. */
   section: { min_length_m: number; max_length_m: number };
   field: FieldConfig;
+  packs: PacksConfig;
   search: {
     /** The browser stops adding vertices to a drawn polygon here. */
     max_vertices: number;
@@ -627,12 +657,17 @@ export interface Site {
 
 export type LegalResult = { ok: true; status: LegalStatus } | { ok: false; failure: "network" | "unexpected" };
 
+/** The API's path of the legal status at a point of a region. */
+export function legalPath(lon: number, lat: number, region: string): string {
+  const query = new URLSearchParams({ lon: lon.toFixed(7), lat: lat.toFixed(7), region });
+  return `/api/legal?${query.toString()}`;
+}
+
 /** The legal status at a point of a region (an area's legal panel). Never throws. */
 export async function fetchLegal(lon: number, lat: number, region: string, fetchFn: Fetch = fetch): Promise<LegalResult> {
-  const query = new URLSearchParams({ lon: lon.toFixed(7), lat: lat.toFixed(7), region });
   let response: Response;
   try {
-    response = await fetchFn(`/api/legal?${query.toString()}`);
+    response = await fetchFn(legalPath(lon, lat, region));
   } catch {
     return { ok: false, failure: "network" };
   }
@@ -845,8 +880,13 @@ export async function startParcel(area: AreaOfInterest, fetchFn: Fetch = fetch):
 }
 
 /** The job of a detailed map, as it stands. */
+/** The API's path of an area's detailed-map job. */
+export function parcelPath(id: string): string {
+  return `/api/parcel/${encodeURIComponent(id)}`;
+}
+
 export async function fetchParcel(id: string, fetchFn: Fetch = fetch): Promise<ParcelResult> {
-  const answer = await askParcel(() => fetchFn(`/api/parcel/${encodeURIComponent(id)}`));
+  const answer = await askParcel(() => fetchFn(parcelPath(id)));
   return answer.ok ? { ok: true, answer: answer.body as ParcelAnswer } : answer;
 }
 

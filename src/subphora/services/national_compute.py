@@ -23,7 +23,9 @@ from subphora.config.national import (
     PermeabilityDataset,
     WaterPointsDataset,
 )
+from subphora.config.validation import ValidationSettings
 from subphora.domain.potential import InputSource, Variable
+from subphora.domain.validation import ValidationState
 from subphora.geo.grid import GridWindow, transform_bounds, transform_geometry
 from subphora.geo.raster import (
     FloatGrid,
@@ -41,6 +43,7 @@ from subphora.geo.terrain import derive
 from subphora.geo.tiles import tile_bounds
 from subphora.model.evaluate import ABSENT, Category, InputGrids, Quality, evaluate
 from subphora.model.quality import dataset_quality
+from subphora.services.validation import labelled_wells, validate_region
 from subphora.store.national import Category as StoredCategory
 from subphora.store.national import (
     CriterionQuality,
@@ -79,6 +82,7 @@ class RegionJob:
     built_at: datetime
     national: NationalSettings
     model: ModelSettings
+    validation: ValidationSettings
     metres_per_scale_unit: float
     # Per dataset: where and when it was read.
     sources: dict[str, InputSource]
@@ -90,6 +94,10 @@ class RegionResult:
     region_id: str
     cells: int
     scored: int
+    # Its domains by validation state.
+    validated: int
+    chance: int
+    unmeasured: int
 
 
 def _region_mask(job: RegionJob) -> NDArray[np.bool_]:
@@ -173,6 +181,31 @@ def groundwater_grid(
     return _categorical(window, features, key, order, dataset.srs)
 
 
+def body_grid(
+    window: GridWindow,
+    features: Sequence[dict[str, Any]],
+    dataset: GroundwaterBodiesDataset,
+    model: ModelSettings,
+) -> tuple[FloatGrid, list[Category]]:
+    """Groundwater bodies burnt as body codes (category: the code, labelled "name (code)"),
+    drawn in the status grid's order, so a cell's body is the one its status comes from."""
+    lookup = _classes_of(model, Variable.GROUNDWATER_STATUS)
+    rank: dict[str, float] = {}
+    for feature in features:
+        properties = feature.get("properties") or {}
+        code = _text(properties.get(dataset.code_field))
+        suitability = lookup.get(_text(properties.get(dataset.status_field))) if lookup else None
+        drawn = 2.0 if suitability is None else -suitability
+        rank[code] = min(rank.get(code, drawn), drawn)
+
+    def key(properties: dict[str, Any]) -> tuple[str, str] | None:
+        code = _text(properties.get(dataset.code_field))
+        name = _text(properties.get(dataset.name_field))
+        return (code, f"{name} ({code})") if code else None
+
+    return _categorical(window, features, key, lambda c: rank.get(c.cls, 2.0), dataset.srs)
+
+
 def _classes_of(model: ModelSettings, variable: Variable) -> dict[str, float] | None:
     for criterion in model.criteria:
         if criterion.variable is variable and isinstance(criterion.lookup, ClassesLookup):
@@ -243,6 +276,9 @@ def compute_region(job: RegionJob) -> RegionResult:
     groundwater, groundwater_categories = groundwater_grid(
         window, job.inputs.groundwater_bodies, datasets.groundwater_bodies, job.model
     )
+    body, body_categories = body_grid(
+        window, job.inputs.groundwater_bodies, datasets.groundwater_bodies, job.model
+    )
     elevation = warped(
         window, job.inputs.terrain, float(datasets.terrain.sea_value), Resampling.average
     )
@@ -263,22 +299,37 @@ def compute_region(job: RegionJob) -> RegionResult:
         Variable.CLAY_PCT: (clay * datasets.soil.scale).astype(np.float32),
         Variable.GROUNDWATER_STATUS: groundwater,
         Variable.WATER_POINT_DISTANCE_M: _water_points(job),
+        Variable.GROUNDWATER_BODY: body,
     }
     mask = _region_mask(job)
     grids = {v: np.where(mask, g, np.nan).astype(np.float32) for v, g in grids.items()}
     categories = {
         Variable.PERMEABILITY_CLASS: permeability_categories,
         Variable.GROUNDWATER_STATUS: groundwater_categories,
+        Variable.GROUNDWATER_BODY: body_categories,
     }
     quality = _quality(job)
+    validations, skill = validate_region(
+        job.region_id,
+        window,
+        grids,
+        categories,
+        job.model,
+        quality,
+        labelled_wells(job.inputs.water_points, datasets.water_points, job.validation.labels),
+        job.validation,
+        job.built_at,
+    )
     evaluation = evaluate(
         job.model,
         InputGrids(values=grids, categories=categories),
         quality,
         grids[Variable.WATER_POINT_DISTANCE_M],
+        skill,
     )
     grids[Variable.INDEX] = evaluation.index.astype(np.float32)
     grids[Variable.CONFIDENCE] = evaluation.confidence.astype(np.float32)
+    grids[Variable.SKILL] = np.where(np.isnan(evaluation.index), np.nan, skill).astype(np.float32)
     criterion_sources = {
         c.id: job.sources[VARIABLE_DATASET[c.variable]]
         for c in job.model.criteria
@@ -307,12 +358,16 @@ def compute_region(job: RegionJob) -> RegionResult:
         },
         distance_cap_m=job.national.buffer_m,
         model=job.model,
+        validation=validations,
     )
     write_region(job.root, manifest, dict(grids))
     return RegionResult(
         region_id=job.region_id,
         cells=int(mask.sum()),
         scored=int((~np.isnan(grids[Variable.INDEX])).sum()),
+        validated=sum(v.state is ValidationState.VALIDATED for v in validations),
+        chance=sum(v.state is ValidationState.NO_BETTER_THAN_CHANCE for v in validations),
+        unmeasured=sum(v.state is ValidationState.NOT_ENOUGH_LABELS for v in validations),
     )
 
 

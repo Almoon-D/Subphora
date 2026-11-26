@@ -7,6 +7,10 @@ returns the finished analysis, so it pickles to a worker and back. Nothing here 
 the network. The grids are computed over the area's window (area plus buffer), then kept
 only inside the area: what lies in the buffer is there for flow and distances, not
 scored, explained or drawn.
+
+The skill of each domain comes from the national map's validation (the area is far too
+small to validate on its own); each candidate gets its depth to water from the imported
+piezometers of its own groundwater body, and the drilling cost of that depth.
 """
 
 from collections.abc import Sequence
@@ -18,9 +22,11 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
+from subphora.config.depth import DrillingSettings, PiezometrySettings
 from subphora.config.model import ModelSettings
 from subphora.config.national import NationalSettings, TileLayer
 from subphora.config.parcel import ParcelSettings
+from subphora.domain.depth import LevelsSource
 from subphora.domain.layers import LayerDetail
 from subphora.domain.legal import LegalState, LegalStatus
 from subphora.domain.parcel_map import (
@@ -32,12 +38,15 @@ from subphora.domain.parcel_map import (
 )
 from subphora.domain.parcels import LocalPoint
 from subphora.domain.potential import (
+    AUXILIARY,
     CATEGORICAL,
+    RESULTS,
     InputSource,
     MissingInput,
     MissingReason,
     Variable,
 )
+from subphora.domain.validation import MEASURED, NO_BODY, DomainValidation
 from subphora.geo.grid import GridWindow, lon_lat_bounds, transform_xy
 from subphora.geo.raster import (
     FloatGrid,
@@ -54,20 +63,25 @@ from subphora.model import (
     Category,
     Evaluation,
     InputGrids,
+    PiezometerPoint,
     Quality,
     area_means,
     confidence_of,
     dataset_quality,
+    depth_at,
+    drilling_cost,
     evaluate,
     explain_cell,
     select_candidates,
 )
 from subphora.services.national_compute import (
+    body_grid,
     groundwater_grid,
     permeability_grid,
     warped,
     water_point_positions,
 )
+from subphora.services.validation import domain_codes, domain_keys, domain_validations, skill_grid
 from subphora.store.national import Category as StoredCategory
 from subphora.store.national import CriterionQuality, RegionManifest, write_region
 from subphora.store.parcels import write_analysis, write_image
@@ -117,10 +131,18 @@ class ParcelJobSpec:
     parcel: ParcelSettings
     national: NationalSettings
     model: ModelSettings
+    piezometry: PiezometrySettings
+    drilling: DrillingSettings
     metres_per_scale_unit: float
     # Per dataset (PARCEL_VARIABLE_DATASET's values): where and when it was read.
     sources: dict[str, InputSource]
     inputs: ParcelInputs
+    # The national map's validation per domain (body code, or the outside) near the area.
+    validations: dict[str, DomainValidation]
+    # The imported piezometers near the area, in the window's CRS, and their source (None
+    # when no levels were imported).
+    piezometers: list[PiezometerPoint]
+    levels: LevelsSource | None
 
 
 def _text(value: Any) -> str:
@@ -235,6 +257,9 @@ def _grids(spec: ParcelJobSpec) -> tuple[dict[Variable, FloatGrid], dict[Variabl
         parcel.buffer_m,
     )
     clay = warped(window, spec.inputs.soil, float(national.soil.nodata_value), Resampling.nearest)
+    body, body_categories = body_grid(
+        window, spec.inputs.groundwater_bodies, national.groundwater_bodies, spec.model
+    )
     positions, dips = bedding_dips(spec)
     grids: dict[Variable, FloatGrid] = {
         Variable.PERMEABILITY_CLASS: permeability,
@@ -253,10 +278,12 @@ def _grids(spec: ParcelJobSpec) -> tuple[dict[Variable, FloatGrid], dict[Variabl
         Variable.BEDDING_DIP_DEG: nearest_value(
             window, positions, dips, parcel.bedding.max_distance_m
         ),
+        Variable.GROUNDWATER_BODY: body,
     }
     categories = {
         Variable.PERMEABILITY_CLASS: permeability_categories,
         Variable.GROUNDWATER_STATUS: groundwater_categories,
+        Variable.GROUNDWATER_BODY: body_categories,
     }
     return grids, categories
 
@@ -292,14 +319,20 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
     full, categories = _grids(spec)
     grids = {v: np.where(inside, g[view], np.nan).astype(np.float32) for v, g in full.items()}
     quality = _quality(spec)
+    body_categories = categories[Variable.GROUNDWATER_BODY]
+    validations = domain_validations(body_categories, spec.validations)
+    by_domain = {v.domain: v for v in validations}
+    skill = skill_grid(grids[Variable.GROUNDWATER_BODY], body_categories, by_domain, spec.model)
     evaluation = evaluate(
         spec.model,
         InputGrids(values=grids, categories=categories),
         quality,
         grids[Variable.WATER_POINT_DISTANCE_M],
+        skill,
     )
     grids[Variable.INDEX] = evaluation.index.astype(np.float32)
     grids[Variable.CONFIDENCE] = evaluation.confidence.astype(np.float32)
+    grids[Variable.SKILL] = np.where(np.isnan(evaluation.index), np.nan, skill).astype(np.float32)
     sources = {
         c.id: spec.sources[PARCEL_VARIABLE_DATASET[c.variable]]
         for c in spec.model.criteria
@@ -333,11 +366,14 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
         distance_cap_m=max(caps.values()),
         distance_caps=caps,
         model=spec.model,
+        validation=validations,
     )
     write_region(spec.root, manifest, dict(grids))
     layers = [spec.national.tiles.layer(layer_id) for layer_id in spec.parcel.layers]
     corners = _write_images(spec, window, grids, layers)
-    candidates, no_candidates = _candidates(spec, window, grids, inside, categories, quality)
+    candidates, no_candidates = _candidates(
+        spec, window, grids, inside, categories, quality, by_domain
+    )
     analysis = AreaAnalysis(
         id=spec.area_id,
         label=spec.label,
@@ -347,7 +383,7 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
         area_m2=spec.area_m2,
         built_at=spec.built_at,
         layers=tuple(layer.variable for layer in layers),
-        summary=_summary(spec, evaluation, inside, sources),
+        summary=_summary(spec, evaluation, inside, sources, grids, body_categories, by_domain),
         candidates=candidates,
         no_candidates=no_candidates,
         sources=spec.sources,
@@ -389,6 +425,7 @@ def _candidates(
     inside: NDArray[np.bool_],
     categories: dict[Variable, list[Category]],
     quality: dict[str, Quality],
+    validations: dict[str, DomainValidation],
 ) -> tuple[tuple[Candidate, ...], NoCandidates | None]:
     settings = spec.parcel.candidates
     index = grids[Variable.INDEX]
@@ -425,10 +462,12 @@ def _candidates(
         y = window.north - (row + 0.5) * window.cell_m
         lon, lat = transform_xy(x, y, window.crs, _LON_LAT)
         values: dict[Variable, float] = {
-            v: float(g[row, column])
-            for v, g in grids.items()
-            if v not in (Variable.INDEX, Variable.CONFIDENCE)
+            v: float(g[row, column]) for v, g in grids.items() if v not in RESULTS | AUXILIARY
         }
+        body = _category_at(
+            grids[Variable.GROUNDWATER_BODY], categories[Variable.GROUNDWATER_BODY], row, column
+        )
+        domain = NO_BODY if body is None else body.cls
         estimate = explain_cell(
             spec.model,
             values,
@@ -437,6 +476,20 @@ def _candidates(
             sources,
             values[Variable.WATER_POINT_DISTANCE_M],
             caps,
+            validations[domain],
+        )
+        permeability = _category_at(
+            grids[Variable.PERMEABILITY_CLASS], categories[Variable.PERMEABILITY_CLASS], row, column
+        )
+        depth = depth_at(
+            x,
+            y,
+            values[Variable.ELEVATION_M],
+            None if body is None else (body.cls, body.label),
+            spec.piezometers,
+            spec.piezometry.water_table,
+            permeability is not None and spec.piezometry.is_karst(permeability.label),
+            spec.levels,
         )
         candidates.append(
             Candidate(
@@ -446,9 +499,18 @@ def _candidates(
                 local=LocalPoint(crs=window.crs, x=x, y=y),
                 estimate=estimate,
                 legal=legal,
+                depth=depth,
+                cost=drilling_cost(depth, spec.drilling),
             )
         )
     return tuple(candidates), None
+
+
+def _category_at(grid: FloatGrid, items: list[Category], row: int, column: int) -> Category | None:
+    """The category of a categorical grid at a cell, or None where it has no feature."""
+    value = float(grid[row, column])
+    code = -1 if np.isnan(value) else int(value)
+    return items[code] if 0 <= code < len(items) else None
 
 
 def _summary(
@@ -456,6 +518,9 @@ def _summary(
     evaluation: Evaluation,
     inside: NDArray[np.bool_],
     sources: dict[str, InputSource],
+    grids: dict[Variable, FloatGrid],
+    body_categories: list[Category],
+    validations: dict[str, DomainValidation],
 ) -> AreaSummary:
     means = area_means(spec.model, evaluation, inside)
     contributions = tuple(
@@ -481,13 +546,22 @@ def _summary(
         for c in spec.model.criteria
         if c.id not in means.criteria
     )
+    domains = domain_codes(grids[Variable.GROUNDWATER_BODY], body_categories)
+    keys = domain_keys(body_categories)
+    present = sorted({int(code) for code in np.unique(domains[inside])})
+    touched = tuple(validations[keys[code][0]] for code in present)
     return AreaSummary(
         cells=means.cells,
         scored_cells=means.scored_cells,
         mean_index=means.mean_index,
         mean_confidence=None
         if means.mean_confidence is None
-        else confidence_of(means.components, spec.model.confidence),
+        else confidence_of(
+            means.components,
+            spec.model.confidence,
+            skill_measured=any(v.state in MEASURED for v in touched),
+        ),
         contributions=contributions,
         missing=missing,
+        validation=touched,
     )

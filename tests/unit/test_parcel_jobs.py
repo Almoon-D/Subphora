@@ -103,7 +103,10 @@ async def test_a_point_gets_its_map_candidates_and_layers(
         assert candidate["legal"]["state"] == "not_evaluated"
         assert candidate["legal"]["disclaimer"].startswith("Guidance, not legal advice")
         assert candidate["legal"]["source"]
-        assert candidate["depth"] == "not_estimated"
+        # No levels imported: the depth is unknown and says why; no depth, no cost.
+        assert candidate["depth"]["state"] == "unknown"
+        assert candidate["depth"]["reason"] == "not_imported"
+        assert candidate["cost"] is None
     xy = [(c["local"]["x"], c["local"]["y"]) for c in candidates]
     for i, a in enumerate(xy):
         for b in xy[i + 1 :]:
@@ -352,3 +355,108 @@ async def test_an_unreadable_result_is_reported(settings: Settings, tmp_path: Pa
         unreadable = await client.get(f"/api/parcel/{area_id}")
     assert unreadable.status_code == 500
     assert unreadable.json()["code"] == "unreadable"
+
+
+# ── Validation, depth and cost from the national map and the imported levels ──────────
+
+
+def _levels(settings: Settings, root: Path) -> None:
+    """Two piezometers of the synthetic body near Madrid, and one of another body nearer."""
+    from datetime import UTC, date, datetime
+
+    from subphora.domain.depth import LevelsSource
+    from subphora.domain.piezometry import Piezometer, PiezometryDataset
+    from subphora.store.piezometry import write_piezometry
+
+    def piezometer(key: int, lon: float, level: float, body: str) -> Piezometer:
+        return Piezometer(
+            id=key,
+            code=str(key),
+            name="Synthetic",
+            body=body,
+            body_label="Synthetic body",
+            longitude=lon,
+            latitude=40.42,
+            ground_m=None,
+            level_m=level,
+            level_low_m=level - 1,
+            level_high_m=level + 1,
+            measurements=12,
+            first=date(2024, 1, 1),
+            last=date(2024, 12, 1),
+        )
+
+    write_piezometry(
+        settings.piezometry.output_path(root),
+        PiezometryDataset(
+            source=LevelsSource(
+                service_id="miteco-piezometry-db",
+                publisher="MITECO",
+                attribution="MITECO",
+                file_name="basedatospiezometria.zip",
+                imported_at=datetime(2026, 11, 26, tzinfo=UTC),
+                levels_from=date(2024, 1, 1),
+                levels_to=date(2024, 12, 1),
+            ),
+            sha256="0" * 64,
+            piezometers_read=3,
+            levels_read=36,
+            left_out=0,
+            piezometers=(
+                piezometer(1, -3.71, 560.0, "ES030MSBT000"),
+                piezometer(2, -3.69, 570.0, "ES030MSBT000"),
+                piezometer(3, -3.7001, 300.0, "ES099MSBT999"),
+            ),
+        ),
+    )
+
+
+async def test_a_map_takes_the_national_skill_and_gives_each_candidate_depth_and_cost(
+    settings: Settings, tmp_path: Path
+) -> None:
+    from tests.unit.test_national_build import build
+
+    national = await build(settings, tmp_path, FakeSpain(wells=700), "-3.80,40.30,-3.55,40.55")
+    (region,) = national.built
+    assert region.validated == 1
+    _levels(settings, tmp_path)
+    async with serve(settings, tmp_path, FakeSpain(whole_body=True)) as client:
+        _, body = await analyse(client, point_area())
+        analysis = body["job"]["analysis"]
+        first = analysis["candidates"][0]
+        explained = await client.get(
+            f"/api/parcel/{body['job']['id']}/explain",
+            params={"lon": first["longitude"], "lat": first["latitude"]},
+        )
+    (validation,) = analysis["summary"]["validation"]
+    assert validation["domain"] == "ES030MSBT000"
+    assert validation["state"] == "validated"
+    for candidate in analysis["candidates"]:
+        estimate = candidate["estimate"]
+        assert estimate["validation"] == validation
+        skill = next(c for c in estimate["confidence"]["components"] if c["id"] == "skill")
+        assert skill["measured"]
+        assert skill["value"] > 0
+        depth = candidate["depth"]
+        assert depth["state"] == "estimated"
+        # Only the body's own piezometers, never the nearer one of another body.
+        assert 560 < depth["water_table"]["elevation_m"] < 570
+        assert depth["water_table"]["body"] == "ES030MSBT000"
+        assert depth["depth_m"] == pytest.approx(
+            depth["ground_m"] - depth["water_table"]["elevation_m"]
+        )
+        assert depth["karst"]  # the synthetic permeability is CARBONATADAS-ALTA
+        cost = candidate["cost"]
+        assert cost["currency"] == "EUR"
+        assert float(cost["low"]) < float(cost["high"])
+    assert explained.json()["estimate"] == first["estimate"]
+
+
+async def test_a_new_import_or_build_makes_the_area_a_new_job(
+    settings: Settings, tmp_path: Path
+) -> None:
+    async with serve(settings, tmp_path) as client:
+        before = (await start(client, point_area())).json()["job"]["id"]
+        _levels(settings, tmp_path)
+        after = (await start(client, point_area())).json()["job"]["id"]
+    assert before != after

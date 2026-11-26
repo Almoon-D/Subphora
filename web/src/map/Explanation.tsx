@@ -1,8 +1,16 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The national map's answer at a tapped point: the index with its confidence, what forms it
 // (each input's value, suitability, weight, contribution and source), the inputs missing
-// there, and what the confidence depends on.
-import type { CellExplanation, Confidence, ExplainResult, ParcelExplainResult, PotentialEstimate } from "../api.ts";
+// there, what the confidence depends on, and how well the model did against known wells in
+// that hydrogeological domain.
+import type {
+  CellExplanation,
+  Confidence,
+  DomainValidation,
+  ExplainResult,
+  ParcelExplainResult,
+  PotentialEstimate,
+} from "../api.ts";
 import { formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import { describeDetail } from "./LayerPanel.tsx";
 import { percent, valueText } from "./national.ts";
@@ -10,9 +18,14 @@ import { percent, valueText } from "./national.ts";
 const score = (value: number) => formatNumber(value, 2);
 
 /** The only way the page shows a score: always with its confidence beside it, and named an
- * index (hard rule 1). */
-export function ScoreWithConfidence({ estimate }: { estimate: Pick<PotentialEstimate, "score" | "confidence"> }) {
+ * index (hard rule 1); a probability only where the domain is calibrated, with its interval. */
+export function ScoreWithConfidence({
+  estimate,
+}: {
+  estimate: Pick<PotentialEstimate, "score" | "confidence"> & Partial<Pick<PotentialEstimate, "probability">>;
+}) {
   const confidence: Confidence = estimate.confidence;
+  const { probability } = estimate;
   return (
     <p className="score" data-score={estimate.score ?? ""} data-confidence={confidence.label}>
       <strong>{estimate.score === null ? t("explain.noIndex") : t("explain.index", { value: score(estimate.score) })}</strong>
@@ -20,7 +33,51 @@ export function ScoreWithConfidence({ estimate }: { estimate: Pick<PotentialEsti
       <span className={`confidence confidence-${confidence.label}`}>
         {t("explain.confidence", { label: t(`explain.confidence.${confidence.label}`), value: score(confidence.value) })}
       </span>
+      {probability && (
+        <>
+          {" · "}
+          <span className="probability" data-probability={probability.value}>
+            {t("explain.probability", {
+              value: percent(probability.value),
+              low: percent(probability.low),
+              high: percent(probability.high),
+            })}
+          </span>
+        </>
+      )}
     </p>
+  );
+}
+
+/** How well the model discriminates known wells in a domain: measured, "no better than
+ * chance here", too few wells, or not validated, always said. */
+export function ValidationNote({ validation }: { validation: DomainValidation }) {
+  const { auc } = validation;
+  const params = {
+    label: validation.label,
+    productive: validation.productive,
+    value: auc ? score(auc.value) : "",
+    low: auc ? score(auc.low) : "",
+    high: auc ? score(auc.high) : "",
+    reason: validation.labels_source,
+  };
+  const measured = validation.state === "validated" || validation.state === "no_better_than_chance";
+  return (
+    <div className={`validation validation-${validation.state}`} data-validation={validation.state} data-domain={validation.domain}>
+      <p>{t(`validation.${validation.state}`, params)}</p>
+      {measured && (
+        <p className="note">
+          {t("validation.counts", { productive: validation.productive, blocks: validation.blocks })}{" "}
+          {validation.design &&
+            t(`validation.design.${validation.design}`, {
+              productive: validation.productive,
+              dry: validation.dry,
+              background: validation.background,
+            })}{" "}
+          {validation.calibration && t("validation.calibrated")}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -127,6 +184,7 @@ function Explained({ explanation }: { explanation: CellExplanation }) {
       <Inputs estimate={estimate} />
       <Missing estimate={estimate} />
       <ConfidenceBreakdown confidence={estimate.confidence} />
+      <ValidationNote validation={estimate.validation} />
       <EstimateSources estimate={estimate} />
       <p className="note">
         {t("explain.cell", {
@@ -172,6 +230,7 @@ export function ParcelExplanationView({ result }: { result: ParcelExplainResult 
       <Inputs estimate={estimate} />
       <Missing estimate={estimate} />
       <ConfidenceBreakdown confidence={estimate.confidence} />
+      <ValidationNote validation={estimate.validation} />
       <EstimateSources estimate={estimate} />
       <p className="note">{t("detailed.cell", { cell: explanation.cell_m, date: formatDate(explanation.built_at) })}</p>
     </li>

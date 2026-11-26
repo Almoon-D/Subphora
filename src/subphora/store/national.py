@@ -19,7 +19,7 @@ import os
 import tempfile
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Annotated, Any, BinaryIO
+from typing import Annotated, Any, BinaryIO, Self
 
 import numpy as np
 import rasterio
@@ -27,13 +27,14 @@ from numpy.typing import NDArray
 from pmtiles.reader import MmapSource, Reader
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
 from pmtiles.writer import Writer
-from pydantic import AwareDatetime, Field
+from pydantic import AwareDatetime, Field, model_validator
 from rasterio.enums import Resampling
 from rasterio.windows import from_bounds
 
 from subphora.config.model import ModelSettings
 from subphora.domain import DomainModel
 from subphora.domain.potential import DISTANCES, InputSource, Variable
+from subphora.domain.validation import NO_BODY, DomainValidation
 
 type Bounds = tuple[float, float, float, float]
 
@@ -78,7 +79,20 @@ class RegionManifest(DomainModel):
     # Distances are reported as "at least" this, unless ``distance_caps`` has their own.
     distance_cap_m: float = Field(gt=0)
     model: ModelSettings
+    # The validation of every domain of the grid: each groundwater body, and the outside.
+    validation: tuple[DomainValidation, ...] = Field(min_length=1)
     distance_caps: dict[Variable, Annotated[float, Field(gt=0)]] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _every_domain_validated(self) -> Self:
+        domains = [v.domain for v in self.validation]
+        bodies = {c.cls for c in self.categories.get(Variable.GROUNDWATER_BODY, ())}
+        if len(set(domains)) != len(domains) or set(domains) != bodies | {NO_BODY}:
+            raise ValueError("each domain of the grid, and the outside, is validated once")
+        return self
+
+    def validation_of(self, domain: str) -> DomainValidation:
+        return next(v for v in self.validation if v.domain == domain)
 
     def caps(self) -> dict[Variable, float]:
         """Every distance variable's cap."""

@@ -131,6 +131,15 @@ tiles:
       # The labels' thresholds (model.yaml): low, medium, high.
       breaks: [0.4, 0.7]
       colours: ["#fee6ce", "#fdae6b", "#7f2704"]
+    # The model's measured skill per hydrogeological domain (validation.yaml): 0 is "no
+    # better than chance here" (red); a domain without enough wells is not drawn.
+    - id: model-skill
+      variable: skill
+      visible: false
+      opacity: 0.6
+      unit: skill
+      breaks: [0.01, 0.34, 0.67]
+      colours: ["#d7301f", "#fdcc8a", "#78c679", "#238443"]
     - id: terrain-slope
       variable: slope_deg
       visible: false

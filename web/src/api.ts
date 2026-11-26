@@ -439,13 +439,53 @@ export interface Confidence {
   components: { id: string; weight: number; value: number; measured: boolean }[];
 }
 
+export type ValidationState = "validated" | "no_better_than_chance" | "not_enough_labels" | "not_validated";
+
+export interface AucInterval {
+  value: number;
+  low: number;
+  high: number;
+  level: number;
+}
+
+/** How well the model discriminates known wells in one hydrogeological domain. */
+export interface DomainValidation {
+  /** A groundwater body's code, or "none" outside every body. */
+  domain: string;
+  label: string;
+  state: ValidationState;
+  design: "presence_absence" | "presence_background" | null;
+  productive: number;
+  dry: number;
+  background: number;
+  blocks: number;
+  auc: AucInterval | null;
+  calibration: { intercept: number; slope: number; level: number; brier_out_of_fold: number } | null;
+  no_calibration: "not_validated" | "no_dry_labels" | "too_few_labels" | null;
+  excluded_criteria: string[];
+  labels_source: string;
+  validated_at: string | null;
+}
+
+/** The calibrated probability of a productive well, only where the domain is calibrated. */
+export interface Probability {
+  value: number;
+  low: number;
+  high: number;
+  level: number;
+  domain: string;
+}
+
 export interface PotentialEstimate {
-  kind: "index";
+  /** "probability" only where the cell's domain is calibrated; the score stays the index. */
+  kind: "index" | "probability";
   /** Null where no input is present: no estimate there. */
   score: number | null;
   confidence: Confidence;
   contributions: Contribution[];
   missing: MissingInput[];
+  validation: DomainValidation;
+  probability: Probability | null;
 }
 
 export interface CellExplanation {
@@ -497,6 +537,47 @@ export interface LegalStatus {
   reason: string | null;
 }
 
+export type DepthUnknown = "not_imported" | "outside_bodies" | "no_piezometer_nearby" | "no_ground_elevation";
+
+export interface WaterTable {
+  elevation_m: number;
+  low_m: number;
+  high_m: number;
+  body: string;
+  body_label: string;
+  piezometers: number;
+  nearest_m: number;
+}
+
+/** The depth to water at a spot: estimated with its range and source, or unknown and why. */
+export interface DepthEstimate {
+  state: "estimated" | "unknown";
+  reason: DepthUnknown | null;
+  ground_m: number | null;
+  water_table: WaterTable | null;
+  depth_m: number | null;
+  low_m: number | null;
+  high_m: number | null;
+  /** Carbonate rock (possible karst): the depth is unreliable. */
+  karst: boolean;
+  source: { attribution: string; file_name: string; imported_at: string; levels_from: string; levels_to: string } | null;
+}
+
+/** The drilling cost range in euros; amounts are decimal strings. */
+export interface DrillingCost {
+  currency: "EUR";
+  low: string;
+  high: string;
+  drilled_low_m: string;
+  drilled_high_m: string;
+  per_metre_low: string;
+  per_metre_high: string;
+  fixed_low: string;
+  fixed_high: string;
+  source: string;
+  priced_on: string;
+}
+
 /** A spot of the area worth a closer look, with everything that explains its score. */
 export interface Candidate {
   rank: number;
@@ -505,7 +586,9 @@ export interface Candidate {
   local: { crs: string; x: number; y: number };
   estimate: PotentialEstimate;
   legal: LegalStatus;
-  depth: "not_estimated";
+  depth: DepthEstimate;
+  /** Exactly when the depth is estimated. */
+  cost: DrillingCost | null;
 }
 
 export interface CriterionSummary {
@@ -527,6 +610,8 @@ export interface AreaSummary {
   mean_confidence: Confidence | null;
   contributions: CriterionSummary[];
   missing: MissingInput[];
+  /** The validation of each hydrogeological domain with a cell in the area. */
+  validation: DomainValidation[];
 }
 
 export interface AreaAnalysis {

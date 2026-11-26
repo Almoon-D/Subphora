@@ -83,7 +83,7 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   expect(mocks.posted).toHaveLength(1);
   expect(mocks.polled).toContain(DAIMIEL_ID);
   // The mean, always with its confidence, and named an index.
-  await expect(panel(page).locator(".score").first()).toContainText("Índice 0,68");
+  await expect(panel(page).locator(".score").first()).toContainText("Índice 0,70");
   await expect(panel(page).locator(".score").first()).toContainText("Confianza");
   await expect(panel(page)).toContainText("No es una probabilidad");
   await expect(panel(page)).toContainText("MDT05");
@@ -93,7 +93,12 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   await expect(candidates.first().locator(".legal")).toHaveAttribute("data-legal", "not_evaluated");
   await expect(candidates.first()).toContainText("Situación legal: sin evaluar");
   await expect(candidates.first()).toContainText("Orientación, no asesoramiento legal");
-  await expect(candidates.first()).toContainText("Profundidad del agua: sin estimar");
+  // Each candidate has its depth to water and its drilling cost, and the area its validation.
+  await expect(candidates.first().locator(".depth")).toHaveAttribute("data-depth", "estimated");
+  await expect(candidates.first()).toContainText("Profundidad del agua: unos");
+  await expect(candidates.first()).toContainText("posible karst");
+  await expect(candidates.first()).toContainText("Coste de perforación: entre");
+  await expect(panel(page).locator('[data-validation="validated"]').first()).toContainText("AUC");
   await expect(page.locator(".candidate-marker")).toHaveCount(5);
   // The index is drawn first; another layer replaces it.
   await expect(map(page)).toHaveAttribute("data-parcel", `${DAIMIEL_ID}:potential-index:5`);

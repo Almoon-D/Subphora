@@ -3,8 +3,10 @@
 
 An estimate cannot be built without its confidence, the contribution of every input
 present (its value, suitability, renormalised weight, source, date and resolution) and the
-list of the inputs that are missing, with why. Until session 07 calibrates the model the
-score is a relative potential index: ``kind`` admits nothing else.
+list of the inputs that are missing, with why. It also carries the validation of the
+cell's hydrogeological domain. The score is a relative potential index; only where that
+domain is calibrated does the estimate add a probability with its interval, and its
+``kind`` says so.
 """
 
 import math
@@ -15,6 +17,7 @@ from pydantic import AwareDatetime, Field, model_validator
 
 from subphora.domain import DomainModel
 from subphora.domain.layers import LayerDetail
+from subphora.domain.validation import MEASURED, DomainValidation, Probability
 
 # Rounding the stored float32 grids leaves sums off by about this much.
 _TOLERANCE = 1e-4
@@ -36,21 +39,28 @@ class Variable(StrEnum):
     # dip of the bedding measured nearest to it.
     LINEAMENT_DENSITY = "lineament_density"
     BEDDING_DIP_DEG = "bedding_dip_deg"
+    # The groundwater body drawn at a cell (its code; -1 outside every body): the
+    # hydrogeological domain the model is validated in. Not a criterion's input.
+    GROUNDWATER_BODY = "groundwater_body"
     INDEX = "index"
     CONFIDENCE = "confidence"
+    # The confidence's skill component where the cell's domain was measured; NaN elsewhere.
+    SKILL = "skill"
 
 
 # Variables whose values are categories: a code into the region's category list, -1 where
 # the input has no feature at the cell.
 CATEGORICAL: frozenset[Variable] = frozenset(
-    {Variable.PERMEABILITY_CLASS, Variable.GROUNDWATER_STATUS}
+    {Variable.PERMEABILITY_CLASS, Variable.GROUNDWATER_STATUS, Variable.GROUNDWATER_BODY}
 )
 # Variables that are distances, capped at how far their input was read ("at least this far").
 DISTANCES: frozenset[Variable] = frozenset(
     {Variable.DRAINAGE_DISTANCE_M, Variable.WATER_POINT_DISTANCE_M}
 )
 # The model's results, not inputs.
-RESULTS: frozenset[Variable] = frozenset({Variable.INDEX, Variable.CONFIDENCE})
+RESULTS: frozenset[Variable] = frozenset({Variable.INDEX, Variable.CONFIDENCE, Variable.SKILL})
+# Grids that are neither a criterion's input nor a result.
+AUXILIARY: frozenset[Variable] = frozenset({Variable.GROUNDWATER_BODY})
 
 
 class InputSource(DomainModel):
@@ -138,7 +148,8 @@ class ConfidenceComponent(DomainModel):
     id: ComponentId
     weight: float = _UNIT
     value: float = _UNIT
-    # False for a component nothing has measured yet (the model's skill before session 07).
+    # False for a component nothing has measured (the skill where the domain is not
+    # validated).
     measured: bool
 
 
@@ -162,13 +173,16 @@ class Confidence(DomainModel):
 class PotentialEstimate(DomainModel):
     """The score at a cell with everything that explains it."""
 
-    # A relative potential index until session 07 calibrates the model: never a probability.
-    kind: Literal["index"] = "index"
+    # "probability" only where the cell's domain is calibrated; the score itself is always
+    # the relative potential index.
+    kind: Literal["index", "probability"] = "index"
     # None when no input is present at the cell: there is no estimate there.
     score: float | None = _UNIT
     confidence: Confidence
     contributions: tuple[Contribution, ...]
     missing: tuple[MissingInput, ...]
+    validation: DomainValidation
+    probability: Probability | None = None
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -177,6 +191,15 @@ class PotentialEstimate(DomainModel):
             raise ValueError("each criterion is either present or missing, once")
         if not names:
             raise ValueError("an estimate names its criteria")
+        if (self.kind == "probability") != (self.probability is not None):
+            raise ValueError("an estimate is a probability exactly when it carries one")
+        if self.probability is not None and (
+            self.validation.calibration is None or self.score is None
+        ):
+            raise ValueError("a probability needs a score and a calibrated domain")
+        skill = next(c for c in self.confidence.components if c.id is ComponentId.SKILL)
+        if skill.measured != (self.validation.state in MEASURED):
+            raise ValueError("the skill is measured exactly where the domain was validated")
         if (self.score is None) != (not self.contributions):
             raise ValueError("there is a score exactly when some input is present")
         if self.score is not None:

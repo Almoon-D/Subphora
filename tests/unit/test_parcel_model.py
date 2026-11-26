@@ -15,6 +15,7 @@ from PIL import Image
 from pydantic import ValidationError
 
 from subphora.config import load_settings
+from subphora.domain.depth import DepthEstimate, DepthUnknown
 from subphora.domain.layers import LayerDetail
 from subphora.domain.legal import LegalState, LegalStatus
 from subphora.domain.parcel_map import (
@@ -39,6 +40,7 @@ from subphora.model import (
     confidence_of,
     evaluate,
     explain_cell,
+    not_validated,
     select_candidates,
 )
 from tests.unit.test_national_settings import edit, refused
@@ -58,6 +60,8 @@ LEGAL = LegalStatus(
     state=LegalState.NOT_EVALUATED, source="not built", assessed_at=WHEN, disclaimer="Guidance"
 )
 WINDOW = GridWindow(crs="EPSG:25830", cell_m=10, west=0, north=1000, width=100, height=100)
+UNVALIDATED = not_validated("none", "Outside every groundwater body", "No national map.")
+UNKNOWN_DEPTH = DepthEstimate(state="unknown", reason=DepthUnknown.NOT_IMPORTED)
 
 
 # ── Candidates and means ───────────────────────────────────────────────────────────────
@@ -118,7 +122,7 @@ def test_the_area_means_add_up_like_a_cell() -> None:
     assert means.criteria["wetness"].present_share == 0.5
     assert means.criteria["slope"].present_share == 1.0
     assert set(means.criteria) == {"slope", "wetness", "lineaments"}
-    confidence = confidence_of(means.components, MODEL.confidence)
+    confidence = confidence_of(means.components, MODEL.confidence, skill_measured=False)
     assert means.mean_confidence is not None
     assert confidence.value == pytest.approx(means.mean_confidence)
     nothing = area_means(MODEL, evaluation, np.zeros(shape, dtype=bool))
@@ -134,6 +138,7 @@ def test_a_parcel_only_criterion_is_missing_where_its_grid_is_not_made() -> None
         {"slope": SOURCE},
         100.0,
         {},
+        UNVALIDATED,
     )
     reasons = {m.criterion: m.reason for m in estimate.missing}
     assert reasons["lineaments"] is MissingReason.NO_DATASET
@@ -146,6 +151,7 @@ def test_a_parcel_only_criterion_is_missing_where_its_grid_is_not_made() -> None
         {"slope": SOURCE, "bedding_dip": SOURCE},
         100.0,
         {},
+        UNVALIDATED,
     )
     assert {m.criterion: m.reason for m in with_dip.missing}["bedding_dip"] is MissingReason.NO_DATA
 
@@ -208,7 +214,14 @@ def test_the_map_image_lies_where_its_grid_does() -> None:
 
 def _estimate() -> Any:
     return explain_cell(
-        MODEL, {Variable.SLOPE_DEG: 1.0}, {}, {"slope": Quality(1, 1)}, {"slope": SOURCE}, 100, {}
+        MODEL,
+        {Variable.SLOPE_DEG: 1.0},
+        {},
+        {"slope": Quality(1, 1)},
+        {"slope": SOURCE},
+        100,
+        {},
+        UNVALIDATED,
     )
 
 
@@ -220,6 +233,8 @@ def _candidate(rank: int = 1, estimate: Any = None) -> Candidate:
         local=LocalPoint(crs="EPSG:25830", x=0, y=0),
         estimate=estimate or _estimate(),
         legal=LEGAL,
+        depth=UNKNOWN_DEPTH,
+        cost=None,
     )
 
 
@@ -243,14 +258,23 @@ def test_a_legal_status_is_never_blank() -> None:
 
 def test_a_candidate_has_a_score() -> None:
     unscored = explain_cell(
-        MODEL, {Variable.SLOPE_DEG: float("nan")}, {}, {"slope": Quality(1, 1)}, {}, 100, {}
+        MODEL,
+        {Variable.SLOPE_DEG: float("nan")},
+        {},
+        {"slope": Quality(1, 1)},
+        {},
+        100,
+        {},
+        UNVALIDATED,
     )
     with pytest.raises(ValidationError, match="score"):
         _candidate(estimate=unscored)
 
 
 def _summary(**overrides: Any) -> AreaSummary:
-    confidence = confidence_of(dict.fromkeys(MODEL.confidence.weights, 0.5), MODEL.confidence)
+    confidence = confidence_of(
+        dict.fromkeys(MODEL.confidence.weights, 0.5), MODEL.confidence, skill_measured=False
+    )
     fields: dict[str, Any] = {
         "cells": 2,
         "scored_cells": 2,
@@ -267,6 +291,7 @@ def _summary(**overrides: Any) -> AreaSummary:
             ),
         ),
         "missing": (MissingInput(criterion="soil", weight=0.07, reason=MissingReason.NO_DATA),),
+        "validation": (UNVALIDATED,),
     }
     return AreaSummary(**{**fields, **overrides})
 

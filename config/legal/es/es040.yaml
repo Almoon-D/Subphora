@@ -1,0 +1,24 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Guadiana (area ES040): only the 2022-2027 plan's perimeters closed to new groundwater
+# abstractions (Real Decreto 35/2023, normative appendix 11.1), as CH Guadiana's map layer
+# draws them (docs/knowledge/regional-layers.md, read 2026-11-24). The plan's normative
+# text is not loaded (areas.yaml says why).
+
+rules:
+  - id: phgn-11-1-perimeters
+    area: ES040
+    kind: zone
+    match:
+      layer: guadiana-abstraction-limits
+      field: zona
+    outcome: blocks
+    label_field: nom_objeto
+    title:
+      en: "Perimeters around wetlands, springs and piezometers where no new groundwater abstraction is authorised"
+      es: "Perímetros alrededor de humedales, manantiales y piezómetros donde no se autorizan nuevas captaciones de agua subterránea"
+    source:
+      name: "Plan Hidrológico del Guadiana 2022-2027 (Real Decreto 35/2023)"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "normative appendix 11.1"
+      published: 2023-02-10
+      checked: 2026-11-24

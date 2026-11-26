@@ -14,6 +14,7 @@ const QUEUED = JSON.parse(fixture("parcel-queued.json")) as { job: Record<string
 const DAIMIEL = fixture("parcel-daimiel.json");
 const CAMPOS_DONE = fixture("parcel-campos.json");
 const EXPLAIN = fixture("explain-parcel-daimiel.json");
+const LEGAL = fixture("legal-daimiel.json");
 const DAIMIEL_ID = (JSON.parse(DAIMIEL) as { job: { id: string } }).job.id;
 const CAMPOS_ID = (JSON.parse(CAMPOS_DONE) as { job: { id: string } }).job.id;
 const PNG = Buffer.from(
@@ -40,6 +41,7 @@ async function mockApi(page: Page, start: (label: string) => Answer, done: Recor
   const mocks: Mocks = { posted: [], polled: [], images: [], explained: [] };
   await page.route("**/api/map", (route) => route.fulfill({ contentType: "application/json", body: MAP }));
   await page.route("**/api/national", (route) => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }));
+  await page.route("**/api/legal?*", (route) => route.fulfill({ contentType: "application/json", body: LEGAL }));
   await page.route("**/api/parcel", (route) => {
     const area = route.request().postDataJSON() as { label: string };
     mocks.posted.push(area);
@@ -77,6 +79,12 @@ const map = (page: Page) => page.locator(".map");
 test("an area's detailed map runs, then shows its mean, layer and candidates", async ({ page }) => {
   const mocks = await mockApi(page, () => ({ status: 202, body: QUEUED_NOW }), { [DAIMIEL_ID]: DAIMIEL });
   await openWith(page, [POINT]);
+  // The area's legal panel comes first, before anything is computed.
+  const legalPanel = page.locator("section.legal-panel");
+  await expect(legalPanel.locator(".legal-status")).toHaveAttribute("data-legal", "rules_not_loaded");
+  await expect(legalPanel).toContainText("Masa de agua subterránea: Synthetic body (ES030MSBT000)");
+  await expect(legalPanel).toContainText("Ley autonómica ES-CM");
+  await expect(legalPanel).toContainText("Licencia municipal de obras");
   await expect(panel(page)).toHaveAttribute("data-state", "idle");
   await panel(page).getByRole("button", { name: "Calcular el mapa detallado" }).click();
   await expect(panel(page)).toHaveAttribute("data-state", "done");
@@ -90,8 +98,14 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   // Candidates: ranked, each with its legal status and the disclaimer.
   const candidates = panel(page).locator(".candidate");
   await expect(candidates).toHaveCount(5);
-  await expect(candidates.first().locator(".legal")).toHaveAttribute("data-legal", "not_evaluated");
-  await expect(candidates.first()).toContainText("Situación legal: sin evaluar");
+  const legal = candidates.first().locator(".legal-status");
+  await expect(legal).toHaveAttribute("data-legal", "rules_not_loaded");
+  await expect(legal).toContainText("Normas no cargadas");
+  await expect(legal).toContainText("Organismo competente: Confederación Hidrográfica del Tajo");
+  await expect(legal.locator('[data-scope="basin_plan"]')).toContainText("No se leyó la parte normativa");
+  await legal.getByText(/Normas evaluadas/).click();
+  await expect(legal.locator('[data-rule="rdph-87-2-distance"]')).toContainText("inventario del IGME");
+  await expect(legal.locator('[data-rule="rdph-87-2-distance"] a')).toContainText("art. 87.2");
   await expect(candidates.first()).toContainText("Orientación, no asesoramiento legal");
   // Each candidate has its depth to water and its drilling cost, and the area its validation.
   await expect(candidates.first().locator(".depth")).toHaveAttribute("data-depth", "estimated");

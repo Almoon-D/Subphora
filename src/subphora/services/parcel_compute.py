@@ -23,6 +23,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from subphora.config.depth import DrillingSettings, PiezometrySettings
+from subphora.config.legal import Texts as LegalTexts
 from subphora.config.model import ModelSettings
 from subphora.config.national import NationalSettings, TileLayer
 from subphora.config.parcel import ParcelSettings
@@ -35,6 +36,8 @@ from subphora.domain.parcel_map import (
     Candidate,
     CriterionSummary,
     NoCandidates,
+    Site,
+    SiteDistance,
 )
 from subphora.domain.parcels import LocalPoint
 from subphora.domain.potential import (
@@ -133,6 +136,7 @@ class ParcelJobSpec:
     model: ModelSettings
     piezometry: PiezometrySettings
     drilling: DrillingSettings
+    legal: LegalTexts
     metres_per_scale_unit: float
     # Per dataset (PARCEL_VARIABLE_DATASET's values): where and when it was read.
     sources: dict[str, InputSource]
@@ -443,9 +447,9 @@ def _candidates(
         return (), NoCandidates.LOW_CONFIDENCE if scored else NoCandidates.NO_SCORE
     legal = LegalStatus(
         state=LegalState.NOT_EVALUATED,
-        source=spec.parcel.legal.not_evaluated_source,
+        source=spec.legal.not_evaluated,
         assessed_at=spec.built_at,
-        disclaimer=spec.parcel.legal.disclaimer,
+        disclaimer=spec.legal.disclaimer,
     )
     sources = {
         c.id: spec.sources[PARCEL_VARIABLE_DATASET[c.variable]]
@@ -499,11 +503,27 @@ def _candidates(
                 local=LocalPoint(crs=window.crs, x=x, y=y),
                 estimate=estimate,
                 legal=legal,
+                site=_site(values, caps),
                 depth=depth,
                 cost=drilling_cost(depth, spec.drilling),
             )
         )
     return tuple(candidates), None
+
+
+def _site(values: dict[Variable, float], caps: dict[Variable, float]) -> Site:
+    """The distances at a cell, each None where it reached its cap (none nearer)."""
+
+    def distance(variable: Variable) -> SiteDistance | None:
+        value, cap = values[variable], caps[variable]
+        if np.isnan(value):
+            return None
+        return SiteDistance(metres=None if value >= cap else value, reach_m=cap)
+
+    point = distance(Variable.WATER_POINT_DISTANCE_M)
+    if point is None:  # the distance to points is measured at every cell
+        point = SiteDistance(reach_m=caps[Variable.WATER_POINT_DISTANCE_M])
+    return Site(water_point=point, channel=distance(Variable.DRAINAGE_DISTANCE_M))
 
 
 def _category_at(grid: FloatGrid, items: list[Category], row: int, column: int) -> Category | None:

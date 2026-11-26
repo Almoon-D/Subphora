@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Andalusia (area ES-AN): Ley 9/2010, de Aguas para Andalucía (LAA). Read at the BOE on
+# 2026-11-24 (docs/knowledge/legal-groundwater.md); published: its last consolidated update.
+
+rules:
+  - id: laa-51-1-at-risk
+    area: ES-AN
+    kind: body_authorisation
+    declared_at_risk: true
+    marked:
+      - layer: andalusia-preventive-control
+        field: control_preventivo
+        values: ["Sometida a control preventivo"]
+    max_volume_m3: 7000
+    title:
+      en: "In a body at risk or under preventive control, a small-use well needs an authorisation"
+      es: "En una masa en riesgo o en control preventivo, un pozo de uso privativo necesita autorización"
+    source:
+      name: "Ley 9/2010, de 30 de julio, de Aguas para Andalucía"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
+      article: "art. 51.1"
+      published: 2026-03-20
+      checked: 2026-11-24
+
+  - id: laa-51-2-well
+    area: ES-AN
+    kind: authorisation
+    where: {districts: [ES060, ES063, ES064]}
+    title:
+      en: "Opening, deepening or moving a well needs the Consejería's prior authorisation"
+      es: "Abrir, profundizar o trasladar un pozo necesita autorización previa de la Consejería"
+    source:
+      name: "Ley 9/2010, de 30 de julio, de Aguas para Andalucía"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
+      article: "art. 51.2"
+      published: 2026-03-20
+      checked: 2026-11-24
+
+  - id: laa-51-2-well-state-basins
+    area: ES-AN
+    kind: authorisation
+    where: {districts: [ES040, ES050, ES070]}
+    title:
+      en: "Opening, deepening or moving a well needs the Consejería's prior authorisation"
+      es: "Abrir, profundizar o trasladar un pozo necesita autorización previa de la Consejería"
+    uncertain:
+      en: "This district's basin is managed by the State; whether the Andalusian law's authorisation also binds a well here is not settled by the text read."
+      es: "La cuenca de esta demarcación la gestiona el Estado; el texto leído no aclara si la autorización de la ley andaluza obliga también a un pozo aquí."
+    source:
+      name: "Ley 9/2010, de 30 de julio, de Aguas para Andalucía"
+      url: "https://www.boe.es/buscar/act.php?id=BOE-A-2010-13465"
+      article: "art. 51.2"
+      published: 2026-03-20
+      checked: 2026-11-24

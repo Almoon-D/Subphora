@@ -13,6 +13,7 @@ from pydantic import model_validator
 
 from subphora.config.base import Section
 from subphora.config.depth import DrillingSettings, PiezometrySettings
+from subphora.config.legal import LegalSettings
 from subphora.config.map import Legend, MapSettings
 from subphora.config.model import BreaksLookup, ModelSettings
 from subphora.config.national import NationalSettings
@@ -34,6 +35,7 @@ __all__ = [
     "ApiSettings",
     "CoreSettings",
     "DrillingSettings",
+    "LegalSettings",
     "MapSettings",
     "ModelSettings",
     "NationalSettings",
@@ -72,6 +74,7 @@ class Settings(Section):
     piezometry: PiezometrySettings
     drilling: DrillingSettings
     section: SectionSettings
+    legal: LegalSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
@@ -168,6 +171,35 @@ class Settings(Section):
             )
             if failures:
                 raise ValueError(f"{key} does not qualify: {'; '.join(failures)}")
+        return self
+
+    @model_validator(mode="after")
+    def _legal_layers_answer(self) -> Self:
+        """Every layer the legal filter reads is a map overlay or a regional layer with
+        feature info, and every field it reads is one that layer's answer keeps."""
+        legal = self.legal
+        bodies = legal.bodies
+        reads = [
+            ("legal.bodies", bodies.status_layer, bodies.code_field),
+            ("legal.bodies", bodies.status_layer, bodies.name_field),
+            ("legal.bodies", bodies.status_layer, bodies.quantitative_field),
+            ("legal.bodies", bodies.at_risk_layer, bodies.at_risk_code_field),
+            ("legal.bodies", bodies.at_risk_layer, bodies.declaration_field),
+        ]
+        reads += [(f"legal.rules.{rule}", m.layer, m.field) for rule, m in legal.layer_matches()]
+        for rule in legal.rules:
+            if rule.kind == "zone":
+                reads.append((f"legal.rules.{rule.id}", rule.match.layer, rule.label_field))
+        overlays = {overlay.id: overlay.info for overlay in self.map.overlays.layers}
+        regional = {layer.id: layer.info for layer in self.regional.layers}
+        for key, layer_id, field in reads:
+            if layer_id not in overlays and layer_id not in regional:
+                raise ValueError(f"{key}: {layer_id!r} is not a map or regional layer")
+            info = overlays.get(layer_id) or regional.get(layer_id)
+            if info is None:
+                raise ValueError(f"{key}: {layer_id} answers no feature info")
+            if field not in info.fields:
+                raise ValueError(f"{key}: {layer_id}'s answer does not keep {field!r}")
         return self
 
     @model_validator(mode="after")
@@ -305,4 +337,26 @@ def load_settings(config_dir: Path = CONFIG_DIR) -> Settings:
     owner = config_dir / "owner.yaml"
     if owner.exists():
         raw = _merge(raw, _read(owner))
+    legal = raw.get("legal")
+    if isinstance(legal, dict) and isinstance(legal.get("country"), str):
+        raw["legal"] = {**legal, **_legal_rules(config_dir / "legal" / legal["country"])}
     return Settings.model_validate(raw)
+
+
+def _legal_rules(folder: Path) -> dict[str, Any]:
+    """``areas.yaml`` and the rules of every other file of a country's legal folder; each
+    rule file holds the rules of the one area its name gives (``es-an.yaml``: ES-AN)."""
+    rules: list[Any] = []
+    for path in sorted(folder.glob("*.yaml")):
+        if path.name == "areas.yaml":
+            continue
+        content = _read(path)
+        area = path.stem.upper()
+        listed = content.get("rules") if isinstance(content, dict) else None
+        if not isinstance(listed, list):
+            raise ValueError(f"{path.name}: a rule file holds a list under 'rules'")
+        for rule in listed:
+            if isinstance(rule, dict) and rule.get("area") != area:
+                raise ValueError(f"{path.name}: rule {rule.get('id')!r} is not keyed {area}")
+        rules.extend(listed)
+    return {"areas": _read(folder / "areas.yaml"), "rules": rules}

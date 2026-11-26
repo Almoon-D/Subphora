@@ -1,0 +1,358 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Every river-basin district of Spain (the codes of MITECO's demarhidro_2027) with its
+# groundwater authority and whether its basin plan's rules are loaded, and every region
+# with whether its water law is (docs/knowledge/water-authorities.md, legal-groundwater.md).
+# A district or region not fully loaded says what is missing and why.
+
+districts:
+  ES010:
+    name: "Miño-Sil"
+    authority: "Confederación Hidrográfica del Miño-Sil"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES014:
+    name: "Galicia-Costa"
+    authority: "Augas de Galicia (Xunta de Galicia)"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES017:
+    name: "Cantábrico Oriental"
+    authority: "Confederación Hidrográfica del Cantábrico / URA (Agencia Vasca del Agua)"
+    level: state
+    note:
+      en: "The State manages the inter-community basins of this district and URA, for the Basque Government, its internal basins; the point alone does not say which."
+      es: "El Estado gestiona las cuencas intercomunitarias de esta demarcación y URA, por el Gobierno Vasco, sus cuencas internas; el punto por sí solo no dice cuál."
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES018:
+    name: "Cantábrico Occidental"
+    authority: "Confederación Hidrográfica del Cantábrico"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES020:
+    name: "Duero"
+    authority: "Confederación Hidrográfica del Duero"
+    level: state
+    plan:
+      state: partial
+      reason:
+        en: "Only the Duero plan's groundwater zoning (annex IV art. 33, read through CH Duero's map layer) is loaded; its normative text (distances, limits) was not read: the official sources were out of reach from the session of 2026-11-26."
+        es: "Del plan del Duero solo está cargada la zonificación de aguas subterráneas (anexo IV art. 33, leída a través de la capa de la CH Duero); su texto normativo (distancias, límites) no se leyó: las fuentes oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES030:
+    name: "Tajo"
+    authority: "Confederación Hidrográfica del Tajo"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES040:
+    name: "Guadiana"
+    authority: "Confederación Hidrográfica del Guadiana"
+    level: state
+    plan:
+      state: partial
+      reason:
+        en: "Only the Guadiana plan's perimeters closed to new abstractions (normative appendix 11.1, read through CH Guadiana's map layer) are loaded; its normative text (distances, limits) was not read: the official sources were out of reach from the session of 2026-11-26."
+        es: "Del plan del Guadiana solo están cargados los perímetros cerrados a nuevas captaciones (apéndice normativo 11.1, leídos a través de la capa de la CH Guadiana); su texto normativo (distancias, límites) no se leyó: las fuentes oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES050:
+    name: "Guadalquivir"
+    authority: "Confederación Hidrográfica del Guadalquivir"
+    level: state
+    plan: {state: loaded}
+  ES060:
+    name: "Cuencas Mediterráneas Andaluzas"
+    authority: "Junta de Andalucía (Consejería competente en aguas)"
+    level: regional
+    plan: {state: loaded}
+  ES063:
+    name: "Guadalete y Barbate"
+    authority: "Junta de Andalucía (Consejería competente en aguas)"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES064:
+    name: "Tinto, Odiel y Piedras"
+    authority: "Junta de Andalucía (Consejería competente en aguas)"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES070:
+    name: "Segura"
+    authority: "Confederación Hidrográfica del Segura"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES080:
+    name: "Júcar"
+    authority: "Confederación Hidrográfica del Júcar"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES091:
+    name: "Ebro"
+    authority: "Confederación Hidrográfica del Ebro"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES100:
+    name: "Cuencas Internas de Cataluña"
+    authority: "Agència Catalana de l'Aigua"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES110:
+    name: "Illes Balears"
+    authority: "Govern de les Illes Balears"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES120:
+    name: "Gran Canaria"
+    authority: "Consejo Insular de Aguas de Gran Canaria"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES122:
+    name: "Fuerteventura"
+    authority: "Consejo Insular de Aguas de Fuerteventura"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES123:
+    name: "Lanzarote"
+    authority: "Consejo Insular de Aguas de Lanzarote"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES124:
+    name: "Tenerife"
+    authority: "Consejo Insular de Aguas de Tenerife"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES125:
+    name: "La Palma"
+    authority: "Consejo Insular de Aguas de La Palma"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES126:
+    name: "La Gomera"
+    authority: "Consejo Insular de Aguas de La Gomera"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES127:
+    name: "El Hierro"
+    authority: "Consejo Insular de Aguas de El Hierro"
+    level: regional
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES150:
+    name: "Ceuta"
+    authority: "Confederación Hidrográfica del Guadalquivir"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+  ES160:
+    name: "Melilla"
+    authority: "Confederación Hidrográfica del Guadalquivir"
+    level: state
+    plan:
+      state: not_read
+      reason:
+        en: "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26."
+        es: "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+
+regions:
+  ES-AN:
+    name: "Andalucía"
+    water_law: {state: loaded}
+  ES-AR:
+    name: "Aragón"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-AS:
+    name: "Principado de Asturias"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-IB:
+    name: "Illes Balears"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CN:
+    name: "Canarias"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CB:
+    name: "Cantabria"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CL:
+    name: "Castilla y León"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CM:
+    name: "Castilla-La Mancha"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CT:
+    name: "Cataluña"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-VC:
+    name: "Comunitat Valenciana"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-EX:
+    name: "Extremadura"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-GA:
+    name: "Galicia"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-MD:
+    name: "Comunidad de Madrid"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-MC:
+    name: "Región de Murcia"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-NC:
+    name: "Comunidad Foral de Navarra"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-PV:
+    name: "País Vasco"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-RI:
+    name: "La Rioja"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-CE:
+    name: "Ceuta"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+  ES-ML:
+    name: "Melilla"
+    water_law:
+      state: not_read
+      reason:
+        en: "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26."
+        es: "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."

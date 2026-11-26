@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.12.0] - 2026-11-26
+
+- A legal panel opens first for every selected area: the water authority, the groundwater
+  body with its quantitative status and any at-risk declaration, every rule that applies
+  with its official source, article and dates, and a verdict with the disclaimer.
+- Every candidate spot now carries its own legal verdict ("probably not allowed",
+  "conditions apply", "no blocking rule found" or "rules not loaded"), with the distance to
+  the nearest inventoried water point and channel checked against each rule's limit.
+- Spots inside a zone that forbids the well (an exclusion circle, a Guadiana closed
+  perimeter, a Duero "zona no autorizada") are marked on the list and struck on the map.
+- Loaded: the national Water Law and its Regulation, the Andalusian Water Law, the
+  Guadalquivir and Andalusian Mediterranean plans, and the closed zones of the Guadiana and
+  Duero; every other district and region says its rules are not loaded, and why.
+
 ## [0.11.0] - 2026-11-26
 
 - "Dibujar un corte": tap the start and end of a line on the map and a geological

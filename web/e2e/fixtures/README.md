@@ -23,6 +23,7 @@ explanation and the detailed maps come from the synthetic Spain and are regenera
 | `parcel-campos.json` | the same for `area-sigpac-campos.json`, outside the national build and far from every piezometer: not validated, depth unknown |
 | `explain-parcel-daimiel.json` | `GET /api/parcel/{id}/explain` at the Daimiel map's first candidate |
 | `section-daimiel.json` | `POST /api/section` along a 1.2 km line running east through the Daimiel point, on the synthetic services: three units, a projected contact, the fault, a borehole and the water table |
+| `legal-daimiel.json` | `GET /api/legal` at the Daimiel point's centre (region ES-CM) on the synthetic services: the synthetic body in poor status, Tajo plan and regional law not loaded, distances not measured |
 
 `tests/unit/test_map_catalogue.py` checks that they still match the API's models (and
 `map.json` its answer); regenerate them when it fails.

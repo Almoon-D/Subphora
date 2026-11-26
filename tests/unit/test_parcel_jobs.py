@@ -104,9 +104,16 @@ async def test_a_point_gets_its_map_candidates_and_layers(
     assert scores == sorted(scores, reverse=True)
     for candidate in candidates:
         assert candidate["estimate"]["confidence"]["value"] >= candidate_settings.min_confidence
-        assert candidate["legal"]["state"] == "not_evaluated"
-        assert candidate["legal"]["disclaimer"].startswith("Guidance, not legal advice")
-        assert candidate["legal"]["source"]
+        # Assessed by the legal filter at the spot, with the distances measured there.
+        legal = candidate["legal"]
+        assert legal["state"] != "not_evaluated"
+        assert legal["disclaimer"].startswith("Guidance, not legal advice")
+        assert legal["source"]
+        assert legal["authority"]["district"] == "ES030"
+        assert legal["body"]["quantitative_status"] == "Malo"
+        distance = next(f for f in legal["findings"] if f["rule_id"] == "rdph-87-2-distance")
+        point = candidate["site"]["water_point"]["metres"]
+        assert distance["outcome"] == ("blocks" if point is not None and point < 100 else "clear")
         # No levels imported: the depth is unknown and says why; no depth, no cost.
         assert candidate["depth"]["state"] == "unknown"
         assert candidate["depth"]["reason"] == "not_imported"
@@ -413,3 +420,18 @@ async def test_a_new_import_or_build_makes_the_area_a_new_job(
         write_levels(settings, tmp_path)
         after = (await start(client, point_area())).json()["job"]["id"]
     assert before != after
+
+
+async def test_a_failing_legal_filter_leaves_the_map_with_candidates_not_evaluated(
+    settings: Settings, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def broken(*_args: object) -> object:
+        raise RuntimeError("synthetic failure of the legal filter")
+
+    monkeypatch.setattr("subphora.services.legal.LegalService.candidates", broken)
+    async with serve(settings, tmp_path) as client:
+        _started, body = await analyse(client, point_area())
+    assert body["job"]["state"] == "done"
+    for candidate in body["job"]["analysis"]["candidates"]:
+        assert candidate["legal"]["state"] == "not_evaluated"
+        assert candidate["legal"]["disclaimer"].startswith("Guidance, not legal advice")

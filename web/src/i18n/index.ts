@@ -5,12 +5,34 @@ import { es, type MessageKey } from "./es.ts";
 export type { MessageKey };
 
 export const LOCALE = "es-ES";
+export const LANGUAGE = "es";
 
 type Params = Readonly<Record<string, string | number>>;
 
 /** The message for a key built at run time (`layer.<id>`), or `fallback` when it has none. */
 export function lookup(key: string, fallback: string): string {
   return (es as Readonly<Record<string, string>>)[key] ?? fallback;
+}
+
+/** The message for a key built at run time, with each `{name}` replaced by `params[name]`
+ * (a missing one left as it is), or `fallback` when the key has none. */
+export function lookupWith(key: string, params: Params, fallback: string): string {
+  const template = (es as Readonly<Record<string, string>>)[key];
+  if (template === undefined) {
+    return fallback;
+  }
+  return template.replace(/\{(\w+)\}/g, (placeholder, name: string) => {
+    const value = params[name];
+    if (value === undefined) {
+      return placeholder;
+    }
+    return typeof value === "number" ? formatNumber(value) : value;
+  });
+}
+
+/** The text of a server's translated field in the interface's language, else English. */
+export function translated(text: Readonly<Record<string, string>>): string {
+  return text[LANGUAGE] ?? text.en ?? Object.values(text)[0] ?? "";
 }
 
 /** The message for `key`, with each `{name}` replaced by `params[name]`. */

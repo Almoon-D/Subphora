@@ -1,0 +1,159 @@
+{
+  "state": "rules_not_loaded",
+  "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+  "assessed_at": "2026-11-26T14:33:32.357272Z",
+  "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
+  "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+  "region": "ES-CM",
+  "authority": {
+    "district": "ES030",
+    "district_name": "Tajo",
+    "name": "Confederación Hidrográfica del Tajo",
+    "level": "state",
+    "note": null
+  },
+  "body": {
+    "code": "ES030MSBT000",
+    "name": "Synthetic body",
+    "quantitative_status": "Malo",
+    "declared_at_risk": false,
+    "declaration": null
+  },
+  "findings": [
+    {
+      "rule_id": "rdph-85-notice",
+      "area": "ES",
+      "title": {
+        "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+        "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+      },
+      "source": {
+        "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+        "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+        "article": "arts. 84.2 and 85",
+        "published": "2026-06-03",
+        "checked": "2026-11-24"
+      },
+      "outcome": "notice",
+      "message": "notify_authority",
+      "values": {
+        "limit": 7000.0
+      },
+      "uncertain": null
+    },
+    {
+      "rule_id": "rdph-87-1-concession",
+      "area": "ES",
+      "title": {
+        "en": "Above 7,000 m³/year per estate a concession is needed",
+        "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+      },
+      "source": {
+        "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+        "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+        "article": "art. 87.1",
+        "published": "2026-06-03",
+        "checked": "2026-11-24"
+      },
+      "outcome": "not_applicable",
+      "message": "within_small_use",
+      "values": {
+        "volume": 7000.0,
+        "limit": 7000.0
+      },
+      "uncertain": null
+    },
+    {
+      "rule_id": "rdph-84-2-at-risk",
+      "area": "ES",
+      "title": {
+        "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+        "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+      },
+      "source": {
+        "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+        "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+        "article": "art. 84.2",
+        "published": "2026-06-03",
+        "checked": "2026-11-24"
+      },
+      "outcome": "clear",
+      "message": "body_not_marked",
+      "values": {
+        "body": "Synthetic body"
+      },
+      "uncertain": null
+    },
+    {
+      "rule_id": "rdph-87-2-distance",
+      "area": "ES",
+      "title": {
+        "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+        "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+      },
+      "source": {
+        "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+        "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+        "article": "art. 87.2",
+        "published": "2026-06-03",
+        "checked": "2026-11-24"
+      },
+      "outcome": "check",
+      "message": "distance_not_measured",
+      "values": {
+        "minimum": 100.0
+      },
+      "uncertain": {
+        "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+        "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+      }
+    },
+    {
+      "rule_id": "rdph-87-4-policia",
+      "area": "ES",
+      "title": {
+        "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+        "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+      },
+      "source": {
+        "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+        "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+        "article": "arts. 9, 78 and 87.4",
+        "published": "2026-06-03",
+        "checked": "2026-11-24"
+      },
+      "outcome": "check",
+      "message": "channel_not_measured",
+      "values": {},
+      "uncertain": null
+    }
+  ],
+  "not_loaded": [
+    {
+      "scope": "basin_plan",
+      "area": "ES030",
+      "reason": {
+        "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+        "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+      }
+    },
+    {
+      "scope": "regional_law",
+      "area": "ES-CM",
+      "reason": {
+        "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+        "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+      }
+    }
+  ],
+  "permits": [
+    {
+      "en": "A municipal licence for the works: needed; not evaluated.",
+      "es": "Licencia municipal de obras: necesaria; no evaluada."
+    },
+    {
+      "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+      "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+    }
+  ]
+}

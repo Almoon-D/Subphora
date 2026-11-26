@@ -30,6 +30,22 @@ _TOLERANCE = 1e-4
 _UNIT = Field(ge=0, le=1)
 
 
+class SiteDistance(DomainModel):
+    """Metres to the nearest feature, or None when none lies within ``reach_m``."""
+
+    metres: float | None = Field(default=None, ge=0)
+    reach_m: float = Field(gt=0)
+
+
+class Site(DomainModel):
+    """What the legal filter measures at a candidate: the distance to the nearest water
+    point of the IGME inventory, and to the nearest channel derived from the terrain model
+    (None where the terrain has no value)."""
+
+    water_point: SiteDistance
+    channel: SiteDistance | None
+
+
 class Candidate(DomainModel):
     """A spot of the area worth a closer look: a cell with a high index and enough
     confidence, with everything that explains it."""
@@ -40,6 +56,7 @@ class Candidate(DomainModel):
     local: LocalPoint
     estimate: PotentialEstimate
     legal: LegalStatus
+    site: Site
     depth: DepthEstimate
     # The cost of drilling to that depth; exactly when the depth is estimated.
     cost: DrillingCost | None

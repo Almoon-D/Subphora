@@ -1,13 +1,28 @@
 # Legal knowledge: drilling for groundwater
 
-Guidance material for session 09, which turns it into rules as data. Every rule has its
+The texts behind the rules of `config/legal/es/` (decision 0034). Every rule has its
 official source, article and the date it was read. **Uncertain** marks what the text does not
-settle; session 09 shows those as "conditions apply" with the open question, never as a
-verdict. Nothing here is legal advice. Read on 2026-11-24.
+settle; the filter shows those as a condition with the open question, never as a verdict.
+Nothing here is legal advice. Read on 2026-11-24.
 
-**Coverage so far:** the national law, one regional water law and two basin plans. The other
-regional water laws and the plans of the other 23 river-basin districts are not read yet;
-session 09 reads them all (decision 0022).
+**Coverage:** the national law, one regional water law (Andalusia), two basin plans
+(Guadalquivir, Andalusian Mediterranean) and the closed zones of two more (Guadiana appendix
+11.1, Duero annex IV art. 33, through their authorities' map layers: `regional-layers.md`).
+
+## Not read yet (2026-11-26)
+
+- **Why:** session 09 could not reach any official host from the cloud: the network policy
+  refused `www.boe.es`, `www.miteco.gob.es`, `gis.miteco.gob.es` and
+  `www.juntadeandalucia.es` (HTTP 403 from the proxy), the fetch tool could not read the
+  BOE's robots.txt, and the owner's computer was offline. No source above was re-checked;
+  their dates are those of 2026-11-24. `(GET, 2026-11-26)`
+- **Basin plans not read:** ES010, ES014, ES017, ES018, ES030, ES070, ES080, ES091, ES100,
+  ES110, ES120, ES122–ES127, ES150, ES160, and the normative text of ES020 and ES040 beyond
+  their zoning. Each says "rules not loaded" with this reason (`areas.yaml`).
+- **Regional water laws not read:** every region but Andalusia. Whether each adds
+  conditions to a well is unknown; none is assumed to add none.
+- **Mining-safety rules** for water boreholes: still not read (below).
+- Session 09a reads all of these (VERIFY-LIVE(legal-sources)).
 
 ## National: Water Law and Public Water Domain Regulation
 

@@ -459,9 +459,51 @@ ol.candidates {
   border-bottom: 1px solid #eef1f4;
 }
 
-.candidate .legal {
+.legal-status {
   font-size: 0.85rem;
   margin: 0.2rem 0;
+  padding-left: 0.5rem;
+  border-left: 3px solid #9aa5b1;
+}
+
+.legal-status .verdict {
+  font-weight: 700;
+  margin: 0.2rem 0;
+}
+
+.legal-status[data-legal="probably_not_allowed"] {
+  border-left-color: #b2182b;
+}
+
+.legal-status[data-legal="conditions_apply"] {
+  border-left-color: #d68a00;
+}
+
+.legal-status[data-legal="no_blocking_rule"] {
+  border-left-color: #1a9641;
+}
+
+.legal-status ul {
+  margin: 0.2rem 0;
+  padding-left: 1.1rem;
+}
+
+.legal-status .findings li {
+  margin-bottom: 0.3rem;
+}
+
+.legal-status .findings li[data-outcome="blocks"] strong {
+  color: #b2182b;
+}
+
+.candidate .blocked {
+  color: #b2182b;
+}
+
+.candidate-marker.blocked {
+  border-color: #b2182b;
+  color: #b2182b;
+  text-decoration: line-through;
 }
 
 .candidate details summary {

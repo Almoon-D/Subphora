@@ -1,12 +1,12 @@
 {
   "job": {
-    "id": "0f672075367ce0d3",
+    "id": "d3e0cb6e394da068",
     "state": "done",
     "failure": null,
     "detail": null,
     "poll_after_s": 2.0,
     "analysis": {
-      "id": "0f672075367ce0d3",
+      "id": "d3e0cb6e394da068",
       "label": "39.067500, -3.611500",
       "crs": "EPSG:25830",
       "cell_m": 5.0,
@@ -17,7 +17,7 @@
         39.06976702473398
       ],
       "area_m2": 196034.2802734375,
-      "built_at": "2026-11-26T13:20:55.594774Z",
+      "built_at": "2026-11-26T14:33:32.509649Z",
       "layers": [
         "index",
         "confidence",
@@ -78,7 +78,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-26T13:20:55.417370Z",
+              "retrieved_at": "2026-11-26T14:33:32.378566Z",
               "detail": {
                 "scale_denominator": 200000,
                 "cell_m": null,
@@ -97,7 +97,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-26T13:20:55.419051Z",
+              "retrieved_at": "2026-11-26T14:33:32.379304Z",
               "detail": {
                 "scale_denominator": 50000,
                 "cell_m": null,
@@ -116,7 +116,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-26T13:20:55.418106Z",
+              "retrieved_at": "2026-11-26T14:33:32.379911Z",
               "detail": {
                 "scale_denominator": 50000,
                 "cell_m": null,
@@ -135,7 +135,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-26T13:20:55.453038Z",
+              "retrieved_at": "2026-11-26T14:33:32.401606Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -154,7 +154,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-26T13:20:55.453038Z",
+              "retrieved_at": "2026-11-26T14:33:32.401606Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -173,7 +173,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-26T13:20:55.453038Z",
+              "retrieved_at": "2026-11-26T14:33:32.401606Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -192,7 +192,7 @@
               "service_id": "soilgrids-wcs",
               "publisher": "ISRIC World Soil Information",
               "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-              "retrieved_at": "2026-11-26T13:20:55.457859Z",
+              "retrieved_at": "2026-11-26T14:33:32.451313Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 250.0,
@@ -211,7 +211,7 @@
               "service_id": "miteco-gw-status",
               "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
               "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-              "retrieved_at": "2026-11-26T13:20:55.417764Z",
+              "retrieved_at": "2026-11-26T14:33:32.378995Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": null,
@@ -230,7 +230,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-26T13:20:55.418389Z",
+              "retrieved_at": "2026-11-26T14:33:32.379593Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": null,
@@ -269,7 +269,7 @@
               "water_points"
             ],
             "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-            "validated_at": "2026-11-26T13:20:53.650085Z"
+            "validated_at": "2026-11-26T14:33:30.588772Z"
           }
         ]
       },
@@ -341,7 +341,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.417370Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378566Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -368,7 +368,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.419051Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379304Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -395,7 +395,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418106Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379911Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -422,7 +422,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -449,7 +449,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -476,7 +476,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -503,7 +503,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-26T13:20:55.457859Z",
+                  "retrieved_at": "2026-11-26T14:33:32.451313Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -530,7 +530,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-26T13:20:55.417764Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378995Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -557,7 +557,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418389Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379593Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -595,16 +595,184 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T13:20:53.650085Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z"
             },
             "probability": null
           },
           "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-26T13:20:55.594774Z",
+            "state": "rules_not_loaded",
+            "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+            "assessed_at": "2026-11-26T14:33:33.488537Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
+            "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+            "region": "ES-CM",
+            "authority": {
+              "district": "ES030",
+              "district_name": "Tajo",
+              "name": "Confederación Hidrográfica del Tajo",
+              "level": "state",
+              "note": null
+            },
+            "body": {
+              "code": "ES030MSBT000",
+              "name": "Synthetic body",
+              "quantitative_status": "Malo",
+              "declared_at_risk": false,
+              "declaration": null
+            },
+            "findings": [
+              {
+                "rule_id": "rdph-85-notice",
+                "area": "ES",
+                "title": {
+                  "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+                  "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 84.2 and 85",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "notice",
+                "message": "notify_authority",
+                "values": {
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-1-concession",
+                "area": "ES",
+                "title": {
+                  "en": "Above 7,000 m³/year per estate a concession is needed",
+                  "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.1",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "not_applicable",
+                "message": "within_small_use",
+                "values": {
+                  "volume": 7000.0,
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-84-2-at-risk",
+                "area": "ES",
+                "title": {
+                  "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+                  "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 84.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "body_not_marked",
+                "values": {
+                  "body": "Synthetic body"
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-2-distance",
+                "area": "ES",
+                "title": {
+                  "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+                  "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "point_far_enough",
+                "values": {
+                  "minimum": 100.0,
+                  "method": "inventory",
+                  "distance": 248.8
+                },
+                "uncertain": {
+                  "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+                  "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+                }
+              },
+              {
+                "rule_id": "rdph-87-4-policia",
+                "area": "ES",
+                "title": {
+                  "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+                  "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 9, 78 and 87.4",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "far_from_channel",
+                "values": {
+                  "limit": 100.0,
+                  "method": "terrain",
+                  "distance": 1995.0
+                },
+                "uncertain": null
+              }
+            ],
+            "not_loaded": [
+              {
+                "scope": "basin_plan",
+                "area": "ES030",
+                "reason": {
+                  "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+                }
+              },
+              {
+                "scope": "regional_law",
+                "area": "ES-CM",
+                "reason": {
+                  "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+                }
+              }
+            ],
+            "permits": [
+              {
+                "en": "A municipal licence for the works: needed; not evaluated.",
+                "es": "Licencia municipal de obras: necesaria; no evaluada."
+              },
+              {
+                "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+                "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+              }
+            ]
+          },
+          "site": {
+            "water_point": {
+              "metres": 248.8473358154297,
+              "reach_m": 10000.0
+            },
+            "channel": {
+              "metres": 1995.0250244140625,
+              "reach_m": 2000.0
+            }
           },
           "depth": {
             "state": "estimated",
@@ -717,7 +885,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.417370Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378566Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -744,7 +912,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.419051Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379304Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -771,7 +939,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418106Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379911Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -798,7 +966,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -825,7 +993,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -852,7 +1020,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -879,7 +1047,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-26T13:20:55.457859Z",
+                  "retrieved_at": "2026-11-26T14:33:32.451313Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -906,7 +1074,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-26T13:20:55.417764Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378995Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -933,7 +1101,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418389Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379593Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -971,16 +1139,184 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T13:20:53.650085Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z"
             },
             "probability": null
           },
           "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-26T13:20:55.594774Z",
+            "state": "rules_not_loaded",
+            "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+            "assessed_at": "2026-11-26T14:33:33.487087Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
+            "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+            "region": "ES-CM",
+            "authority": {
+              "district": "ES030",
+              "district_name": "Tajo",
+              "name": "Confederación Hidrográfica del Tajo",
+              "level": "state",
+              "note": null
+            },
+            "body": {
+              "code": "ES030MSBT000",
+              "name": "Synthetic body",
+              "quantitative_status": "Malo",
+              "declared_at_risk": false,
+              "declaration": null
+            },
+            "findings": [
+              {
+                "rule_id": "rdph-85-notice",
+                "area": "ES",
+                "title": {
+                  "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+                  "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 84.2 and 85",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "notice",
+                "message": "notify_authority",
+                "values": {
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-1-concession",
+                "area": "ES",
+                "title": {
+                  "en": "Above 7,000 m³/year per estate a concession is needed",
+                  "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.1",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "not_applicable",
+                "message": "within_small_use",
+                "values": {
+                  "volume": 7000.0,
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-84-2-at-risk",
+                "area": "ES",
+                "title": {
+                  "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+                  "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 84.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "body_not_marked",
+                "values": {
+                  "body": "Synthetic body"
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-2-distance",
+                "area": "ES",
+                "title": {
+                  "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+                  "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "point_far_enough",
+                "values": {
+                  "minimum": 100.0,
+                  "method": "inventory",
+                  "distance": 249.6
+                },
+                "uncertain": {
+                  "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+                  "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+                }
+              },
+              {
+                "rule_id": "rdph-87-4-policia",
+                "area": "ES",
+                "title": {
+                  "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+                  "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 9, 78 and 87.4",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "far_from_channel",
+                "values": {
+                  "limit": 100.0,
+                  "method": "terrain",
+                  "distance": 1995.0
+                },
+                "uncertain": null
+              }
+            ],
+            "not_loaded": [
+              {
+                "scope": "basin_plan",
+                "area": "ES030",
+                "reason": {
+                  "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+                }
+              },
+              {
+                "scope": "regional_law",
+                "area": "ES-CM",
+                "reason": {
+                  "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+                }
+              }
+            ],
+            "permits": [
+              {
+                "en": "A municipal licence for the works: needed; not evaluated.",
+                "es": "Licencia municipal de obras: necesaria; no evaluada."
+              },
+              {
+                "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+                "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+              }
+            ]
+          },
+          "site": {
+            "water_point": {
+              "metres": 249.61770629882812,
+              "reach_m": 10000.0
+            },
+            "channel": {
+              "metres": 1995.0250244140625,
+              "reach_m": 2000.0
+            }
           },
           "depth": {
             "state": "estimated",
@@ -1093,7 +1429,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.417370Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378566Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -1120,7 +1456,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.419051Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379304Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1147,7 +1483,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418106Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379911Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1174,7 +1510,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1201,7 +1537,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1228,7 +1564,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1255,7 +1591,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-26T13:20:55.457859Z",
+                  "retrieved_at": "2026-11-26T14:33:32.451313Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -1282,7 +1618,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-26T13:20:55.417764Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378995Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1309,7 +1645,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418389Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379593Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1347,16 +1683,184 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T13:20:53.650085Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z"
             },
             "probability": null
           },
           "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-26T13:20:55.594774Z",
+            "state": "rules_not_loaded",
+            "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+            "assessed_at": "2026-11-26T14:33:33.489952Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
+            "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+            "region": "ES-CM",
+            "authority": {
+              "district": "ES030",
+              "district_name": "Tajo",
+              "name": "Confederación Hidrográfica del Tajo",
+              "level": "state",
+              "note": null
+            },
+            "body": {
+              "code": "ES030MSBT000",
+              "name": "Synthetic body",
+              "quantitative_status": "Malo",
+              "declared_at_risk": false,
+              "declaration": null
+            },
+            "findings": [
+              {
+                "rule_id": "rdph-85-notice",
+                "area": "ES",
+                "title": {
+                  "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+                  "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 84.2 and 85",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "notice",
+                "message": "notify_authority",
+                "values": {
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-1-concession",
+                "area": "ES",
+                "title": {
+                  "en": "Above 7,000 m³/year per estate a concession is needed",
+                  "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.1",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "not_applicable",
+                "message": "within_small_use",
+                "values": {
+                  "volume": 7000.0,
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-84-2-at-risk",
+                "area": "ES",
+                "title": {
+                  "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+                  "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 84.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "body_not_marked",
+                "values": {
+                  "body": "Synthetic body"
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-2-distance",
+                "area": "ES",
+                "title": {
+                  "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+                  "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "point_far_enough",
+                "values": {
+                  "minimum": 100.0,
+                  "method": "inventory",
+                  "distance": 248.1
+                },
+                "uncertain": {
+                  "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+                  "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+                }
+              },
+              {
+                "rule_id": "rdph-87-4-policia",
+                "area": "ES",
+                "title": {
+                  "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+                  "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 9, 78 and 87.4",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "no_channel_within",
+                "values": {
+                  "reach": 2000.0,
+                  "limit": 100.0,
+                  "method": "terrain"
+                },
+                "uncertain": null
+              }
+            ],
+            "not_loaded": [
+              {
+                "scope": "basin_plan",
+                "area": "ES030",
+                "reason": {
+                  "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+                }
+              },
+              {
+                "scope": "regional_law",
+                "area": "ES-CM",
+                "reason": {
+                  "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+                }
+              }
+            ],
+            "permits": [
+              {
+                "en": "A municipal licence for the works: needed; not evaluated.",
+                "es": "Licencia municipal de obras: necesaria; no evaluada."
+              },
+              {
+                "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+                "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+              }
+            ]
+          },
+          "site": {
+            "water_point": {
+              "metres": 248.08062744140625,
+              "reach_m": 10000.0
+            },
+            "channel": {
+              "metres": null,
+              "reach_m": 2000.0
+            }
           },
           "depth": {
             "state": "estimated",
@@ -1469,7 +1973,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.417370Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378566Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -1496,7 +2000,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.419051Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379304Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1523,7 +2027,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418106Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379911Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1550,7 +2054,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1577,7 +2081,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1604,7 +2108,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1631,7 +2135,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-26T13:20:55.457859Z",
+                  "retrieved_at": "2026-11-26T14:33:32.451313Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -1658,7 +2162,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-26T13:20:55.417764Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378995Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1685,7 +2189,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418389Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379593Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1723,16 +2227,184 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T13:20:53.650085Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z"
             },
             "probability": null
           },
           "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-26T13:20:55.594774Z",
+            "state": "rules_not_loaded",
+            "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+            "assessed_at": "2026-11-26T14:33:33.489692Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
+            "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+            "region": "ES-CM",
+            "authority": {
+              "district": "ES030",
+              "district_name": "Tajo",
+              "name": "Confederación Hidrográfica del Tajo",
+              "level": "state",
+              "note": null
+            },
+            "body": {
+              "code": "ES030MSBT000",
+              "name": "Synthetic body",
+              "quantitative_status": "Malo",
+              "declared_at_risk": false,
+              "declaration": null
+            },
+            "findings": [
+              {
+                "rule_id": "rdph-85-notice",
+                "area": "ES",
+                "title": {
+                  "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+                  "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 84.2 and 85",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "notice",
+                "message": "notify_authority",
+                "values": {
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-1-concession",
+                "area": "ES",
+                "title": {
+                  "en": "Above 7,000 m³/year per estate a concession is needed",
+                  "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.1",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "not_applicable",
+                "message": "within_small_use",
+                "values": {
+                  "volume": 7000.0,
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-84-2-at-risk",
+                "area": "ES",
+                "title": {
+                  "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+                  "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 84.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "body_not_marked",
+                "values": {
+                  "body": "Synthetic body"
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-2-distance",
+                "area": "ES",
+                "title": {
+                  "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+                  "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "point_far_enough",
+                "values": {
+                  "minimum": 100.0,
+                  "method": "inventory",
+                  "distance": 245.8
+                },
+                "uncertain": {
+                  "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+                  "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+                }
+              },
+              {
+                "rule_id": "rdph-87-4-policia",
+                "area": "ES",
+                "title": {
+                  "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+                  "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 9, 78 and 87.4",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "no_channel_within",
+                "values": {
+                  "reach": 2000.0,
+                  "limit": 100.0,
+                  "method": "terrain"
+                },
+                "uncertain": null
+              }
+            ],
+            "not_loaded": [
+              {
+                "scope": "basin_plan",
+                "area": "ES030",
+                "reason": {
+                  "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+                }
+              },
+              {
+                "scope": "regional_law",
+                "area": "ES-CM",
+                "reason": {
+                  "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+                }
+              }
+            ],
+            "permits": [
+              {
+                "en": "A municipal licence for the works: needed; not evaluated.",
+                "es": "Licencia municipal de obras: necesaria; no evaluada."
+              },
+              {
+                "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+                "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+              }
+            ]
+          },
+          "site": {
+            "water_point": {
+              "metres": 245.7580108642578,
+              "reach_m": 10000.0
+            },
+            "channel": {
+              "metres": null,
+              "reach_m": 2000.0
+            }
           },
           "depth": {
             "state": "estimated",
@@ -1845,7 +2517,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.417370Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378566Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -1872,7 +2544,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.419051Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379304Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1899,7 +2571,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418106Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379911Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1926,7 +2598,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1953,7 +2625,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1980,7 +2652,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-26T13:20:55.453038Z",
+                  "retrieved_at": "2026-11-26T14:33:32.401606Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -2007,7 +2679,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-26T13:20:55.457859Z",
+                  "retrieved_at": "2026-11-26T14:33:32.451313Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -2034,7 +2706,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-26T13:20:55.417764Z",
+                  "retrieved_at": "2026-11-26T14:33:32.378995Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -2061,7 +2733,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-26T13:20:55.418389Z",
+                  "retrieved_at": "2026-11-26T14:33:32.379593Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -2099,16 +2771,184 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T13:20:53.650085Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z"
             },
             "probability": null
           },
           "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-26T13:20:55.594774Z",
+            "state": "rules_not_loaded",
+            "source": "The rules of config/legal/es/ read at their official sources (docs/knowledge/legal-groundwater.md), evaluated with MITECO's groundwater bodies, status and at-risk declarations at this point.",
+            "assessed_at": "2026-11-26T14:33:33.489833Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
+            "reason": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26. Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+            "region": "ES-CM",
+            "authority": {
+              "district": "ES030",
+              "district_name": "Tajo",
+              "name": "Confederación Hidrográfica del Tajo",
+              "level": "state",
+              "note": null
+            },
+            "body": {
+              "code": "ES030MSBT000",
+              "name": "Synthetic body",
+              "quantitative_status": "Malo",
+              "declared_at_risk": false,
+              "declaration": null
+            },
+            "findings": [
+              {
+                "rule_id": "rdph-85-notice",
+                "area": "ES",
+                "title": {
+                  "en": "A small-use well (up to 7,000 m³/year) is notified to the water authority",
+                  "es": "Un pozo de uso privativo de hasta 7.000 m³/año se comunica al organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 84.2 and 85",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "notice",
+                "message": "notify_authority",
+                "values": {
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-1-concession",
+                "area": "ES",
+                "title": {
+                  "en": "Above 7,000 m³/year per estate a concession is needed",
+                  "es": "Por encima de 7.000 m³/año por finca hace falta una concesión"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.1",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "not_applicable",
+                "message": "within_small_use",
+                "values": {
+                  "volume": 7000.0,
+                  "limit": 7000.0
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-84-2-at-risk",
+                "area": "ES",
+                "title": {
+                  "en": "In a body declared at risk, a new small-use well needs the basin authority's authorisation",
+                  "es": "En una masa declarada en riesgo, un pozo nuevo de uso privativo necesita autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986), as amended by Real Decreto 665/2023; Water Law art. 54.2",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 84.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "body_not_marked",
+                "values": {
+                  "body": "Synthetic body"
+                },
+                "uncertain": null
+              },
+              {
+                "rule_id": "rdph-87-2-distance",
+                "area": "ES",
+                "title": {
+                  "en": "Minimum distance to other wells, springs and control points (where the basin plan sets none)",
+                  "es": "Distancia mínima a otros pozos, manantiales y puntos de control (donde el plan de cuenca no fija otra)"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986)",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "art. 87.2",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "point_far_enough",
+                "values": {
+                  "minimum": 100.0,
+                  "method": "inventory",
+                  "distance": 247.1
+                },
+                "uncertain": {
+                  "en": "Under 0.15 l/s the distance is 10 m in urban land and 20 m in non-developable land; the land class is not known here, so 20 m is used. The distance applies to the neighbours' unlined ponds and ditches too, which no layer maps.",
+                  "es": "Por debajo de 0,15 l/s la distancia es de 10 m en suelo urbano y 20 m en suelo no urbanizable; aquí no se conoce la clase de suelo, así que se usan 20 m. La distancia vale también para balsas y acequias sin revestir de los vecinos, que ninguna capa recoge."
+                }
+              },
+              {
+                "rule_id": "rdph-87-4-policia",
+                "area": "ES",
+                "title": {
+                  "en": "A well in the zona de policía (100 m from a channel) always needs the basin authority's authorisation",
+                  "es": "Un pozo en la zona de policía (100 m desde un cauce) necesita siempre autorización del organismo de cuenca"
+                },
+                "source": {
+                  "name": "Reglamento del Dominio Público Hidráulico (Real Decreto 849/1986); Water Law art. 6",
+                  "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1986-10638",
+                  "article": "arts. 9, 78 and 87.4",
+                  "published": "2026-06-03",
+                  "checked": "2026-11-24"
+                },
+                "outcome": "clear",
+                "message": "no_channel_within",
+                "values": {
+                  "reach": 2000.0,
+                  "limit": 100.0,
+                  "method": "terrain"
+                },
+                "uncertain": null
+              }
+            ],
+            "not_loaded": [
+              {
+                "scope": "basin_plan",
+                "area": "ES030",
+                "reason": {
+                  "en": "The normative part of this district's 2022-2027 basin plan was not read: the official sources (BOE, the authority's site) were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó la parte normativa del plan hidrológico 2022-2027 de esta demarcación: las fuentes oficiales (BOE, web del organismo) no eran accesibles en la sesión del 2026-11-26."
+                }
+              },
+              {
+                "scope": "regional_law",
+                "area": "ES-CM",
+                "reason": {
+                  "en": "Whether this region's water law adds conditions to a well was not read: the official gazettes were out of reach from the session of 2026-11-26.",
+                  "es": "No se leyó si la ley de aguas de esta comunidad añade condiciones a un pozo: los boletines oficiales no eran accesibles en la sesión del 2026-11-26."
+                }
+              }
+            ],
+            "permits": [
+              {
+                "en": "A municipal licence for the works: needed; not evaluated.",
+                "es": "Licencia municipal de obras: necesaria; no evaluada."
+              },
+              {
+                "en": "The drilling authorisation of the regional mining authority (mining-safety rules): not evaluated, its rules were not read.",
+                "es": "Autorización del sondeo por la autoridad minera autonómica (normas de seguridad minera): no evaluada, sus normas no se han leído."
+              }
+            ]
+          },
+          "site": {
+            "water_point": {
+              "metres": 247.1295166015625,
+              "reach_m": 10000.0
+            },
+            "channel": {
+              "metres": null,
+              "reach_m": 2000.0
+            }
           },
           "depth": {
             "state": "estimated",
@@ -2161,7 +3001,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-26T13:20:55.417370Z",
+          "retrieved_at": "2026-11-26T14:33:32.378566Z",
           "detail": {
             "scale_denominator": 200000,
             "cell_m": null,
@@ -2173,7 +3013,7 @@
           "service_id": "ign-mdt-wcs",
           "publisher": "Instituto Geográfico Nacional (IGN)",
           "attribution": "MDT CC-BY 4.0 scne.es",
-          "retrieved_at": "2026-11-26T13:20:55.453038Z",
+          "retrieved_at": "2026-11-26T14:33:32.401606Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": 5.0,
@@ -2185,7 +3025,7 @@
           "service_id": "soilgrids-wcs",
           "publisher": "ISRIC World Soil Information",
           "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-          "retrieved_at": "2026-11-26T13:20:55.457859Z",
+          "retrieved_at": "2026-11-26T14:33:32.451313Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": 250.0,
@@ -2197,7 +3037,7 @@
           "service_id": "miteco-gw-status",
           "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
           "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-          "retrieved_at": "2026-11-26T13:20:55.417764Z",
+          "retrieved_at": "2026-11-26T14:33:32.378995Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": null,
@@ -2209,7 +3049,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-26T13:20:55.418389Z",
+          "retrieved_at": "2026-11-26T14:33:32.379593Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": null,
@@ -2221,7 +3061,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-26T13:20:55.419051Z",
+          "retrieved_at": "2026-11-26T14:33:32.379304Z",
           "detail": {
             "scale_denominator": 50000,
             "cell_m": null,
@@ -2233,7 +3073,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-26T13:20:55.418106Z",
+          "retrieved_at": "2026-11-26T14:33:32.379911Z",
           "detail": {
             "scale_denominator": 50000,
             "cell_m": null,
@@ -2249,7 +3089,7 @@
     {
       "id": "potential-index",
       "variable": "index",
-      "image": "/api/parcel/0f672075367ce0d3/layers/potential-index",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/potential-index",
       "opacity": 0.65,
       "visible": true,
       "unit": "index",
@@ -2284,7 +3124,7 @@
     {
       "id": "potential-confidence",
       "variable": "confidence",
-      "image": "/api/parcel/0f672075367ce0d3/layers/potential-confidence",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/potential-confidence",
       "opacity": 0.7,
       "visible": false,
       "unit": "confidence",
@@ -2309,7 +3149,7 @@
     {
       "id": "model-skill",
       "variable": "skill",
-      "image": "/api/parcel/0f672075367ce0d3/layers/model-skill",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/model-skill",
       "opacity": 0.6,
       "visible": false,
       "unit": "skill",
@@ -2339,7 +3179,7 @@
     {
       "id": "terrain-slope",
       "variable": "slope_deg",
-      "image": "/api/parcel/0f672075367ce0d3/layers/terrain-slope",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/terrain-slope",
       "opacity": 0.7,
       "visible": false,
       "unit": "deg",
@@ -2379,7 +3219,7 @@
     {
       "id": "terrain-drainage",
       "variable": "drainage_distance_m",
-      "image": "/api/parcel/0f672075367ce0d3/layers/terrain-drainage",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/terrain-drainage",
       "opacity": 0.7,
       "visible": false,
       "unit": "m",
@@ -2414,7 +3254,7 @@
     {
       "id": "terrain-wetness",
       "variable": "twi",
-      "image": "/api/parcel/0f672075367ce0d3/layers/terrain-wetness",
+      "image": "/api/parcel/d3e0cb6e394da068/layers/terrain-wetness",
       "opacity": 0.7,
       "visible": false,
       "unit": "twi",

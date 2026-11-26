@@ -1,0 +1,25 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Duero (area ES020): only the 2022-2027 plan's groundwater zoning (Real Decreto 35/2023,
+# annex IV art. 33), as CH Duero's Mírame-IDEDuero layer draws it
+# (docs/knowledge/regional-layers.md, read 2026-11-24). The plan's normative text is not
+# loaded (areas.yaml says why).
+
+rules:
+  - id: phd-33-zoning
+    area: ES020
+    kind: zone
+    match:
+      layer: duero-groundwater-zoning
+      field: f_valoracion_final
+      values: ["Zona No Autorizada"]
+    outcome: blocks
+    label_field: nombre
+    title:
+      en: "Groundwater zoning: zones not authorised for new abstractions, or with specific limitations"
+      es: "Zonificación de aguas subterráneas: zonas no autorizadas para nuevas captaciones, o con limitaciones específicas"
+    source:
+      name: "Plan Hidrológico del Duero 2022-2027 (Real Decreto 35/2023), annex IV"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 33"
+      published: 2023-02-10
+      checked: 2026-11-24

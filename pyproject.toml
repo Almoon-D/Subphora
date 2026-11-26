@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "subphora"
-version = "0.11.0"
+version = "0.12.0"
 description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"
@@ -140,7 +140,7 @@ layers = [
     "__main__",
     "api",
     "services",
-    "model",
+    "model | legal",
     "countries | geo | sources | store",
     "config",
     "domain",
@@ -171,3 +171,17 @@ name = "The model imports only domain, config and geo"
 type = "forbidden"
 source_modules = ["subphora.model"]
 forbidden_modules = ["subphora.sources", "subphora.store", "subphora.countries"]
+
+# The legal filter evaluates rules held as data on what it is handed (MASTER_PLAN §4.2,
+# §4.5), so every rule's branches are tested without network or grids.
+[[tool.importlinter.contracts]]
+name = "The legal filter imports only domain and config"
+type = "forbidden"
+source_modules = ["subphora.legal"]
+forbidden_modules = [
+    "subphora.sources",
+    "subphora.store",
+    "subphora.countries",
+    "subphora.geo",
+    "subphora.model",
+]

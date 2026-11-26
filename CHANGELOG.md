@@ -7,6 +7,22 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.9.0] - 2026-11-26
+
+- The model is checked against public wells: every national build measures, per
+  groundwater body, how well the index separates productive wells from random places (AUC
+  with its interval), and says "validated", "no better than chance" or "not enough wells".
+- That measured skill now counts in the confidence, and a new layer maps it.
+- The index stays an index: no public record of dry wells exists yet, so it is not turned
+  into a probability anywhere, and the app says why.
+- `subphora piezometry import` reads the national piezometry database downloaded by hand
+  (needs mdbtools).
+- Each candidate spot shows the estimated depth to water with its range, from the
+  piezometers of its own groundwater body, or "unknown" and why; karst rock is flagged.
+- Each candidate with a depth shows a drilling cost range in euros, with the sources and
+  date of the prices (overridable in `config/owner.yaml`).
+- The detailed map's summary lists the validation of each groundwater body it touches.
+
 ## [0.8.0] - 2026-11-25
 
 - A detailed map of any selected area: "Calcular el mapa detallado" computes the potential

@@ -59,6 +59,18 @@ Hosts catalogued from this file: `geoguadiana.chguadiana.es`, `www.chguadiana.es
   The link opens a form protected by an ALTCHA proof-of-work challenge: it is meant for a
   person. Subphora does not automate it (that would defeat the challenge); the owner
   downloads the file by hand and session 07 imports it from `data/`. `(GET DescargaFichero, 2026-11-24)`
+- **The national database, opened** `(basedatospiezometria.zip, downloaded by hand 2026-11, 2026-11-26)`:
+  one Access file `Piezo_GEOportal_2024_descargas_20260220.accdb` (156 MB) with two tables.
+  `01_Piezometros`: 4,658 piezometers; `IDPIEZ`, `PIEZCOD`, `PIEZNOM` (name; `ESTADO` is
+  "Activo" for 4,198 and "Eliminado" for 460), coordinates `CX89_HUSO30`/`CY89_HUSO30` in the zone given by `PIEZHUSO`
+  (30 or 31, despite the names), ground `CZ` (empty for 61), `MAS_CONTROL` and
+  `NOM MAS CONTROL` (the monitored groundwater body, empty for 1, codes like
+  `ES040MSBT000030607`; that they match MITECO's bodies layer is
+  VERIFY-LIVE(piezometer-body-codes)), `LITO`, `PIEZPROF`. `02_Niveles`: 1,243,637 levels,
+  `IDPIEZ`, `FechaP`, `Cota_NP_msnm` (level above sea, m), 2007-02-05 to 2024-12-31. The Python `access-parser`
+  misreads it (shifted text columns, empty levels); `mdb-export` (mdbtools) reads it
+  correctly. With the defaults, 4,342 piezometers keep a recent level; 316 are left out
+  (removed long ago, too few measurements, or no body). The download states no licence.
 - MITECO's page "Información y consulta de niveles piezométricos" links the viewer
   `https://sig.mapama.gob.es/redes-seguimiento/` and every basin's piezometry page (the links
   used in the table above). About 2,500 piezometers in the inter-community districts, mostly

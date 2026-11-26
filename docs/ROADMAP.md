@@ -13,8 +13,8 @@
 | 04 | `docs/sessions/done/04-search.md` | Opus 5.5, medium | done |
 | 05 | `docs/sessions/done/05-national-map.md` | Opus 5.5, high | done |
 | 06 | `docs/sessions/done/06-parcel-detail.md` | Opus 5.5, high | done |
-| 07 | `docs/sessions/07-validation-depth-cost.md` | Opus 5.5, high | next |
-| 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | planned |
+| 07 | `docs/sessions/done/07-validation-depth-cost.md` | Opus 5.5, high | done |
+| 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | next |
 | 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | planned |
 | 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | planned |
 | 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | planned |
@@ -36,17 +36,27 @@
 - VERIFY-LIVE(chg-ide): every path on `idechg.chguadalquivir.es` redirected to an error page
   from the cloud session; find the CHG's OGC endpoints (MITECO's national services cover
   the bodies meanwhile). Queued by 01; unblocked by a browser look at the CHG geoportal.
-- VERIFY-LIVE(piezometric-levels): open the national piezometry database (a hand download,
-  behind a human-only form) and the basin spreadsheets (Guadiana, Ebro, Júcar) and record
-  their columns and dates (`docs/knowledge/water-authorities.md`). Queued by 01; the owner
-  downloads the national file before session 07, which needs it.
+- VERIFY-LIVE(piezometric-levels): the basin spreadsheets (Guadiana, Ebro, Júcar): open them
+  and record their columns and dates (`docs/knowledge/water-authorities.md`), then import
+  them beside the national database (read in 07). Queued by 01; their hosts answered 403 from
+  the cloud in 07; the owner downloads them, or a session from a machine in Spain.
+- VERIFY-LIVE(dry-wells): a public record of dry or failed boreholes (IGME BDAguas, basin
+  registers). Until one exists, validation is presence-background and no domain is
+  calibrated into a probability (decision 0030). Queued by 07; IGME or the owner's wells (14).
+- VERIFY-LIVE(piezometer-body-codes): that `MAS_CONTROL` in the national piezometry database
+  uses the same codes as MITECO's groundwater-bodies layer, on a real build with levels.
+  Queued by 07; the owner's next `national build` and detailed map show it.
+- VERIFY-LIVE(drilling-prices): the €/m and fixed costs in `config/defaults/drilling.yaml`
+  come from three consumer price pages (2023-2026), not quotes; a local driller's quote
+  overrides them in `config/owner.yaml`. Queued by 07; the owner.
 - VERIFY-LIVE(basin-terms): the licence of the basin spreadsheets and downloads (Guadiana,
-  Ebro, Júcar) and of the Balearic service, not stated on their pages. Queued by 01; session 07.
+  Ebro, Júcar) and of the Balearic service, not stated on their pages. Queued by 01; the
+  owner allows them for private testing (07); a paid product asks first.
 - VERIFY-LIVE(water-authorities-unreached): CH Guadalquivir, Segura, Tajo, Miño-Sil, Augas de
   Galicia and the Canary island councils published no reachable data service from the cloud;
   find their endpoints from a browser. Queued by 01; session 07 (levels) and 09 (rules).
 - VERIFY-LIVE(igme-water-levels): levels per IGME water point exist only in the BDAguas web
-  app, with no documented API; ask IGME or find a download. Queued by 01; session 07.
+  app, with no documented API; ask IGME or find a download. Queued by 01; still open after 07.
 - VERIFY-LIVE(igme-geode-download): the GEODE vector download route and size. Queued by 01;
   the national model (05) needed none; session 06 or 08 if it reads GEODE in bulk.
 - VERIFY-LIVE(cnig-mdt02-coverage): MDT02 coverage and download route (the CNIG download
@@ -88,6 +98,14 @@
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
 
+- Probability tiles: no domain is calibrated today (no dry wells); when one is, the national
+  map can draw a probability layer beside the index for it. (07)
+- The `piezometric_depth` criterion of the national model still has no grid: the imported
+  levels could build one per body where piezometers are dense enough. (07)
+- Karst is flagged from the permeability map's "CARBONATADAS" classes; IGME's karst map
+  would be more precise. (07)
+- The validation's background cells and wells use the 100 m national grid: the detailed
+  map's candidates inherit their domain's result, not one measured at 5 m. (07)
 - Every external endpoint, licence, price and legal rule in the plan was written from memory:
   session 01 verifies them before code depends on them. (00)
 - Node 27's stable release is due in April 2027 (only alphas exist): move `.nvmrc` to 27
@@ -150,8 +168,6 @@
 - Wetness and drainage are computed per province with a 10 km buffer: a large river's
   catchment beyond it is not counted, so its floodplain's wetness index is lower than a
   whole-basin computation would give. (05)
-- The IGME water points are a criterion and the confidence's evidence: session 07 must keep
-  a validation fold's wells out of both before measuring skill. (05)
 - `data/cache` grows with every build's terrain windows (476 MB for two provinces): the size
   cap of session 13 covers it. (05)
 - No elevation or relief layer is drawn: the IGN publishes its MDT as a map (WMS
@@ -173,6 +189,20 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 07 — Validation, depth to water and drilling cost (2026-11-26, version 0.9.0)
+
+- Landed: per-body validation in every national build (IGME productive wells vs background
+  cells, 10 km block bootstrap AUC, the water-points criterion left out; decision 0030),
+  its skill in the confidence and a `model-skill` layer; calibration code, refused today
+  (no dry wells); `subphora piezometry import` of the national database with mdbtools; the
+  water table per body, depth with its range or "unknown" and why, karst flag, and the
+  drilling cost in Decimal (decision 0031); all on candidates, summaries and explanations.
+- Live: the owner's national database imported (4,342 of 4,658 piezometers, 1.24 M levels,
+  2007-2024; `water-authorities.md`). Basin hosts and IGME answered 403 from the cloud.
+- Deferred: basin spreadsheets (VERIFY-LIVE(piezometric-levels)); probability (dry-wells).
+- VERIFY-LIVE: dry-wells, piezometer-body-codes, drilling-prices (new); piezometric-levels
+  narrowed to the basin sheets; basin-terms (owner: private testing allowed).
 
 ### 06 — Parcel-scale detail, explanation and candidate spots (2026-11-25, version 0.8.0)
 

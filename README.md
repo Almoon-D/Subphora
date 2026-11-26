@@ -59,9 +59,22 @@ make check     # todo lo que corre CI (Python y web, con tests en navegador)
 uv run subphora --help
 uv run subphora national build --region ES-Z   # mapa nacional de una provincia
 uv run subphora national build --all           # toda España (~5 GB libres, varias horas)
+uv run subphora piezometry import              # niveles piezométricos (ver abajo)
 ```
 
 El mapa nacional se guarda en `data/national/` y `make dev` lo muestra al abrir el mapa.
+Cada construcción compara el índice con los pozos públicos del IGME en cada masa de agua y
+dice si acierta ("validado"), si no es mejor que el azar o si faltan pozos; ese acierto
+entra en la confianza y tiene su propia capa.
+
+**Profundidad y coste.** Descarga a mano la base de datos de piezometría del MITECO
+(`basedatospiezometria.zip`, el formulario es para personas) y déjala en
+`data/piezometry/`. Instala mdbtools (`brew install mdbtools` en macOS,
+`apt install mdbtools` en Linux) y ejecuta `uv run subphora piezometry import`. Desde
+entonces cada punto candidato del mapa detallado muestra la profundidad estimada del agua
+con su margen (o "desconocida" y por qué) y un rango de coste de perforación. Los precios
+están en `config/defaults/drilling.yaml`; pon el presupuesto de tu pocero en
+`config/owner.yaml` para sustituirlos.
 
 La primera vez, `make check` descarga el Chromium de Playwright para los tests en
 navegador.

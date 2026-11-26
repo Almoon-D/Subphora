@@ -28,11 +28,15 @@ import {
   searchText,
   startParcel,
 } from "./api.ts";
+import { FieldPanel } from "./field/FieldPanel.tsx";
+import { useFieldDb, useGeolocation, useOutbox } from "./field/hooks.ts";
+import type { Target } from "./field/records.ts";
+import { type FieldSession, loadFieldSession, saveFieldSession } from "./field/session.ts";
 import { formatArea, formatDate, formatNumber, lookup, t } from "./i18n/index.ts";
 import { InfoPanel, type Tap } from "./map/InfoPanel.tsx";
 import { LayerPanel } from "./map/LayerPanel.tsx";
 import { initialLayers, type MapLayers, queryableOverlays } from "./map/layers.ts";
-import { type Draft, MapView, type ParcelDrawing } from "./map/MapView.tsx";
+import { type Draft, type FieldDrawing, MapView, type ParcelDrawing } from "./map/MapView.tsx";
 import { nationalAnswersTap } from "./map/national.ts";
 import { Comparison } from "./parcel/Comparison.tsx";
 import {
@@ -235,6 +239,9 @@ function SessionList({ session, onSelect }: { session: SessionAreas; onSelect: (
   );
 }
 
+// Only read while field mode is off, before the configuration is loaded.
+const NO_GEOLOCATION = { high_accuracy: false, timeout_ms: 1, maximum_age_ms: 0 };
+
 export function App() {
   const [config, setConfig] = useState<MapConfig | null>(null);
   // Null when the national map could not be read: the rest of the page works without it.
@@ -259,6 +266,18 @@ export function App() {
   // Only the answers to the latest tap, and to the latest search, are shown.
   const tapCount = useRef(0);
   const searchCount = useRef(0);
+  // Field mode: on or off and the spot walked to (kept for a reload), the device's store
+  // and outbox (sending whether or not field mode is on), and the position while it is on.
+  const [field, setField] = useState<FieldSession>(() => loadFieldSession());
+  const [follow, setFollow] = useState(true);
+  const store = useFieldDb();
+  const fieldDb = store.state === "open" ? store.db : null;
+  const outbox = useOutbox(fieldDb, config?.field ?? null);
+  const located = useGeolocation(config?.field.geolocation ?? NO_GEOLOCATION, field.on && config !== null);
+
+  useEffect(() => {
+    saveFieldSession(field);
+  }, [field]);
 
   useEffect(() => {
     Promise.all([fetchMapConfig(), fetchNational().catch(() => null)]).then(
@@ -432,10 +451,45 @@ export function App() {
     ? { analysis: selectedAnalysis, layer: parcelLayers.find((l) => l.id === chosenLayer) ?? null }
     : null;
   const searching = search.state === "searching";
+  const fieldDrawing: FieldDrawing | null = field.on ? { fix: located.fix, target: field.target, follow } : null;
   return (
     <div className="app">
-      <aside className="panel">
-        <h1>{t("app.title")}</h1>
+      <aside className={field.on ? "panel field" : "panel"}>
+        {field.on && config ? (
+          <FieldPanel
+            config={config.field}
+            db={fieldDb}
+            outbox={outbox}
+            located={located}
+            analysis={selectedAnalysis}
+            target={field.target}
+            follow={follow}
+            onTarget={(target: Target | null) => {
+              setField((current) => ({ ...current, target }));
+            }}
+            onFollow={setFollow}
+            onExit={() => {
+              setField((current) => ({ ...current, on: false }));
+            }}
+          />
+        ) : (
+          <>
+        <div className="title-row">
+          <h1>{t("app.title")}</h1>
+          {config && (
+            <button
+              type="button"
+              className="secondary"
+              data-unsynced={outbox.unsynced}
+              onClick={() => {
+                setDraft(null);
+                setField((current) => ({ ...current, on: true }));
+              }}
+            >
+              {outbox.unsynced > 0 ? t("field.enterUnsynced", { count: outbox.unsynced }) : t("field.enter")}
+            </button>
+          )}
+        </div>
         <form
           role="search"
           onSubmit={(event) => {
@@ -553,6 +607,8 @@ export function App() {
             {t("app.mapUnavailable")}
           </p>
         )}
+          </>
+        )}
       </aside>
       <main className="map-area">
         {config && layers ? (
@@ -565,6 +621,7 @@ export function App() {
             tapped={tapped}
             draft={draft}
             section={sectionLine}
+            field={fieldDrawing}
             onZoom={setZoom}
             onTap={(lon, lat, tapZoom) => {
               void onTap(lon, lat, tapZoom);

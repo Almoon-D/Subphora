@@ -24,8 +24,13 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         launchOptions: {
           ...(executablePath ? { executablePath } : {}),
-          // WebGL without a GPU, for MapLibre.
-          args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader"],
+          // WebGL without a GPU, for MapLibre; a synthetic microphone for voice memos.
+          args: [
+            "--enable-unsafe-swiftshader",
+            "--use-angle=swiftshader",
+            "--use-fake-device-for-media-stream",
+            "--use-fake-ui-for-media-stream",
+          ],
         },
       },
     },

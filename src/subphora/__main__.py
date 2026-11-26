@@ -58,6 +58,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     piezometry_import.add_argument(
         "--file", metavar="PATH", help="the downloaded .zip or .accdb instead of the configured one"
     )
+    field = sub.add_parser("field", help="the field observations synced to this server")
+    field_sub = field.add_subparsers(dest="field_command", required=True)
+    field_sub.add_parser(
+        "summary", help="count the stored records by kind, their files and tracks (data/field)"
+    )
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -72,6 +77,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _national_build(settings, args.region, all_provinces=args.all)
     if args.command == "piezometry":
         return _piezometry_import(settings, args.file)
+    if args.command == "field":
+        return _field_summary(settings)
     if args.sources_command == "list":
         print(_catalogue_table(settings))
         return 0
@@ -107,6 +114,21 @@ def _serve(settings: Settings) -> int:
         access_log=False,
         log_level=settings.core.log_level.lower(),
     )
+    return 0
+
+
+def _field_summary(settings: Settings) -> int:
+    from subphora.config import REPO_ROOT
+    from subphora.services.field import FieldService
+
+    summary = asyncio.run(FieldService(settings, REPO_ROOT).summary())
+    for count in summary.kinds:
+        files = f", {count.with_media} with their file" if count.with_media else ""
+        print(f"{count.kind.value}: {count.records} records{files}")
+    print(f"tracks: {summary.tracks}")
+    if summary.first_recorded_at and summary.last_recorded_at:
+        first = summary.first_recorded_at.isoformat()
+        print(f"recorded from {first} to {summary.last_recorded_at.isoformat()} (UTC)")
     return 0
 
 

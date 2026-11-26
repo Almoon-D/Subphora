@@ -50,7 +50,18 @@ corte geológico interpretativo del terreno bajo ella, con su confianza; toca cu
 parte del corte para saber qué es y de dónde sale. El lugar elegido
 aparece en amarillo sobre la ortofoto PNOA, con su ficha (provincia, superficie, fuente y
 fecha); las áreas de la sesión quedan en una lista para volver a ellas (solo en esa
-pestaña del navegador). `Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC
+pestaña del navegador).
+
+**Modo campo.** El botón *Modo campo* (arriba, junto al título) cambia el panel a botones
+grandes para usar al aire libre: tu posición con su precisión y rumbo, y, si eliges uno de
+los puntos candidatos del mapa detallado, la distancia y la dirección hasta él; dice
+"Estás en el punto" solo a menos de 10 m y con una precisión de ±10 m o mejor. Registra
+notas, fotos, notas de voz y la ruta: todo se guarda primero en el navegador, se envía al
+servidor cuando hay conexión (sin duplicar nada) y queda en `data/field/`. El panel cuenta
+lo que falta por enviar y lo exporta a un archivo. Para probarlo sin conexión: en el
+navegador, herramientas de desarrollo → Red → *Sin conexión*, registra algo, vuelve a
+conectar y mira cómo baja el contador; `uv run subphora field summary` cuenta lo recibido.
+`Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC
 y CartoCiudad se guardan en `data/cache/` (no se sube al repositorio).
 
 ## Comandos
@@ -63,6 +74,7 @@ uv run subphora --help
 uv run subphora national build --region ES-Z   # mapa nacional de una provincia
 uv run subphora national build --all           # toda España (~5 GB libres, varias horas)
 uv run subphora piezometry import              # niveles piezométricos (ver abajo)
+uv run subphora field summary                  # lo registrado en campo que ha llegado
 ```
 
 El mapa nacional se guarda en `data/national/` y `make dev` lo muestra al abrir el mapa.

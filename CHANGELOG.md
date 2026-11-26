@@ -7,6 +7,18 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.14.0] - 2026-11-26
+
+- Field mode: a "Modo campo" button turns the panel into large, high-contrast controls with
+  your live position, its accuracy circle and heading on the map.
+- Pick a candidate spot of the detailed map and the panel shows the distance and direction
+  to it; it says "at the spot" only within 10 m and with an accuracy of ±10 m or better.
+- Notes, photos, voice memos and the walked track are saved on the device first, with or
+  without coverage, and only then confirmed.
+- They sync to the server when there is a connection, in batches that can be retried or cut
+  by a reload without duplicating or losing anything; the panel counts what is unsent.
+- Everything unsent can be exported to a file; `subphora field summary` counts what arrived.
+
 ## [0.13.0] - 2026-11-26
 
 - The legal filter now knows the basin plans of 17 of Spain's 25 river-basin districts

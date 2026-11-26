@@ -29,6 +29,10 @@
   with their sources and dates, the verdict and the disclaimer; an area's legal panel.
 - ``POST /api/section`` (a line's two ends): the interpretive geological cross-section
   under it, with the confidence of every cell and "unknown" below the evidence.
+- ``POST /api/field/observations`` (a batch of field records): each stored once, its
+  outcome (created, duplicate or conflict) in the answer; a retried batch changes nothing.
+- ``PUT /api/field/observations/{id}/media``: a photo's or voice memo's file, once its
+  record is stored and only if it is the file the record declared.
 """
 
 import logging
@@ -51,6 +55,14 @@ from subphora.config import REPO_ROOT, Settings
 from subphora.domain import DomainModel
 from subphora.domain.aoi import AoiOrigin, AreaOfInterest, SearchAnswer, SearchError, SearchFailure
 from subphora.domain.areas import AreaBoundary
+from subphora.domain.field import (
+    FieldError,
+    FieldFailure,
+    MediaAnswer,
+    Observation,
+    Outcome,
+    SyncAnswer,
+)
 from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
 from subphora.domain.legal import LegalStatus
 from subphora.domain.parcel_map import JobState, ParcelError, ParcelExplanation, ParcelFailure
@@ -60,6 +72,7 @@ from subphora.domain.section import CrossSection, SectionError, SectionFailure
 from subphora.geo import MAX_TILE_ZOOM
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
+from subphora.services.field import FieldService
 from subphora.services.layers import LayerService
 from subphora.services.legal import LegalService
 from subphora.services.national_map import NationalMapService
@@ -125,7 +138,21 @@ _SECTION_STATUS = {
     SectionFailure.UPSTREAM_ERROR: 502,
     SectionFailure.UPSTREAM_TIMEOUT: 504,
 }
+_FIELD_STATUS = {
+    FieldFailure.INVALID_OBSERVATION: 400,
+    FieldFailure.TOO_MANY: 413,
+    FieldFailure.NOTE_TOO_LONG: 422,
+    FieldFailure.UNKNOWN_OBSERVATION: 404,
+    FieldFailure.NO_MEDIA: 422,
+    FieldFailure.MEDIA_TYPE: 415,
+    FieldFailure.MEDIA_TOO_LARGE: 413,
+    FieldFailure.MEDIA_MISMATCH: 400,
+    FieldFailure.STORE_UNAVAILABLE: 503,
+}
 _AREA_ID = fastapi.Path(pattern=r"^[0-9a-f]{16}$")
+_OBSERVATION_ID = fastapi.Path(
+    pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+)
 _PNG = "image/png"
 _ZOOM = Query(ge=0, le=MAX_TILE_ZOOM)
 _TILE_INDEX = fastapi.Path(ge=0)
@@ -136,6 +163,12 @@ class DrawnPolygon(DomainModel):
 
     type: Literal["Polygon"]
     coordinates: tuple[tuple[Position, ...]] = Field(min_length=1, max_length=1)
+
+
+class FieldBatch(DomainModel):
+    """The body of ``POST /api/field/observations``: the outbox's next records."""
+
+    observations: tuple[Observation, ...] = Field(min_length=1)
 
 
 class DrawnLine(DomainModel):
@@ -175,6 +208,7 @@ def create_app(
                 client, settings, cache, root, workers, app.state.legal
             )
             app.state.section = SectionService(client, settings, cache, root)
+            app.state.field = FieldService(settings, root)
             stack.callback(app.state.national.close)
             stack.push_async_callback(app.state.parcel.close)
             yield
@@ -394,6 +428,50 @@ def create_app(
                 raise SectionError(SectionFailure.INVALID_LINE, "an end is not in degrees")
         service: SectionService = request.app.state.section
         return await service.section(line.start, line.end)
+
+    @app.exception_handler(FieldError)
+    async def field_failed(_request: Request, exc: FieldError) -> JSONResponse:
+        if exc.failure is FieldFailure.STORE_UNAVAILABLE:
+            _log.error("the field store failed: %s", exc.detail)
+        return JSONResponse(
+            status_code=_FIELD_STATUS[exc.failure],
+            content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    def field(request: Request) -> FieldService:
+        service: FieldService = request.app.state.field
+        return service
+
+    @app.post("/api/field/observations")
+    async def field_sync(request: Request) -> SyncAnswer:
+        try:
+            batch = FieldBatch.model_validate_json(await request.body())
+        except ValidationError as exc:
+            # Where the batch is wrong, never what it holds (a record may be private).
+            where = ".".join(str(part) for part in exc.errors()[0]["loc"])
+            raise FieldError(
+                FieldFailure.INVALID_OBSERVATION, f"the batch is not valid at {where or 'root'}"
+            ) from exc
+        return SyncAnswer(results=await field(request).sync(batch.observations))
+
+    @app.put("/api/field/observations/{observation_id}/media")
+    async def field_media(
+        observation_id: Annotated[str, _OBSERVATION_ID], request: Request, response: Response
+    ) -> MediaAnswer:
+        limit = settings.field.media.max_bytes
+        declared = request.headers.get("content-length", "")
+        if declared.isdigit() and int(declared) > limit:
+            raise FieldError(FieldFailure.MEDIA_TOO_LARGE, f"a file has at most {limit} bytes")
+        content_type = request.headers.get("content-type", "")
+        content = bytearray()
+        async for chunk in request.stream():
+            content += chunk
+            if len(content) > limit:
+                raise FieldError(FieldFailure.MEDIA_TOO_LARGE, f"a file has at most {limit} bytes")
+        outcome = await field(request).media(observation_id, content_type, bytes(content))
+        if outcome is Outcome.CREATED:
+            response.status_code = 201
+        return MediaAnswer(id=observation_id, outcome=outcome)
 
     @app.get("/api/areas/{area_id}")
     async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:

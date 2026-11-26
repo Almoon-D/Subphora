@@ -139,10 +139,10 @@ class ParcelJobSpec:
     inputs: ParcelInputs
     # The national map's validation per domain (body code, or the outside) near the area.
     validations: dict[str, DomainValidation]
-    # The imported piezometers near the area, in the window's CRS, and their source (None
-    # when no levels were imported).
+    # The imported piezometers near the area, in the window's CRS, and the sources of
+    # their levels by service (None when no levels were imported).
     piezometers: list[PiezometerPoint]
-    levels: LevelsSource | None
+    levels: dict[str, LevelsSource] | None
 
 
 def _text(value: Any) -> str:

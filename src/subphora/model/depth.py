@@ -13,7 +13,7 @@
 """
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -42,6 +42,25 @@ class PiezometerPoint:
     level_m: float
     low_m: float
     high_m: float
+    # The services of the levels it summarises.
+    sources: tuple[str, ...] = ()
+
+
+def _nearest(
+    x: float,
+    y: float,
+    body: str,
+    piezometers: Sequence[PiezometerPoint],
+    settings: WaterTableSettings,
+) -> list[tuple[float, PiezometerPoint]]:
+    """``body``'s piezometers used at (x, y): the nearest within the maximum distance, or
+    the one at the spot alone."""
+    near = sorted(
+        ((math.hypot(p.x - x, p.y - y), p) for p in piezometers if p.body == body),
+        key=lambda pair: pair[0],
+    )
+    near = [pair for pair in near if pair[0] <= settings.max_distance_m][: settings.max_piezometers]
+    return near[:1] if near and near[0][0] < _AT_SPOT_M else near
 
 
 def water_table(
@@ -54,16 +73,10 @@ def water_table(
 ) -> WaterTable | None:
     """The water table at (x, y) from ``body``'s piezometers; None when none is within the
     maximum distance."""
-    near = sorted(
-        (math.hypot(p.x - x, p.y - y), p)
-        for p in piezometers
-        if p.body == body and math.hypot(p.x - x, p.y - y) <= settings.max_distance_m
-    )[: settings.max_piezometers]
+    near = _nearest(x, y, body, piezometers, settings)
     if not near:
         return None
     nearest = near[0][0]
-    if nearest < _AT_SPOT_M:
-        near = near[:1]
     weights = [1.0 if d < _AT_SPOT_M else 1 / d**settings.power for d, _ in near]
     total = sum(weights)
     level = sum(w * p.level_m for w, (_, p) in zip(weights, near, strict=True)) / total
@@ -90,15 +103,16 @@ def depth_at(
     piezometers: Sequence[PiezometerPoint],
     settings: WaterTableSettings,
     karst: bool,
-    source: LevelsSource | None,
+    sources: Mapping[str, LevelsSource] | None,
 ) -> DepthEstimate:
     """The depth to water at a spot; ``body`` is its groundwater body (code, label) or
-    None outside every body; ``source`` is None when no levels were imported."""
+    None outside every body; ``sources`` (by service) is None when no levels were
+    imported."""
 
     def unknown(reason: DepthUnknown) -> DepthEstimate:
         return DepthEstimate(state="unknown", reason=reason, karst=karst)
 
-    if source is None:
+    if sources is None:
         return unknown(DepthUnknown.NOT_IMPORTED)
     if body is None:
         return unknown(DepthUnknown.OUTSIDE_BODIES)
@@ -107,6 +121,7 @@ def depth_at(
     table = water_table(x, y, body[0], body[1], piezometers, settings)
     if table is None:
         return unknown(DepthUnknown.NO_PIEZOMETER_NEARBY)
+    used = {s for _, p in _nearest(x, y, body[0], piezometers, settings) for s in p.sources}
     return DepthEstimate(
         state="estimated",
         ground_m=ground_m,
@@ -115,7 +130,7 @@ def depth_at(
         low_m=max(0.0, ground_m - table.high_m),
         high_m=max(0.0, ground_m - table.low_m),
         karst=karst,
-        source=source,
+        sources=tuple(s for key, s in sources.items() if key in used),
     )
 
 

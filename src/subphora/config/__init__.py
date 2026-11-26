@@ -73,12 +73,18 @@ class Settings(Section):
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
         """The criteria left out of the validated index exist, and the piezometric levels
-        are a catalogued download."""
+        (national and basin) are catalogued downloads, each read once."""
         ids = {c.id for c in self.model.criteria}
         unknown = sorted(set(self.validation.labels.excluded_criteria) - ids)
         if unknown:
             raise ValueError(f"validation.labels.excluded_criteria: {unknown} are not criteria")
         self._catalogued("piezometry.service", self.piezometry.service, "download")
+        services = [self.piezometry.service]
+        for index, basin in enumerate(self.piezometry.basins):
+            self._catalogued(f"piezometry.basins[{index}].service", basin.service, "download")
+            services.append(basin.service)
+        if len(set(services)) != len(services):
+            raise ValueError("piezometry: each source of levels is imported once")
         return self
 
     @model_validator(mode="after")

@@ -37,6 +37,8 @@ class LevelsSource(DomainModel):
     publisher: str = Field(min_length=1)
     attribution: str = Field(min_length=1)
     file_name: str = Field(min_length=1)
+    # sha256 of the file imported, to tell one download from another.
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     imported_at: AwareDatetime
     levels_from: date
     levels_to: date
@@ -77,7 +79,8 @@ class DepthEstimate(DomainModel):
     high_m: float | None = Field(default=None, ge=0)
     # Carbonate rock under the spot (possible karst): the depth is unreliable.
     karst: bool = False
-    source: LevelsSource | None = None
+    # The sources of the piezometers' levels used, national first.
+    sources: tuple[LevelsSource, ...] = ()
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -85,7 +88,7 @@ class DepthEstimate(DomainModel):
         if self.state == "estimated":
             if (
                 self.reason is not None
-                or self.source is None
+                or not self.sources
                 or self.ground_m is None
                 or self.water_table is None
                 or self.depth_m is None
@@ -95,7 +98,7 @@ class DepthEstimate(DomainModel):
                 raise ValueError("an estimated depth has every figure and its source, no reason")
             if not self.low_m <= self.depth_m <= self.high_m:
                 raise ValueError("the depth lies inside its range")
-        elif self.reason is None or any(f is not None for f in figures):
+        elif self.reason is None or any(f is not None for f in figures) or self.sources:
             raise ValueError("an unknown depth says why and has no figures")
         return self
 

@@ -194,12 +194,20 @@ def _piezometry_import(settings: Settings, file: str | None) -> int:
     except (PiezometryReadError, ValueError) as exc:
         print(f"FAILED: {exc}")
         return EXIT_FAILED_CHECK
-    source = dataset.source
     print(
         f"{len(dataset.piezometers)} piezometers kept of {dataset.piezometers_read} "
-        f"({dataset.left_out} left out), from {dataset.levels_read} levels "
-        f"{source.levels_from} to {source.levels_to}"
+        f"({dataset.left_out} left out), from {dataset.levels_read} levels"
     )
+    for source in dataset.sources:
+        used = sum(1 for p in dataset.piezometers if source.service_id in p.sources)
+        print(
+            f"  {source.service_id} ({source.file_name}): {used} piezometers, "
+            f"levels {source.levels_from} to {source.levels_to}"
+        )
+    imported = {s.service_id for s in dataset.sources}
+    for basin in settings.piezometry.basins:
+        if basin.service not in imported:
+            print(f"  {basin.service}: not imported ({basin.input} missing or no level kept)")
     print(f"Written to {settings.piezometry.output_path(REPO_ROOT)}")
     return 0
 

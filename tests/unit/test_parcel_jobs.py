@@ -370,7 +370,7 @@ def _levels(settings: Settings, root: Path) -> None:
 
     def piezometer(key: int, lon: float, level: float, body: str) -> Piezometer:
         return Piezometer(
-            id=key,
+            id=str(key),
             code=str(key),
             name="Synthetic",
             body=body,
@@ -384,21 +384,24 @@ def _levels(settings: Settings, root: Path) -> None:
             measurements=12,
             first=date(2024, 1, 1),
             last=date(2024, 12, 1),
+            sources=("miteco-piezometry-db",),
         )
 
     write_piezometry(
         settings.piezometry.output_path(root),
         PiezometryDataset(
-            source=LevelsSource(
-                service_id="miteco-piezometry-db",
-                publisher="MITECO",
-                attribution="MITECO",
-                file_name="basedatospiezometria.zip",
-                imported_at=datetime(2026, 11, 26, tzinfo=UTC),
-                levels_from=date(2024, 1, 1),
-                levels_to=date(2024, 12, 1),
+            sources=(
+                LevelsSource(
+                    service_id="miteco-piezometry-db",
+                    publisher="MITECO",
+                    attribution="MITECO",
+                    file_name="basedatospiezometria.zip",
+                    imported_at=datetime(2026, 11, 26, tzinfo=UTC),
+                    levels_from=date(2024, 1, 1),
+                    levels_to=date(2024, 12, 1),
+                    sha256="0" * 64,
+                ),
             ),
-            sha256="0" * 64,
             piezometers_read=3,
             levels_read=36,
             left_out=0,

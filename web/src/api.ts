@@ -92,6 +92,22 @@ export interface AreaBoundary {
   grid_deg: number;
 }
 
+/** Field mode's settings (config/defaults/field.yaml). */
+export interface FieldConfig {
+  /** A position is "at the spot" within this distance, and never with a worse accuracy. */
+  at_spot_m: number;
+  note_max_chars: number;
+  geolocation: { high_accuracy: boolean; timeout_ms: number; maximum_age_ms: number };
+  track_min_interval_s: number;
+  track_min_distance_m: number;
+  /** The most records a sync request carries. */
+  sync_batch_size: number;
+  /** How often the outbox tries again while records wait. */
+  sync_retry_s: number;
+  media_max_bytes: number;
+  media_types: string[];
+}
+
 export interface MapConfig {
   initial_view: { longitude: number; latitude: number; zoom: number };
   area_padding_px: number;
@@ -99,6 +115,7 @@ export interface MapConfig {
   point_zoom: number;
   /** How long a drawn cross-section's line may be, in metres. */
   section: { min_length_m: number; max_length_m: number };
+  field: FieldConfig;
   search: {
     /** The browser stops adding vertices to a drawn polygon here. */
     max_vertices: number;

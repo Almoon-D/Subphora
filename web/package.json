@@ -16,6 +16,7 @@
     "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run e2e"
   },
   "dependencies": {
+    "geographiclib-geodesic": "^2.2.0",
     "maplibre-gl": "^6.19.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
@@ -29,6 +30,7 @@
     "@vitejs/plugin-react": "^6.3.0",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.8",
     "globals": "^17.14.0",
     "typescript": "~6.0.3",
     "typescript-7": "npm:typescript@^7.0.2",

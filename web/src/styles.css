@@ -548,3 +548,175 @@ ol.candidates {
 .comparison .score {
   font-size: 0.85rem;
 }
+
+/* Field mode: large controls for gloves, black on white with heavy borders for sunlight. */
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.title-row h1 {
+  margin: 0;
+}
+
+.panel.field {
+  --panel-width: 26rem;
+  color: #000000;
+  background: #ffffff;
+  font-size: 1.15rem;
+}
+
+.field-mode h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.field-mode h2 {
+  font-size: 1.25rem;
+}
+
+.field-header {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field-block {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 3px solid #000000;
+  border-radius: 6px;
+}
+
+.field-block h2 {
+  margin-top: 0;
+}
+
+.field-big {
+  margin: 0.25rem 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.field-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  min-width: 3.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #003d7a;
+  border: 3px solid #000000;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.field-button.secondary {
+  color: #000000;
+  background: #ffffff;
+  border: 3px solid #000000;
+}
+
+.field-button[aria-pressed="true"] {
+  color: #ffffff;
+  background: #000000;
+}
+
+.field-button.recording {
+  color: #ffffff;
+  background: #a4161a;
+}
+
+.field-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-button:focus-within,
+.field-button:focus-visible {
+  outline: 4px solid #ffbf00;
+  outline-offset: 2px;
+}
+
+.field-input,
+.field-note textarea {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem;
+  font: inherit;
+  border: 3px solid #000000;
+  border-radius: 6px;
+}
+
+.field-mode .note {
+  color: #222222;
+  font-size: 1rem;
+}
+
+.field-mode .saved {
+  font-weight: 700;
+  color: #0a5c1a;
+}
+
+.at-spot {
+  margin: 0.25rem 0;
+  padding: 0.75rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: #0a5c1a;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.arrow {
+  display: inline-block;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.heading-marker {
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 22px solid #00a2ff;
+  transform-origin: 50% 100%;
+}
+
+.target-marker {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 4px solid #000000;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff3b30 0 30%, #ffffff 31%);
+}

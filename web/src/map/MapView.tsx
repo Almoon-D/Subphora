@@ -41,6 +41,8 @@ import { CLIP_PROTOCOL, clipHandler, clipTemplate } from "./clip.ts";
 import { describeOverlays, describeRegional, type MapLayers, overlayTiles } from "./layers.ts";
 import { isBlocked } from "../legal/legal.ts";
 import { describeNational } from "./national.ts";
+import { circle } from "../field/geodesy.ts";
+import type { Fix, Target } from "../field/records.ts";
 
 // MapLibre finds its worker next to its own module, which bundling moves: name it.
 setWorkerUrl(workerUrl);
@@ -57,12 +59,24 @@ const AREA_COLOUR = "#ffd400";
 const PARCEL = "parcel";
 const DRAFT = "draft";
 const DRAFT_COLOUR = "#ff3b30";
+const FIELD = "field";
+const FIELD_COLOUR = "#00a2ff";
+// The accuracy circle's vertices.
+const CIRCLE_VERTICES = 64;
 
 /** What is being drawn: a point (the next click), a polygon's vertices so far, or a
  * cross-section's line (its start, then its end). */
 export interface Draft {
   mode: "point" | "polygon" | "line";
   vertices: Position[];
+}
+
+/** Field mode on the map: the device's position with its accuracy, the spot walked to,
+ * and whether the map follows the position. */
+export interface FieldDrawing {
+  fix: Fix | null;
+  target: Target | null;
+  follow: boolean;
 }
 
 /** The selected area's detailed map: its analysis and the layer drawn (none: null). */
@@ -84,6 +98,8 @@ interface Props {
   draft: Draft | null;
   /** The line of the cross-section shown, drawn while no drawing is under way. */
   section: readonly Position[] | null;
+  /** Field mode's position and spot; null outside field mode. */
+  field: FieldDrawing | null;
   onZoom: (zoom: number) => void;
   onTap: (lon: number, lat: number, zoom: number) => void;
   onDraw: (lon: number, lat: number) => void;
@@ -122,6 +138,38 @@ function areaFeature(area: AreaOfInterest | null): FeatureCollection {
           coordinates: area.geometry.coordinates.map((polygon) => polygon.map((ring) => ring.map((p) => [p[0], p[1]]))),
         };
   return { type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry }] };
+}
+
+/** The accuracy circle, the position, and the line from it to the spot walked to. */
+function fieldFeatures(field: FieldDrawing | null): FeatureCollection {
+  const fix = field?.fix;
+  if (!fix) {
+    return EMPTY;
+  }
+  const here: [number, number] = [fix.longitude, fix.latitude];
+  const ring = circle(here, fix.accuracy_m, CIRCLE_VERTICES).map((p): [number, number] => [p[0], p[1]]);
+  const features: Feature[] = [
+    { type: "Feature", properties: { part: "accuracy" }, geometry: { type: "Polygon", coordinates: [ring] } },
+    { type: "Feature", properties: { part: "position" }, geometry: { type: "Point", coordinates: here } },
+  ];
+  const target = field.target;
+  if (target) {
+    features.push({
+      type: "Feature",
+      properties: { part: "leg" },
+      geometry: { type: "LineString", coordinates: [here, [target.longitude, target.latitude]] },
+    });
+  }
+  return { type: "FeatureCollection", features };
+}
+
+/** What field mode draws, for the browser tests: the fix and the spot. */
+function describeField(field: FieldDrawing | null): string {
+  if (!field) {
+    return "";
+  }
+  const fix = field.fix ? `fix:${field.fix.longitude.toFixed(5)},${field.fix.latitude.toFixed(5)},${String(field.fix.accuracy_m)}` : "nofix";
+  return field.target ? `${fix}|target:${String(field.target.rank)}` : fix;
 }
 
 const AREA_LAYERS = [`${AREA}-fill`, `${AREA}-line`, `${AREA}-point`];
@@ -173,9 +221,31 @@ function showArea(map: MaplibreMap, area: AreaOfInterest | null): void {
   );
 }
 
-/** The selected area (none yet) and the drawing, on top of every raster layer. */
+/** The selected area (none yet), the drawing and field mode, on top of every raster layer. */
 function addVectorLayers(map: MaplibreMap): void {
   showArea(map, null);
+  map.addSource(FIELD, { type: "geojson", data: EMPTY });
+  map.addLayer({
+    id: `${FIELD}-accuracy`,
+    type: "fill",
+    source: FIELD,
+    filter: ["==", ["get", "part"], "accuracy"],
+    paint: { "fill-color": FIELD_COLOUR, "fill-opacity": 0.2, "fill-outline-color": FIELD_COLOUR },
+  });
+  map.addLayer({
+    id: `${FIELD}-leg`,
+    type: "line",
+    source: FIELD,
+    filter: ["==", ["get", "part"], "leg"],
+    paint: { "line-color": "#ffffff", "line-width": 3, "line-dasharray": [2, 1] },
+  });
+  map.addLayer({
+    id: `${FIELD}-position`,
+    type: "circle",
+    source: FIELD,
+    filter: ["==", ["get", "part"], "position"],
+    paint: { "circle-radius": 9, "circle-color": FIELD_COLOUR, "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 },
+  });
   map.addSource(DRAFT, { type: "geojson", data: EMPTY });
   map.addLayer({
     id: `${DRAFT}-line`,
@@ -421,6 +491,7 @@ export function MapView({
   tapped,
   draft,
   section,
+  field,
   onZoom,
   onTap,
   onDraw,
@@ -613,6 +684,55 @@ export function MapView({
     };
   }, [analysis, loaded]);
 
+  // Field mode: the position, its accuracy and the leg to the spot; an arrow for the
+  // heading while moving; the spot's marker; and the map kept on the position if following.
+  const fix = field?.fix ?? null;
+  const target = field?.target ?? null;
+  const follow = field?.follow ?? false;
+  const headingRef = useRef<Marker | null>(null);
+  const targetRef = useRef<Marker | null>(null);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded) {
+      return;
+    }
+    void map.getSource<GeoJSONSource>(FIELD)?.setData(fieldFeatures(field));
+  }, [field, loaded]);
+  useEffect(() => {
+    const map = mapRef.current;
+    headingRef.current?.remove();
+    headingRef.current = null;
+    if (!map || !loaded || fix?.heading_deg == null) {
+      return;
+    }
+    const element = document.createElement("div");
+    element.className = "heading-marker";
+    element.setAttribute("aria-hidden", "true");
+    headingRef.current = new Marker({ element, rotation: fix.heading_deg, rotationAlignment: "map" })
+      .setLngLat([fix.longitude, fix.latitude])
+      .addTo(map);
+  }, [fix, loaded]);
+  useEffect(() => {
+    const map = mapRef.current;
+    targetRef.current?.remove();
+    targetRef.current = null;
+    if (!map || !loaded || !target) {
+      return;
+    }
+    const element = document.createElement("div");
+    element.className = "target-marker";
+    element.title = t("field.targetHeading", { rank: target.rank });
+    targetRef.current = new Marker({ element }).setLngLat([target.longitude, target.latitude]).addTo(map);
+  }, [target, loaded]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded || !fix || !follow) {
+      return;
+    }
+    const maxZoom = Math.max(...config.base_maps.map((b) => b.max_zoom));
+    map.jumpTo({ center: [fix.longitude, fix.latitude], zoom: Math.max(map.getZoom(), Math.min(config.point_zoom, maxZoom)) });
+  }, [fix, follow, loaded, config]);
+
   const label = area ? areaHeading(area) : t("app.tagline");
   return (
     <div className="map-wrapper">
@@ -628,6 +748,7 @@ export function MapView({
         data-regional={loaded ? describeRegional(config, layers) : ""}
         data-national={loaded ? describeNational(national, layers) : ""}
         data-parcel={loaded ? describeParcel(analysis, parcelLayer?.id ?? null) : ""}
+        data-field={loaded ? describeField(field) : ""}
       />
       {loaded && layers.cadastre.visible && !cadastreReached && <p className="map-hint">{t("map.cadastreHidden")}</p>}
       {missingAreas.length > 0 && <p className="map-hint">{t("map.areaMissing", { areas: missingAreas.map((id) => lookup(`area.${id}`, id)).join(", ") })}</p>}

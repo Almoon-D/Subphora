@@ -93,12 +93,14 @@ test("a tap explains the index with its confidence, inputs and missing data", as
   await expect(map(page)).toHaveAttribute("data-national", "potential-index");
   await tapCentre(page);
   const explanation = page.locator(".national-explanation");
-  await expect(explanation.locator(".score")).toContainText("Índice 0,76");
-  await expect(explanation.locator(".score")).toContainText("Confianza media (0,67)");
+  await expect(explanation.locator(".score")).toContainText("Índice 0,78");
+  await expect(explanation.locator(".score")).toContainText("(0,87)");
   await expect(explanation.locator('[data-criterion="permeability"]')).toContainText("ALTA (CARBONATADAS-ALTA)");
   await expect(explanation.locator('[data-criterion="groundwater_body"]')).toContainText("Malo");
   await expect(explanation.locator('[data-missing="no_dataset"]')).toHaveCount(3);
-  await expect(explanation.locator('[data-component="skill"]')).toContainText("sin medir todavía");
+  // The synthetic wells validate the domain: the skill is measured and shown with its AUC.
+  await expect(explanation.locator('[data-component="skill"]')).not.toContainText("sin medir todavía");
+  await expect(explanation.locator('[data-validation="validated"]')).toContainText("AUC");
   await expect(explanation).toContainText("No es una probabilidad");
   const [asked] = mocks.explained;
   expect(Number(asked?.searchParams.get("lon"))).toBeCloseTo(MADRID.longitude, 2);

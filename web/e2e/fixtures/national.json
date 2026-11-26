@@ -1,227 +1,273 @@
 {
- "kind": "index",
- "built": true,
- "rendered_at": "2026-11-25T10:19:39.858797Z",
- "bounds": [
-  -3.71,
-  40.41,
-  -3.69,
-  40.43
- ],
- "regions": [
-  {
-   "id": "box-3.710+40.410-3.690+40.430",
-   "name": "box-3.710+40.410-3.690+40.430",
-   "bbox": [
-    -3.71,
-    40.41,
-    -3.69,
-    40.43
-   ],
-   "built_at": "2026-11-25T10:19:39.327029Z"
-  }
- ],
- "layers": [
-  {
-   "id": "potential-index",
-   "variable": "index",
-   "tiles": [
-    "/api/national/tiles/potential-index/{z}/{x}/{y}"
-   ],
-   "min_zoom": 5,
-   "max_zoom": 9,
-   "tile_size": 256,
-   "opacity": 0.65,
-   "visible": true,
-   "unit": "index",
-   "legend": [
+  "kind": "index",
+  "built": true,
+  "rendered_at": "2026-11-26T07:58:01.714201Z",
+  "bounds": [
+    -3.8,
+    38.85,
+    -3.5,
+    40.55
+  ],
+  "regions": [
     {
-     "min": null,
-     "max": 0.2,
-     "colour": "#ffffcc"
+      "id": "box-3.750+38.850-3.500+39.300",
+      "name": "box-3.750+38.850-3.500+39.300",
+      "bbox": [
+        -3.75,
+        38.85,
+        -3.5,
+        39.3
+      ],
+      "built_at": "2026-11-26T07:57:59.989049Z"
     },
     {
-     "min": 0.2,
-     "max": 0.4,
-     "colour": "#a1dab4"
-    },
-    {
-     "min": 0.4,
-     "max": 0.6,
-     "colour": "#41b6c4"
-    },
-    {
-     "min": 0.6,
-     "max": 0.8,
-     "colour": "#2c7fb8"
-    },
-    {
-     "min": 0.8,
-     "max": null,
-     "colour": "#253494"
+      "id": "box-3.800+40.300-3.550+40.550",
+      "name": "box-3.800+40.300-3.550+40.550",
+      "bbox": [
+        -3.8,
+        40.3,
+        -3.55,
+        40.55
+      ],
+      "built_at": "2026-11-26T07:57:59.605807Z"
     }
-   ]
-  },
-  {
-   "id": "potential-confidence",
-   "variable": "confidence",
-   "tiles": [
-    "/api/national/tiles/potential-confidence/{z}/{x}/{y}"
-   ],
-   "min_zoom": 5,
-   "max_zoom": 9,
-   "tile_size": 256,
-   "opacity": 0.7,
-   "visible": false,
-   "unit": "confidence",
-   "legend": [
+  ],
+  "layers": [
     {
-     "min": null,
-     "max": 0.4,
-     "colour": "#fee6ce"
+      "id": "potential-index",
+      "variable": "index",
+      "tiles": [
+        "/api/national/tiles/potential-index/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.65,
+      "visible": true,
+      "unit": "index",
+      "legend": [
+        {
+          "min": null,
+          "max": 0.2,
+          "colour": "#ffffcc"
+        },
+        {
+          "min": 0.2,
+          "max": 0.4,
+          "colour": "#a1dab4"
+        },
+        {
+          "min": 0.4,
+          "max": 0.6,
+          "colour": "#41b6c4"
+        },
+        {
+          "min": 0.6,
+          "max": 0.8,
+          "colour": "#2c7fb8"
+        },
+        {
+          "min": 0.8,
+          "max": null,
+          "colour": "#253494"
+        }
+      ]
     },
     {
-     "min": 0.4,
-     "max": 0.7,
-     "colour": "#fdae6b"
+      "id": "potential-confidence",
+      "variable": "confidence",
+      "tiles": [
+        "/api/national/tiles/potential-confidence/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.7,
+      "visible": false,
+      "unit": "confidence",
+      "legend": [
+        {
+          "min": null,
+          "max": 0.4,
+          "colour": "#fee6ce"
+        },
+        {
+          "min": 0.4,
+          "max": 0.7,
+          "colour": "#fdae6b"
+        },
+        {
+          "min": 0.7,
+          "max": null,
+          "colour": "#7f2704"
+        }
+      ]
     },
     {
-     "min": 0.7,
-     "max": null,
-     "colour": "#7f2704"
+      "id": "model-skill",
+      "variable": "skill",
+      "tiles": [
+        "/api/national/tiles/model-skill/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.6,
+      "visible": false,
+      "unit": "skill",
+      "legend": [
+        {
+          "min": null,
+          "max": 0.01,
+          "colour": "#d7301f"
+        },
+        {
+          "min": 0.01,
+          "max": 0.34,
+          "colour": "#fdcc8a"
+        },
+        {
+          "min": 0.34,
+          "max": 0.67,
+          "colour": "#78c679"
+        },
+        {
+          "min": 0.67,
+          "max": null,
+          "colour": "#238443"
+        }
+      ]
+    },
+    {
+      "id": "terrain-slope",
+      "variable": "slope_deg",
+      "tiles": [
+        "/api/national/tiles/terrain-slope/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.7,
+      "visible": false,
+      "unit": "deg",
+      "legend": [
+        {
+          "min": null,
+          "max": 2.0,
+          "colour": "#ffffb2"
+        },
+        {
+          "min": 2.0,
+          "max": 5.0,
+          "colour": "#fed976"
+        },
+        {
+          "min": 5.0,
+          "max": 10.0,
+          "colour": "#feb24c"
+        },
+        {
+          "min": 10.0,
+          "max": 20.0,
+          "colour": "#fd8d3c"
+        },
+        {
+          "min": 20.0,
+          "max": 30.0,
+          "colour": "#f03b20"
+        },
+        {
+          "min": 30.0,
+          "max": null,
+          "colour": "#bd0026"
+        }
+      ]
+    },
+    {
+      "id": "terrain-drainage",
+      "variable": "drainage_distance_m",
+      "tiles": [
+        "/api/national/tiles/terrain-drainage/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.7,
+      "visible": false,
+      "unit": "m",
+      "legend": [
+        {
+          "min": null,
+          "max": 250.0,
+          "colour": "#08519c"
+        },
+        {
+          "min": 250.0,
+          "max": 500.0,
+          "colour": "#3182bd"
+        },
+        {
+          "min": 500.0,
+          "max": 1000.0,
+          "colour": "#6baed6"
+        },
+        {
+          "min": 1000.0,
+          "max": 2000.0,
+          "colour": "#bdd7e7"
+        },
+        {
+          "min": 2000.0,
+          "max": null,
+          "colour": "#eff3ff"
+        }
+      ]
+    },
+    {
+      "id": "terrain-wetness",
+      "variable": "twi",
+      "tiles": [
+        "/api/national/tiles/terrain-wetness/{z}/{x}/{y}"
+      ],
+      "min_zoom": 5,
+      "max_zoom": 9,
+      "tile_size": 256,
+      "opacity": 0.7,
+      "visible": false,
+      "unit": "twi",
+      "legend": [
+        {
+          "min": null,
+          "max": 6.0,
+          "colour": "#f7fbff"
+        },
+        {
+          "min": 6.0,
+          "max": 8.0,
+          "colour": "#c6dbef"
+        },
+        {
+          "min": 8.0,
+          "max": 10.0,
+          "colour": "#6baed6"
+        },
+        {
+          "min": 10.0,
+          "max": 12.0,
+          "colour": "#2171b5"
+        },
+        {
+          "min": 12.0,
+          "max": null,
+          "colour": "#08306b"
+        }
+      ]
     }
-   ]
-  },
-  {
-   "id": "terrain-slope",
-   "variable": "slope_deg",
-   "tiles": [
-    "/api/national/tiles/terrain-slope/{z}/{x}/{y}"
-   ],
-   "min_zoom": 5,
-   "max_zoom": 9,
-   "tile_size": 256,
-   "opacity": 0.7,
-   "visible": false,
-   "unit": "deg",
-   "legend": [
-    {
-     "min": null,
-     "max": 2.0,
-     "colour": "#ffffb2"
-    },
-    {
-     "min": 2.0,
-     "max": 5.0,
-     "colour": "#fed976"
-    },
-    {
-     "min": 5.0,
-     "max": 10.0,
-     "colour": "#feb24c"
-    },
-    {
-     "min": 10.0,
-     "max": 20.0,
-     "colour": "#fd8d3c"
-    },
-    {
-     "min": 20.0,
-     "max": 30.0,
-     "colour": "#f03b20"
-    },
-    {
-     "min": 30.0,
-     "max": null,
-     "colour": "#bd0026"
-    }
-   ]
-  },
-  {
-   "id": "terrain-drainage",
-   "variable": "drainage_distance_m",
-   "tiles": [
-    "/api/national/tiles/terrain-drainage/{z}/{x}/{y}"
-   ],
-   "min_zoom": 5,
-   "max_zoom": 9,
-   "tile_size": 256,
-   "opacity": 0.7,
-   "visible": false,
-   "unit": "m",
-   "legend": [
-    {
-     "min": null,
-     "max": 250.0,
-     "colour": "#08519c"
-    },
-    {
-     "min": 250.0,
-     "max": 500.0,
-     "colour": "#3182bd"
-    },
-    {
-     "min": 500.0,
-     "max": 1000.0,
-     "colour": "#6baed6"
-    },
-    {
-     "min": 1000.0,
-     "max": 2000.0,
-     "colour": "#bdd7e7"
-    },
-    {
-     "min": 2000.0,
-     "max": null,
-     "colour": "#eff3ff"
-    }
-   ]
-  },
-  {
-   "id": "terrain-wetness",
-   "variable": "twi",
-   "tiles": [
-    "/api/national/tiles/terrain-wetness/{z}/{x}/{y}"
-   ],
-   "min_zoom": 5,
-   "max_zoom": 9,
-   "tile_size": 256,
-   "opacity": 0.7,
-   "visible": false,
-   "unit": "twi",
-   "legend": [
-    {
-     "min": null,
-     "max": 6.0,
-     "colour": "#f7fbff"
-    },
-    {
-     "min": 6.0,
-     "max": 8.0,
-     "colour": "#c6dbef"
-    },
-    {
-     "min": 8.0,
-     "max": 10.0,
-     "colour": "#6baed6"
-    },
-    {
-     "min": 10.0,
-     "max": 12.0,
-     "colour": "#2171b5"
-    },
-    {
-     "min": 12.0,
-     "max": null,
-     "colour": "#08306b"
-    }
-   ]
-  }
- ],
- "attributions": [
-  "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-  "MDT CC-BY 4.0 scne.es",
-  "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-  "© Ministerio para la Transición Ecológica y el Reto Demográfico"
- ]
+  ],
+  "attributions": [
+    "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+    "MDT CC-BY 4.0 scne.es",
+    "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
+    "© Ministerio para la Transición Ecológica y el Reto Demográfico"
+  ]
 }

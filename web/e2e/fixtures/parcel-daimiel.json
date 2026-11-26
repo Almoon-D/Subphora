@@ -1,12 +1,12 @@
 {
   "job": {
-    "id": "45f6a846b1f3eac7",
+    "id": "0c760d5c533ed827",
     "state": "done",
     "failure": null,
     "detail": null,
     "poll_after_s": 2.0,
     "analysis": {
-      "id": "45f6a846b1f3eac7",
+      "id": "0c760d5c533ed827",
       "label": "39.067500, -3.611500",
       "crs": "EPSG:25830",
       "cell_m": 5.0,
@@ -17,10 +17,11 @@
         39.06976702473398
       ],
       "area_m2": 196034.2802734375,
-      "built_at": "2026-11-25T15:10:30.143802Z",
+      "built_at": "2026-11-26T07:58:01.980962Z",
       "layers": [
         "index",
         "confidence",
+        "skill",
         "slope_deg",
         "drainage_distance_m",
         "twi"
@@ -29,10 +30,10 @@
         "kind": "index",
         "cells": 7841,
         "scored_cells": 7841,
-        "mean_index": 0.6764164859924331,
+        "mean_index": 0.6967047145347108,
         "mean_confidence": {
-          "value": 0.6214222222222223,
-          "label": "medium",
+          "value": 0.8214222222222223,
+          "label": "high",
           "components": [
             {
               "id": "coverage",
@@ -61,8 +62,8 @@
             {
               "id": "skill",
               "weight": 0.2,
-              "value": 0.0,
-              "measured": false
+              "value": 1.0,
+              "measured": true
             }
           ]
         },
@@ -77,7 +78,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-25T15:10:29.934518Z",
+              "retrieved_at": "2026-11-26T07:58:01.839506Z",
               "detail": {
                 "scale_denominator": 200000,
                 "cell_m": null,
@@ -96,7 +97,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-25T15:10:29.935600Z",
+              "retrieved_at": "2026-11-26T07:58:01.840265Z",
               "detail": {
                 "scale_denominator": 50000,
                 "cell_m": null,
@@ -115,7 +116,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-25T15:10:29.936789Z",
+              "retrieved_at": "2026-11-26T07:58:01.841255Z",
               "detail": {
                 "scale_denominator": 50000,
                 "cell_m": null,
@@ -134,7 +135,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-25T15:10:30.008565Z",
+              "retrieved_at": "2026-11-26T07:58:01.873419Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -153,7 +154,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-25T15:10:30.008565Z",
+              "retrieved_at": "2026-11-26T07:58:01.873419Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -172,7 +173,7 @@
               "service_id": "ign-mdt-wcs",
               "publisher": "Instituto Geográfico Nacional (IGN)",
               "attribution": "MDT CC-BY 4.0 scne.es",
-              "retrieved_at": "2026-11-25T15:10:30.008565Z",
+              "retrieved_at": "2026-11-26T07:58:01.873419Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 5.0,
@@ -191,7 +192,7 @@
               "service_id": "soilgrids-wcs",
               "publisher": "ISRIC World Soil Information",
               "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-              "retrieved_at": "2026-11-25T15:10:30.137886Z",
+              "retrieved_at": "2026-11-26T07:58:01.905392Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": 250.0,
@@ -204,13 +205,13 @@
             "criterion": "groundwater_body",
             "weight": 0.12,
             "mean_share": 0.13333333333333333,
-            "mean_contribution": 0.059711771457722225,
+            "mean_contribution": 0.08,
             "present_share": 1.0,
             "source": {
               "service_id": "miteco-gw-status",
               "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
               "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-              "retrieved_at": "2026-11-25T15:10:29.935110Z",
+              "retrieved_at": "2026-11-26T07:58:01.839932Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": null,
@@ -229,7 +230,7 @@
               "service_id": "igme-rest",
               "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
               "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-              "retrieved_at": "2026-11-25T15:10:29.936145Z",
+              "retrieved_at": "2026-11-26T07:58:01.840548Z",
               "detail": {
                 "scale_denominator": null,
                 "cell_m": null,
@@ -244,6 +245,31 @@
             "criterion": "piezometric_depth",
             "weight": 0.1,
             "reason": "no_dataset"
+          }
+        ],
+        "validation": [
+          {
+            "domain": "ES030MSBT000",
+            "label": "Synthetic body (ES030MSBT000)",
+            "state": "validated",
+            "design": "presence_background",
+            "productive": 71,
+            "dry": 0,
+            "background": 2000,
+            "blocks": 6,
+            "auc": {
+              "value": 0.99275,
+              "low": 0.9888896117783432,
+              "high": 0.9966728893050903,
+              "level": 0.95
+            },
+            "calibration": null,
+            "no_calibration": "no_dry_labels",
+            "excluded_criteria": [
+              "water_points"
+            ],
+            "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+            "validated_at": "2026-11-26T07:57:59.989049Z"
           }
         ]
       },
@@ -261,8 +287,8 @@
             "kind": "index",
             "score": 0.7594444444444445,
             "confidence": {
-              "value": 0.6214222222222222,
-              "label": "medium",
+              "value": 0.8214222222222223,
+              "label": "high",
               "components": [
                 {
                   "id": "coverage",
@@ -291,8 +317,8 @@
                 {
                   "id": "skill",
                   "weight": 0.2,
-                  "value": 0.0,
-                  "measured": false
+                  "value": 1.0,
+                  "measured": true
                 }
               ]
             },
@@ -315,7 +341,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.934518Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839506Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -342,7 +368,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.935600Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840265Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -369,7 +395,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936789Z",
+                  "retrieved_at": "2026-11-26T07:58:01.841255Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -396,7 +422,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -423,7 +449,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -450,7 +476,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -477,7 +503,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-25T15:10:30.137886Z",
+                  "retrieved_at": "2026-11-26T07:58:01.905392Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -504,7 +530,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-25T15:10:29.935110Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839932Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -531,7 +557,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936145Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840548Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -547,32 +573,95 @@
                 "weight": 0.1,
                 "reason": "no_dataset"
               }
-            ]
+            ],
+            "validation": {
+              "domain": "ES030MSBT000",
+              "label": "Synthetic body (ES030MSBT000)",
+              "state": "validated",
+              "design": "presence_background",
+              "productive": 71,
+              "dry": 0,
+              "background": 2000,
+              "blocks": 6,
+              "auc": {
+                "value": 0.99275,
+                "low": 0.9888896117783432,
+                "high": 0.9966728893050903,
+                "level": 0.95
+              },
+              "calibration": null,
+              "no_calibration": "no_dry_labels",
+              "excluded_criteria": [
+                "water_points"
+              ],
+              "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+              "validated_at": "2026-11-26T07:57:59.989049Z"
+            },
+            "probability": null
           },
           "legal": {
             "state": "not_evaluated",
             "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-25T15:10:30.143802Z",
+            "assessed_at": "2026-11-26T07:58:01.980962Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
             "reason": null
           },
-          "depth": "not_estimated"
+          "depth": {
+            "state": "estimated",
+            "reason": null,
+            "ground_m": -499.0,
+            "water_table": {
+              "elevation_m": -532.4538949134627,
+              "low_m": -536.311365385257,
+              "high_m": -528.5964244416684,
+              "body": "ES030MSBT000",
+              "body_label": "Synthetic body (ES030MSBT000)",
+              "piezometers": 2,
+              "nearest_m": 1178.735235897155
+            },
+            "depth_m": 33.453894913462705,
+            "low_m": 29.596424441668432,
+            "high_m": 37.31136538525698,
+            "karst": true,
+            "source": {
+              "service_id": "miteco-piezometry-db",
+              "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+              "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+              "file_name": "basedatospiezometria.zip",
+              "imported_at": "2026-11-26T00:00:00Z",
+              "levels_from": "2023-01-15",
+              "levels_to": "2024-12-15"
+            }
+          },
+          "cost": {
+            "currency": "EUR",
+            "low": "2235",
+            "high": "9876",
+            "drilled_low_m": "49.6",
+            "drilled_high_m": "57.3",
+            "per_metre_low": "38",
+            "per_metre_high": "120",
+            "fixed_low": "350",
+            "fixed_high": "3000",
+            "source": "Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March 2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com, January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).",
+            "priced_on": "2026-11-26"
+          }
         },
         {
           "rank": 2,
-          "longitude": -3.6125211863591056,
-          "latitude": 39.069588910648484,
+          "longitude": -3.6111352581458855,
+          "latitude": 39.06973134925943,
           "local": {
             "crs": "EPSG:25830",
-            "x": 447012.5,
-            "y": 4324677.5
+            "x": 447132.5,
+            "y": 4324692.5
           },
           "estimate": {
             "kind": "index",
-            "score": 0.7461111111111112,
+            "score": 0.7594444444444445,
             "confidence": {
-              "value": 0.6214222222222222,
-              "label": "medium",
+              "value": 0.8214222222222223,
+              "label": "high",
               "components": [
                 {
                   "id": "coverage",
@@ -601,8 +690,8 @@
                 {
                   "id": "skill",
                   "weight": 0.2,
-                  "value": 0.0,
-                  "measured": false
+                  "value": 1.0,
+                  "measured": true
                 }
               ]
             },
@@ -625,7 +714,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.934518Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839506Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -639,7 +728,7 @@
                 "weight": 0.06,
                 "share": 0.06666666666666667,
                 "value": {
-                  "number": 1.2540980577468872,
+                  "number": 1.2668300867080688,
                   "unit": "km_km2",
                   "at_least": false,
                   "category": null,
@@ -652,7 +741,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.935600Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840265Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -679,7 +768,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936789Z",
+                  "retrieved_at": "2026-11-26T07:58:01.841255Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -706,7 +795,380 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "wetness",
+                "weight": 0.08,
+                "share": 0.08888888888888889,
+                "value": {
+                  "number": 14.05607795715332,
+                  "unit": "twi",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.08888888888888889,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "drainage",
+                "weight": 0.08,
+                "share": 0.08888888888888889,
+                "value": {
+                  "number": 1995.0250244140625,
+                  "unit": "m",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.35,
+                "contribution": 0.03111111111111111,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "soil",
+                "weight": 0.07,
+                "share": 0.07777777777777778,
+                "value": {
+                  "number": 25.0,
+                  "unit": "pct",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.45,
+                "contribution": 0.035,
+                "source": {
+                  "service_id": "soilgrids-wcs",
+                  "publisher": "ISRIC World Soil Information",
+                  "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
+                  "retrieved_at": "2026-11-26T07:58:01.905392Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 250.0,
+                    "edition": 2020
+                  },
+                  "resolution_m": 250.0
+                }
+              },
+              {
+                "criterion": "groundwater_body",
+                "weight": 0.12,
+                "share": 0.13333333333333333,
+                "value": {
+                  "number": null,
+                  "unit": null,
+                  "at_least": false,
+                  "category": "Malo",
+                  "label": "Synthetic body (ES030MSBT000)",
+                  "absent": false
+                },
+                "suitability": 0.6,
+                "contribution": 0.08,
+                "source": {
+                  "service_id": "miteco-gw-status",
+                  "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+                  "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
+                  "retrieved_at": "2026-11-26T07:58:01.839932Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": null,
+                    "edition": 2022
+                  },
+                  "resolution_m": null
+                }
+              },
+              {
+                "criterion": "water_points",
+                "weight": 0.1,
+                "share": 0.11111111111111112,
+                "value": {
+                  "number": 249.61770629882812,
+                  "unit": "m",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.11111111111111112,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.840548Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": null
+                }
+              }
+            ],
+            "missing": [
+              {
+                "criterion": "piezometric_depth",
+                "weight": 0.1,
+                "reason": "no_dataset"
+              }
+            ],
+            "validation": {
+              "domain": "ES030MSBT000",
+              "label": "Synthetic body (ES030MSBT000)",
+              "state": "validated",
+              "design": "presence_background",
+              "productive": 71,
+              "dry": 0,
+              "background": 2000,
+              "blocks": 6,
+              "auc": {
+                "value": 0.99275,
+                "low": 0.9888896117783432,
+                "high": 0.9966728893050903,
+                "level": 0.95
+              },
+              "calibration": null,
+              "no_calibration": "no_dry_labels",
+              "excluded_criteria": [
+                "water_points"
+              ],
+              "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+              "validated_at": "2026-11-26T07:57:59.989049Z"
+            },
+            "probability": null
+          },
+          "legal": {
+            "state": "not_evaluated",
+            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
+            "assessed_at": "2026-11-26T07:58:01.980962Z",
+            "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
+            "reason": null
+          },
+          "depth": {
+            "state": "estimated",
+            "reason": null,
+            "ground_m": -496.0,
+            "water_table": {
+              "elevation_m": -528.3365102738112,
+              "low_m": -532.090182270853,
+              "high_m": -524.5828382767694,
+              "body": "ES030MSBT000",
+              "body_label": "Synthetic body (ES030MSBT000)",
+              "piezometers": 2,
+              "nearest_m": 1126.8359985208817
+            },
+            "depth_m": 32.3365102738112,
+            "low_m": 28.582838276769394,
+            "high_m": 36.090182270853006,
+            "karst": true,
+            "source": {
+              "service_id": "miteco-piezometry-db",
+              "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+              "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+              "file_name": "basedatospiezometria.zip",
+              "imported_at": "2026-11-26T00:00:00Z",
+              "levels_from": "2023-01-15",
+              "levels_to": "2024-12-15"
+            }
+          },
+          "cost": {
+            "currency": "EUR",
+            "low": "2197",
+            "high": "9732",
+            "drilled_low_m": "48.6",
+            "drilled_high_m": "56.1",
+            "per_metre_low": "38",
+            "per_metre_high": "120",
+            "fixed_low": "350",
+            "fixed_high": "3000",
+            "source": "Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March 2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com, January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).",
+            "priced_on": "2026-11-26"
+          }
+        },
+        {
+          "rank": 3,
+          "longitude": -3.6125211863591056,
+          "latitude": 39.069588910648484,
+          "local": {
+            "crs": "EPSG:25830",
+            "x": 447012.5,
+            "y": 4324677.5
+          },
+          "estimate": {
+            "kind": "index",
+            "score": 0.7461111111111112,
+            "confidence": {
+              "value": 0.8214222222222223,
+              "label": "high",
+              "components": [
+                {
+                  "id": "coverage",
+                  "weight": 0.3,
+                  "value": 0.8999999999999999,
+                  "measured": true
+                },
+                {
+                  "id": "resolution",
+                  "weight": 0.2,
+                  "value": 0.4487777777777779,
+                  "measured": true
+                },
+                {
+                  "id": "age",
+                  "weight": 0.15,
+                  "value": 0.7444444444444446,
+                  "measured": true
+                },
+                {
+                  "id": "evidence",
+                  "weight": 0.15,
+                  "value": 1.0,
+                  "measured": true
+                },
+                {
+                  "id": "skill",
+                  "weight": 0.2,
+                  "value": 1.0,
+                  "measured": true
+                }
+              ]
+            },
+            "contributions": [
+              {
+                "criterion": "permeability",
+                "weight": 0.25,
+                "share": 0.2777777777777778,
+                "value": {
+                  "number": null,
+                  "unit": null,
+                  "at_least": false,
+                  "category": "ALTA",
+                  "label": "CARBONATADAS-ALTA",
+                  "absent": false
+                },
+                "suitability": 0.8,
+                "contribution": 0.22222222222222224,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.839506Z",
+                  "detail": {
+                    "scale_denominator": 200000,
+                    "cell_m": null,
+                    "edition": 2009
+                  },
+                  "resolution_m": 100.0
+                }
+              },
+              {
+                "criterion": "lineaments",
+                "weight": 0.06,
+                "share": 0.06666666666666667,
+                "value": {
+                  "number": 1.2540980577468872,
+                  "unit": "km_km2",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.7,
+                "contribution": 0.04666666666666666,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.840265Z",
+                  "detail": {
+                    "scale_denominator": 50000,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": 25.0
+                }
+              },
+              {
+                "criterion": "bedding_dip",
+                "weight": 0.04,
+                "share": 0.044444444444444446,
+                "value": {
+                  "number": 20.0,
+                  "unit": "deg",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.75,
+                "contribution": 0.03333333333333333,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.841255Z",
+                  "detail": {
+                    "scale_denominator": 50000,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": 25.0
+                }
+              },
+              {
+                "criterion": "slope",
+                "weight": 0.1,
+                "share": 0.11111111111111112,
+                "value": {
+                  "number": 0.0,
+                  "unit": "deg",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.11111111111111112,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -733,7 +1195,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -760,7 +1222,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -787,7 +1249,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-25T15:10:30.137886Z",
+                  "retrieved_at": "2026-11-26T07:58:01.905392Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -814,7 +1276,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-25T15:10:29.935110Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839932Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -841,7 +1303,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936145Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840548Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -857,342 +1319,95 @@
                 "weight": 0.1,
                 "reason": "no_dataset"
               }
-            ]
-          },
-          "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-25T15:10:30.143802Z",
-            "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
-          },
-          "depth": "not_estimated"
-        },
-        {
-          "rank": 3,
-          "longitude": -3.613154598544478,
-          "latitude": 39.06931524760634,
-          "local": {
-            "crs": "EPSG:25830",
-            "x": 446957.5,
-            "y": 4324647.5
-          },
-          "estimate": {
-            "kind": "index",
-            "score": 0.7461111111111112,
-            "confidence": {
-              "value": 0.6214222222222222,
-              "label": "medium",
-              "components": [
-                {
-                  "id": "coverage",
-                  "weight": 0.3,
-                  "value": 0.8999999999999999,
-                  "measured": true
-                },
-                {
-                  "id": "resolution",
-                  "weight": 0.2,
-                  "value": 0.4487777777777779,
-                  "measured": true
-                },
-                {
-                  "id": "age",
-                  "weight": 0.15,
-                  "value": 0.7444444444444446,
-                  "measured": true
-                },
-                {
-                  "id": "evidence",
-                  "weight": 0.15,
-                  "value": 1.0,
-                  "measured": true
-                },
-                {
-                  "id": "skill",
-                  "weight": 0.2,
-                  "value": 0.0,
-                  "measured": false
-                }
-              ]
+            ],
+            "validation": {
+              "domain": "ES030MSBT000",
+              "label": "Synthetic body (ES030MSBT000)",
+              "state": "validated",
+              "design": "presence_background",
+              "productive": 71,
+              "dry": 0,
+              "background": 2000,
+              "blocks": 6,
+              "auc": {
+                "value": 0.99275,
+                "low": 0.9888896117783432,
+                "high": 0.9966728893050903,
+                "level": 0.95
+              },
+              "calibration": null,
+              "no_calibration": "no_dry_labels",
+              "excluded_criteria": [
+                "water_points"
+              ],
+              "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+              "validated_at": "2026-11-26T07:57:59.989049Z"
             },
-            "contributions": [
-              {
-                "criterion": "permeability",
-                "weight": 0.25,
-                "share": 0.2777777777777778,
-                "value": {
-                  "number": null,
-                  "unit": null,
-                  "at_least": false,
-                  "category": "ALTA",
-                  "label": "CARBONATADAS-ALTA",
-                  "absent": false
-                },
-                "suitability": 0.8,
-                "contribution": 0.22222222222222224,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.934518Z",
-                  "detail": {
-                    "scale_denominator": 200000,
-                    "cell_m": null,
-                    "edition": 2009
-                  },
-                  "resolution_m": 100.0
-                }
-              },
-              {
-                "criterion": "lineaments",
-                "weight": 0.06,
-                "share": 0.06666666666666667,
-                "value": {
-                  "number": 1.228634238243103,
-                  "unit": "km_km2",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.7,
-                "contribution": 0.04666666666666666,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.935600Z",
-                  "detail": {
-                    "scale_denominator": 50000,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": 25.0
-                }
-              },
-              {
-                "criterion": "bedding_dip",
-                "weight": 0.04,
-                "share": 0.044444444444444446,
-                "value": {
-                  "number": 20.0,
-                  "unit": "deg",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.75,
-                "contribution": 0.03333333333333333,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936789Z",
-                  "detail": {
-                    "scale_denominator": 50000,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": 25.0
-                }
-              },
-              {
-                "criterion": "slope",
-                "weight": 0.1,
-                "share": 0.11111111111111112,
-                "value": {
-                  "number": 0.0,
-                  "unit": "deg",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.11111111111111112,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "wetness",
-                "weight": 0.08,
-                "share": 0.08888888888888889,
-                "value": {
-                  "number": 14.131954193115234,
-                  "unit": "twi",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.08888888888888889,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "drainage",
-                "weight": 0.08,
-                "share": 0.08888888888888889,
-                "value": {
-                  "number": 2000.0,
-                  "unit": "m",
-                  "at_least": true,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.2,
-                "contribution": 0.017777777777777778,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "soil",
-                "weight": 0.07,
-                "share": 0.07777777777777778,
-                "value": {
-                  "number": 25.0,
-                  "unit": "pct",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.45,
-                "contribution": 0.035,
-                "source": {
-                  "service_id": "soilgrids-wcs",
-                  "publisher": "ISRIC World Soil Information",
-                  "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-25T15:10:30.137886Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 250.0,
-                    "edition": 2020
-                  },
-                  "resolution_m": 250.0
-                }
-              },
-              {
-                "criterion": "groundwater_body",
-                "weight": 0.12,
-                "share": 0.13333333333333333,
-                "value": {
-                  "number": null,
-                  "unit": null,
-                  "at_least": false,
-                  "category": "Malo",
-                  "label": "Synthetic body (ES030MSBT000)",
-                  "absent": false
-                },
-                "suitability": 0.6,
-                "contribution": 0.08,
-                "source": {
-                  "service_id": "miteco-gw-status",
-                  "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
-                  "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-25T15:10:29.935110Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": null,
-                    "edition": 2022
-                  },
-                  "resolution_m": null
-                }
-              },
-              {
-                "criterion": "water_points",
-                "weight": 0.1,
-                "share": 0.11111111111111112,
-                "value": {
-                  "number": 247.1295166015625,
-                  "unit": "m",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.11111111111111112,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936145Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": null
-                }
-              }
-            ],
-            "missing": [
-              {
-                "criterion": "piezometric_depth",
-                "weight": 0.1,
-                "reason": "no_dataset"
-              }
-            ]
+            "probability": null
           },
           "legal": {
             "state": "not_evaluated",
             "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-25T15:10:30.143802Z",
+            "assessed_at": "2026-11-26T07:58:01.980962Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
             "reason": null
           },
-          "depth": "not_estimated"
+          "depth": {
+            "state": "estimated",
+            "reason": null,
+            "ground_m": -502.0,
+            "water_table": {
+              "elevation_m": -537.4264633864146,
+              "low_m": -541.4034349946593,
+              "high_m": -533.44949177817,
+              "body": "ES030MSBT000",
+              "body_label": "Synthetic body (ES030MSBT000)",
+              "piezometers": 2,
+              "nearest_m": 1238.4858041223192
+            },
+            "depth_m": 35.42646338641464,
+            "low_m": 31.44949177817,
+            "high_m": 39.40343499465928,
+            "karst": true,
+            "source": {
+              "service_id": "miteco-piezometry-db",
+              "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+              "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+              "file_name": "basedatospiezometria.zip",
+              "imported_at": "2026-11-26T00:00:00Z",
+              "levels_from": "2023-01-15",
+              "levels_to": "2024-12-15"
+            }
+          },
+          "cost": {
+            "currency": "EUR",
+            "low": "2303",
+            "high": "10128",
+            "drilled_low_m": "51.4",
+            "drilled_high_m": "59.4",
+            "per_metre_low": "38",
+            "per_metre_high": "120",
+            "fixed_low": "350",
+            "fixed_high": "3000",
+            "source": "Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March 2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com, January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).",
+            "priced_on": "2026-11-26"
+          }
         },
         {
           "rank": 4,
-          "longitude": -3.611536328755988,
-          "latitude": 39.06932374525145,
+          "longitude": -3.610440157258252,
+          "latitude": 39.069554767146684,
           "local": {
             "crs": "EPSG:25830",
-            "x": 447097.5,
-            "y": 4324647.5
+            "x": 447192.5,
+            "y": 4324672.5
           },
           "estimate": {
             "kind": "index",
             "score": 0.7461111111111112,
             "confidence": {
-              "value": 0.6214222222222222,
-              "label": "medium",
+              "value": 0.8214222222222223,
+              "label": "high",
               "components": [
                 {
                   "id": "coverage",
@@ -1221,318 +1436,8 @@
                 {
                   "id": "skill",
                   "weight": 0.2,
-                  "value": 0.0,
-                  "measured": false
-                }
-              ]
-            },
-            "contributions": [
-              {
-                "criterion": "permeability",
-                "weight": 0.25,
-                "share": 0.2777777777777778,
-                "value": {
-                  "number": null,
-                  "unit": null,
-                  "at_least": false,
-                  "category": "ALTA",
-                  "label": "CARBONATADAS-ALTA",
-                  "absent": false
-                },
-                "suitability": 0.8,
-                "contribution": 0.22222222222222224,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.934518Z",
-                  "detail": {
-                    "scale_denominator": 200000,
-                    "cell_m": null,
-                    "edition": 2009
-                  },
-                  "resolution_m": 100.0
-                }
-              },
-              {
-                "criterion": "lineaments",
-                "weight": 0.06,
-                "share": 0.06666666666666667,
-                "value": {
-                  "number": 1.279561996459961,
-                  "unit": "km_km2",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.7,
-                "contribution": 0.04666666666666666,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.935600Z",
-                  "detail": {
-                    "scale_denominator": 50000,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": 25.0
-                }
-              },
-              {
-                "criterion": "bedding_dip",
-                "weight": 0.04,
-                "share": 0.044444444444444446,
-                "value": {
-                  "number": 20.0,
-                  "unit": "deg",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.75,
-                "contribution": 0.03333333333333333,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936789Z",
-                  "detail": {
-                    "scale_denominator": 50000,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": 25.0
-                }
-              },
-              {
-                "criterion": "slope",
-                "weight": 0.1,
-                "share": 0.11111111111111112,
-                "value": {
-                  "number": 0.0,
-                  "unit": "deg",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.11111111111111112,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "wetness",
-                "weight": 0.08,
-                "share": 0.08888888888888889,
-                "value": {
-                  "number": 14.071720123291016,
-                  "unit": "twi",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.08888888888888889,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "drainage",
-                "weight": 0.08,
-                "share": 0.08888888888888889,
-                "value": {
-                  "number": 2000.0,
-                  "unit": "m",
-                  "at_least": true,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.2,
-                "contribution": 0.017777777777777778,
-                "source": {
-                  "service_id": "ign-mdt-wcs",
-                  "publisher": "Instituto Geográfico Nacional (IGN)",
-                  "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 5.0,
-                    "edition": null
-                  },
-                  "resolution_m": 5.0
-                }
-              },
-              {
-                "criterion": "soil",
-                "weight": 0.07,
-                "share": 0.07777777777777778,
-                "value": {
-                  "number": 25.0,
-                  "unit": "pct",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 0.45,
-                "contribution": 0.035,
-                "source": {
-                  "service_id": "soilgrids-wcs",
-                  "publisher": "ISRIC World Soil Information",
-                  "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-25T15:10:30.137886Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": 250.0,
-                    "edition": 2020
-                  },
-                  "resolution_m": 250.0
-                }
-              },
-              {
-                "criterion": "groundwater_body",
-                "weight": 0.12,
-                "share": 0.13333333333333333,
-                "value": {
-                  "number": null,
-                  "unit": null,
-                  "at_least": false,
-                  "category": "Malo",
-                  "label": "Synthetic body (ES030MSBT000)",
-                  "absent": false
-                },
-                "suitability": 0.6,
-                "contribution": 0.08,
-                "source": {
-                  "service_id": "miteco-gw-status",
-                  "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
-                  "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-25T15:10:29.935110Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": null,
-                    "edition": 2022
-                  },
-                  "resolution_m": null
-                }
-              },
-              {
-                "criterion": "water_points",
-                "weight": 0.1,
-                "share": 0.11111111111111112,
-                "value": {
-                  "number": 202.4080047607422,
-                  "unit": "m",
-                  "at_least": false,
-                  "category": null,
-                  "label": null,
-                  "absent": false
-                },
-                "suitability": 1.0,
-                "contribution": 0.11111111111111112,
-                "source": {
-                  "service_id": "igme-rest",
-                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
-                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936145Z",
-                  "detail": {
-                    "scale_denominator": null,
-                    "cell_m": null,
-                    "edition": null
-                  },
-                  "resolution_m": null
-                }
-              }
-            ],
-            "missing": [
-              {
-                "criterion": "piezometric_depth",
-                "weight": 0.1,
-                "reason": "no_dataset"
-              }
-            ]
-          },
-          "legal": {
-            "state": "not_evaluated",
-            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-25T15:10:30.143802Z",
-            "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
-            "reason": null
-          },
-          "depth": "not_estimated"
-        },
-        {
-          "rank": 5,
-          "longitude": -3.6124017016771837,
-          "latitude": 39.06913898105409,
-          "local": {
-            "crs": "EPSG:25830",
-            "x": 447022.5,
-            "y": 4324627.5
-          },
-          "estimate": {
-            "kind": "index",
-            "score": 0.7461111111111112,
-            "confidence": {
-              "value": 0.6214222222222222,
-              "label": "medium",
-              "components": [
-                {
-                  "id": "coverage",
-                  "weight": 0.3,
-                  "value": 0.8999999999999999,
-                  "measured": true
-                },
-                {
-                  "id": "resolution",
-                  "weight": 0.2,
-                  "value": 0.4487777777777779,
-                  "measured": true
-                },
-                {
-                  "id": "age",
-                  "weight": 0.15,
-                  "value": 0.7444444444444446,
-                  "measured": true
-                },
-                {
-                  "id": "evidence",
-                  "weight": 0.15,
                   "value": 1.0,
                   "measured": true
-                },
-                {
-                  "id": "skill",
-                  "weight": 0.2,
-                  "value": 0.0,
-                  "measured": false
                 }
               ]
             },
@@ -1555,7 +1460,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.934518Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839506Z",
                   "detail": {
                     "scale_denominator": 200000,
                     "cell_m": null,
@@ -1582,7 +1487,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.935600Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840265Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1609,7 +1514,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936789Z",
+                  "retrieved_at": "2026-11-26T07:58:01.841255Z",
                   "detail": {
                     "scale_denominator": 50000,
                     "cell_m": null,
@@ -1636,7 +1541,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1650,7 +1555,7 @@
                 "weight": 0.08,
                 "share": 0.08888888888888889,
                 "value": {
-                  "number": 15.197312355041504,
+                  "number": 14.028677940368652,
                   "unit": "twi",
                   "at_least": false,
                   "category": null,
@@ -1663,7 +1568,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1690,7 +1595,7 @@
                   "service_id": "ign-mdt-wcs",
                   "publisher": "Instituto Geográfico Nacional (IGN)",
                   "attribution": "MDT CC-BY 4.0 scne.es",
-                  "retrieved_at": "2026-11-25T15:10:30.008565Z",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 5.0,
@@ -1717,7 +1622,7 @@
                   "service_id": "soilgrids-wcs",
                   "publisher": "ISRIC World Soil Information",
                   "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-                  "retrieved_at": "2026-11-25T15:10:30.137886Z",
+                  "retrieved_at": "2026-11-26T07:58:01.905392Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": 250.0,
@@ -1744,7 +1649,7 @@
                   "service_id": "miteco-gw-status",
                   "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
                   "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-                  "retrieved_at": "2026-11-25T15:10:29.935110Z",
+                  "retrieved_at": "2026-11-26T07:58:01.839932Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1758,7 +1663,7 @@
                 "weight": 0.1,
                 "share": 0.11111111111111112,
                 "value": {
-                  "number": 197.90907287597656,
+                  "number": 245.7580108642578,
                   "unit": "m",
                   "at_least": false,
                   "category": null,
@@ -1771,7 +1676,7 @@
                   "service_id": "igme-rest",
                   "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
                   "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-                  "retrieved_at": "2026-11-25T15:10:29.936145Z",
+                  "retrieved_at": "2026-11-26T07:58:01.840548Z",
                   "detail": {
                     "scale_denominator": null,
                     "cell_m": null,
@@ -1787,16 +1692,452 @@
                 "weight": 0.1,
                 "reason": "no_dataset"
               }
-            ]
+            ],
+            "validation": {
+              "domain": "ES030MSBT000",
+              "label": "Synthetic body (ES030MSBT000)",
+              "state": "validated",
+              "design": "presence_background",
+              "productive": 71,
+              "dry": 0,
+              "background": 2000,
+              "blocks": 6,
+              "auc": {
+                "value": 0.99275,
+                "low": 0.9888896117783432,
+                "high": 0.9966728893050903,
+                "level": 0.95
+              },
+              "calibration": null,
+              "no_calibration": "no_dry_labels",
+              "excluded_criteria": [
+                "water_points"
+              ],
+              "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+              "validated_at": "2026-11-26T07:57:59.989049Z"
+            },
+            "probability": null
           },
           "legal": {
             "state": "not_evaluated",
             "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
-            "assessed_at": "2026-11-25T15:10:30.143802Z",
+            "assessed_at": "2026-11-26T07:58:01.980962Z",
             "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
             "reason": null
           },
-          "depth": "not_estimated"
+          "depth": {
+            "state": "estimated",
+            "reason": null,
+            "ground_m": -493.0,
+            "water_table": {
+              "elevation_m": -525.2963796497827,
+              "low_m": -528.9697020538068,
+              "high_m": -521.6230572457586,
+              "body": "ES030MSBT000",
+              "body_label": "Synthetic body (ES030MSBT000)",
+              "piezometers": 2,
+              "nearest_m": 1086.6612020120494
+            },
+            "depth_m": 32.29637964978269,
+            "low_m": 28.62305724575856,
+            "high_m": 35.96970205380683,
+            "karst": true,
+            "source": {
+              "service_id": "miteco-piezometry-db",
+              "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+              "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+              "file_name": "basedatospiezometria.zip",
+              "imported_at": "2026-11-26T00:00:00Z",
+              "levels_from": "2023-01-15",
+              "levels_to": "2024-12-15"
+            }
+          },
+          "cost": {
+            "currency": "EUR",
+            "low": "2197",
+            "high": "9720",
+            "drilled_low_m": "48.6",
+            "drilled_high_m": "56.0",
+            "per_metre_low": "38",
+            "per_metre_high": "120",
+            "fixed_low": "350",
+            "fixed_high": "3000",
+            "source": "Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March 2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com, January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).",
+            "priced_on": "2026-11-26"
+          }
+        },
+        {
+          "rank": 5,
+          "longitude": -3.613154598544478,
+          "latitude": 39.06931524760634,
+          "local": {
+            "crs": "EPSG:25830",
+            "x": 446957.5,
+            "y": 4324647.5
+          },
+          "estimate": {
+            "kind": "index",
+            "score": 0.7461111111111112,
+            "confidence": {
+              "value": 0.8214222222222223,
+              "label": "high",
+              "components": [
+                {
+                  "id": "coverage",
+                  "weight": 0.3,
+                  "value": 0.8999999999999999,
+                  "measured": true
+                },
+                {
+                  "id": "resolution",
+                  "weight": 0.2,
+                  "value": 0.4487777777777779,
+                  "measured": true
+                },
+                {
+                  "id": "age",
+                  "weight": 0.15,
+                  "value": 0.7444444444444446,
+                  "measured": true
+                },
+                {
+                  "id": "evidence",
+                  "weight": 0.15,
+                  "value": 1.0,
+                  "measured": true
+                },
+                {
+                  "id": "skill",
+                  "weight": 0.2,
+                  "value": 1.0,
+                  "measured": true
+                }
+              ]
+            },
+            "contributions": [
+              {
+                "criterion": "permeability",
+                "weight": 0.25,
+                "share": 0.2777777777777778,
+                "value": {
+                  "number": null,
+                  "unit": null,
+                  "at_least": false,
+                  "category": "ALTA",
+                  "label": "CARBONATADAS-ALTA",
+                  "absent": false
+                },
+                "suitability": 0.8,
+                "contribution": 0.22222222222222224,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.839506Z",
+                  "detail": {
+                    "scale_denominator": 200000,
+                    "cell_m": null,
+                    "edition": 2009
+                  },
+                  "resolution_m": 100.0
+                }
+              },
+              {
+                "criterion": "lineaments",
+                "weight": 0.06,
+                "share": 0.06666666666666667,
+                "value": {
+                  "number": 1.228634238243103,
+                  "unit": "km_km2",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.7,
+                "contribution": 0.04666666666666666,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.840265Z",
+                  "detail": {
+                    "scale_denominator": 50000,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": 25.0
+                }
+              },
+              {
+                "criterion": "bedding_dip",
+                "weight": 0.04,
+                "share": 0.044444444444444446,
+                "value": {
+                  "number": 20.0,
+                  "unit": "deg",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.75,
+                "contribution": 0.03333333333333333,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.841255Z",
+                  "detail": {
+                    "scale_denominator": 50000,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": 25.0
+                }
+              },
+              {
+                "criterion": "slope",
+                "weight": 0.1,
+                "share": 0.11111111111111112,
+                "value": {
+                  "number": 0.0,
+                  "unit": "deg",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.11111111111111112,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "wetness",
+                "weight": 0.08,
+                "share": 0.08888888888888889,
+                "value": {
+                  "number": 14.131954193115234,
+                  "unit": "twi",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.08888888888888889,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "drainage",
+                "weight": 0.08,
+                "share": 0.08888888888888889,
+                "value": {
+                  "number": 2000.0,
+                  "unit": "m",
+                  "at_least": true,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.2,
+                "contribution": 0.017777777777777778,
+                "source": {
+                  "service_id": "ign-mdt-wcs",
+                  "publisher": "Instituto Geográfico Nacional (IGN)",
+                  "attribution": "MDT CC-BY 4.0 scne.es",
+                  "retrieved_at": "2026-11-26T07:58:01.873419Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 5.0,
+                    "edition": null
+                  },
+                  "resolution_m": 5.0
+                }
+              },
+              {
+                "criterion": "soil",
+                "weight": 0.07,
+                "share": 0.07777777777777778,
+                "value": {
+                  "number": 25.0,
+                  "unit": "pct",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 0.45,
+                "contribution": 0.035,
+                "source": {
+                  "service_id": "soilgrids-wcs",
+                  "publisher": "ISRIC World Soil Information",
+                  "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
+                  "retrieved_at": "2026-11-26T07:58:01.905392Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": 250.0,
+                    "edition": 2020
+                  },
+                  "resolution_m": 250.0
+                }
+              },
+              {
+                "criterion": "groundwater_body",
+                "weight": 0.12,
+                "share": 0.13333333333333333,
+                "value": {
+                  "number": null,
+                  "unit": null,
+                  "at_least": false,
+                  "category": "Malo",
+                  "label": "Synthetic body (ES030MSBT000)",
+                  "absent": false
+                },
+                "suitability": 0.6,
+                "contribution": 0.08,
+                "source": {
+                  "service_id": "miteco-gw-status",
+                  "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+                  "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
+                  "retrieved_at": "2026-11-26T07:58:01.839932Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": null,
+                    "edition": 2022
+                  },
+                  "resolution_m": null
+                }
+              },
+              {
+                "criterion": "water_points",
+                "weight": 0.1,
+                "share": 0.11111111111111112,
+                "value": {
+                  "number": 247.1295166015625,
+                  "unit": "m",
+                  "at_least": false,
+                  "category": null,
+                  "label": null,
+                  "absent": false
+                },
+                "suitability": 1.0,
+                "contribution": 0.11111111111111112,
+                "source": {
+                  "service_id": "igme-rest",
+                  "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
+                  "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
+                  "retrieved_at": "2026-11-26T07:58:01.840548Z",
+                  "detail": {
+                    "scale_denominator": null,
+                    "cell_m": null,
+                    "edition": null
+                  },
+                  "resolution_m": null
+                }
+              }
+            ],
+            "missing": [
+              {
+                "criterion": "piezometric_depth",
+                "weight": 0.1,
+                "reason": "no_dataset"
+              }
+            ],
+            "validation": {
+              "domain": "ES030MSBT000",
+              "label": "Synthetic body (ES030MSBT000)",
+              "state": "validated",
+              "design": "presence_background",
+              "productive": 71,
+              "dry": 0,
+              "background": 2000,
+              "blocks": 6,
+              "auc": {
+                "value": 0.99275,
+                "low": 0.9888896117783432,
+                "high": 0.9966728893050903,
+                "level": 0.95
+              },
+              "calibration": null,
+              "no_calibration": "no_dry_labels",
+              "excluded_criteria": [
+                "water_points"
+              ],
+              "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
+              "validated_at": "2026-11-26T07:57:59.989049Z"
+            },
+            "probability": null
+          },
+          "legal": {
+            "state": "not_evaluated",
+            "source": "No rule was checked: the legal filter is not built yet (MASTER_PLAN §4.5, session 09).",
+            "assessed_at": "2026-11-26T07:58:01.980962Z",
+            "disclaimer": "Guidance, not legal advice: the competent water authority and the municipality decide whether and how a well may be drilled.",
+            "reason": null
+          },
+          "depth": {
+            "state": "estimated",
+            "reason": null,
+            "ground_m": -505.0,
+            "water_table": {
+              "elevation_m": -542.9142079535816,
+              "low_m": -547.0164792003952,
+              "high_m": -538.8119367067679,
+              "body": "ES030MSBT000",
+              "body_label": "Synthetic body (ES030MSBT000)",
+              "piezometers": 2,
+              "nearest_m": 1301.1356234068232
+            },
+            "depth_m": 37.91420795358158,
+            "low_m": 33.81193670676794,
+            "high_m": 42.016479200395224,
+            "karst": true,
+            "source": {
+              "service_id": "miteco-piezometry-db",
+              "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+              "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+              "file_name": "basedatospiezometria.zip",
+              "imported_at": "2026-11-26T00:00:00Z",
+              "levels_from": "2023-01-15",
+              "levels_to": "2024-12-15"
+            }
+          },
+          "cost": {
+            "currency": "EUR",
+            "low": "2394",
+            "high": "10440",
+            "drilled_low_m": "53.8",
+            "drilled_high_m": "62.0",
+            "per_metre_low": "38",
+            "per_metre_high": "120",
+            "fixed_low": "350",
+            "fixed_high": "3000",
+            "source": "Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March 2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com, January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).",
+            "priced_on": "2026-11-26"
+          }
         }
       ],
       "no_candidates": null,
@@ -1805,7 +2146,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-25T15:10:29.934518Z",
+          "retrieved_at": "2026-11-26T07:58:01.839506Z",
           "detail": {
             "scale_denominator": 200000,
             "cell_m": null,
@@ -1817,7 +2158,7 @@
           "service_id": "ign-mdt-wcs",
           "publisher": "Instituto Geográfico Nacional (IGN)",
           "attribution": "MDT CC-BY 4.0 scne.es",
-          "retrieved_at": "2026-11-25T15:10:30.008565Z",
+          "retrieved_at": "2026-11-26T07:58:01.873419Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": 5.0,
@@ -1829,7 +2170,7 @@
           "service_id": "soilgrids-wcs",
           "publisher": "ISRIC World Soil Information",
           "attribution": "SoilGrids 2.0, ISRIC World Soil Information, CC BY 4.0",
-          "retrieved_at": "2026-11-25T15:10:30.137886Z",
+          "retrieved_at": "2026-11-26T07:58:01.905392Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": 250.0,
@@ -1841,7 +2182,7 @@
           "service_id": "miteco-gw-status",
           "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
           "attribution": "© Ministerio para la Transición Ecológica y el Reto Demográfico",
-          "retrieved_at": "2026-11-25T15:10:29.935110Z",
+          "retrieved_at": "2026-11-26T07:58:01.839932Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": null,
@@ -1853,7 +2194,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-25T15:10:29.936145Z",
+          "retrieved_at": "2026-11-26T07:58:01.840548Z",
           "detail": {
             "scale_denominator": null,
             "cell_m": null,
@@ -1865,7 +2206,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-25T15:10:29.935600Z",
+          "retrieved_at": "2026-11-26T07:58:01.840265Z",
           "detail": {
             "scale_denominator": 50000,
             "cell_m": null,
@@ -1877,7 +2218,7 @@
           "service_id": "igme-rest",
           "publisher": "Instituto Geológico y Minero de España (IGME-CSIC)",
           "attribution": "Origen de los datos: © CN Instituto Geológico y Minero de España (IGME)",
-          "retrieved_at": "2026-11-25T15:10:29.936789Z",
+          "retrieved_at": "2026-11-26T07:58:01.841255Z",
           "detail": {
             "scale_denominator": 50000,
             "cell_m": null,
@@ -1893,7 +2234,7 @@
     {
       "id": "potential-index",
       "variable": "index",
-      "image": "/api/parcel/45f6a846b1f3eac7/layers/potential-index",
+      "image": "/api/parcel/0c760d5c533ed827/layers/potential-index",
       "opacity": 0.65,
       "visible": true,
       "unit": "index",
@@ -1928,7 +2269,7 @@
     {
       "id": "potential-confidence",
       "variable": "confidence",
-      "image": "/api/parcel/45f6a846b1f3eac7/layers/potential-confidence",
+      "image": "/api/parcel/0c760d5c533ed827/layers/potential-confidence",
       "opacity": 0.7,
       "visible": false,
       "unit": "confidence",
@@ -1951,9 +2292,39 @@
       ]
     },
     {
+      "id": "model-skill",
+      "variable": "skill",
+      "image": "/api/parcel/0c760d5c533ed827/layers/model-skill",
+      "opacity": 0.6,
+      "visible": false,
+      "unit": "skill",
+      "legend": [
+        {
+          "min": null,
+          "max": 0.01,
+          "colour": "#d7301f"
+        },
+        {
+          "min": 0.01,
+          "max": 0.34,
+          "colour": "#fdcc8a"
+        },
+        {
+          "min": 0.34,
+          "max": 0.67,
+          "colour": "#78c679"
+        },
+        {
+          "min": 0.67,
+          "max": null,
+          "colour": "#238443"
+        }
+      ]
+    },
+    {
       "id": "terrain-slope",
       "variable": "slope_deg",
-      "image": "/api/parcel/45f6a846b1f3eac7/layers/terrain-slope",
+      "image": "/api/parcel/0c760d5c533ed827/layers/terrain-slope",
       "opacity": 0.7,
       "visible": false,
       "unit": "deg",
@@ -1993,7 +2364,7 @@
     {
       "id": "terrain-drainage",
       "variable": "drainage_distance_m",
-      "image": "/api/parcel/45f6a846b1f3eac7/layers/terrain-drainage",
+      "image": "/api/parcel/0c760d5c533ed827/layers/terrain-drainage",
       "opacity": 0.7,
       "visible": false,
       "unit": "m",
@@ -2028,7 +2399,7 @@
     {
       "id": "terrain-wetness",
       "variable": "twi",
-      "image": "/api/parcel/45f6a846b1f3eac7/layers/terrain-wetness",
+      "image": "/api/parcel/0c760d5c533ed827/layers/terrain-wetness",
       "opacity": 0.7,
       "visible": false,
       "unit": "twi",

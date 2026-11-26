@@ -1,10 +1,18 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The selected area's detailed map: the button that asks for it, its job while it runs or
-// why it failed, then its mean index and confidence, its layers with their legends, and its
-// ranked candidate spots, each with its explanation and legal status.
-import type { AreaAnalysis, Candidate, ParcelFailure, ParcelLayer } from "../api.ts";
+// why it failed, then its mean index and confidence and how well the model did against
+// wells there, its layers with their legends, and its ranked candidate spots, each with its
+// explanation, legal status, depth to water and drilling cost (or why they are unknown).
+import type { AreaAnalysis, Candidate, DepthEstimate, DrillingCost, ParcelFailure, ParcelLayer } from "../api.ts";
 import { formatArea, formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
-import { ConfidenceBreakdown, EstimateSources, Inputs, Missing, ScoreWithConfidence } from "../map/Explanation.tsx";
+import {
+  ConfidenceBreakdown,
+  EstimateSources,
+  Inputs,
+  Missing,
+  ScoreWithConfidence,
+  ValidationNote,
+} from "../map/Explanation.tsx";
 import { legendText, percent } from "../map/national.ts";
 import type { ParcelView } from "./parcel.ts";
 
@@ -64,6 +72,10 @@ function Summary({ analysis }: { analysis: AreaAnalysis }) {
           ))}
         </ul>
       )}
+      <h4>{t("detailed.validationHeading")}</h4>
+      {summary.validation.map((v) => (
+        <ValidationNote key={v.domain} validation={v} />
+      ))}
       <p className="note">{lookup(`detailed.terrain.${analysis.terrain_model}`, analysis.terrain_model)}</p>
       <p className="note source">{t("national.source", { attribution })}</p>
     </>
@@ -113,6 +125,67 @@ function Layers({
   );
 }
 
+const metres = (value: number) => formatNumber(value, 0);
+const euros = (value: string) => formatNumber(Number(value), 0);
+
+function Depth({ depth }: { depth: DepthEstimate }) {
+  const { water_table: table, source } = depth;
+  if (depth.state === "unknown" || table === null || source === null || depth.depth_m === null) {
+    return (
+      <>
+        <p className="note depth" data-depth="unknown" data-reason={depth.reason ?? ""}>
+          {lookup(`detailed.depthUnknown.${depth.reason ?? ""}`, t("detailed.depthUnknown.not_imported"))}
+        </p>
+        {depth.karst && <p className="note karst">{t("detailed.karst")}</p>}
+      </>
+    );
+  }
+  return (
+    <div className="depth" data-depth="estimated">
+      <p>
+        {t("detailed.depth", {
+          depth: metres(depth.depth_m),
+          low: metres(depth.low_m ?? depth.depth_m),
+          high: metres(depth.high_m ?? depth.depth_m),
+        })}
+      </p>
+      {depth.karst && <p className="warning karst">{t("detailed.karst")}</p>}
+      <p className="note">
+        {t("detailed.depthDetail", {
+          ground: metres(depth.ground_m ?? 0),
+          table: metres(table.elevation_m),
+          count: table.piezometers,
+          body: table.body_label || table.body,
+          nearest: `${formatNumber(table.nearest_m / 1000, 1)} km`,
+          from: formatDate(source.levels_from),
+          to: formatDate(source.levels_to),
+          attribution: source.attribution,
+        })}
+      </p>
+    </div>
+  );
+}
+
+function Cost({ cost }: { cost: DrillingCost }) {
+  return (
+    <div className="cost" data-cost-low={cost.low} data-cost-high={cost.high}>
+      <p>{t("detailed.cost", { low: euros(cost.low), high: euros(cost.high) })}</p>
+      <p className="note">
+        {t("detailed.costDetail", {
+          drilledLow: euros(cost.drilled_low_m),
+          drilledHigh: euros(cost.drilled_high_m),
+          perLow: euros(cost.per_metre_low),
+          perHigh: euros(cost.per_metre_high),
+          fixedLow: euros(cost.fixed_low),
+          fixedHigh: euros(cost.fixed_high),
+          date: formatDate(cost.priced_on),
+          source: cost.source,
+        })}
+      </p>
+    </div>
+  );
+}
+
 function CandidateItem({ candidate }: { candidate: Candidate }) {
   const { local, estimate, legal } = candidate;
   return (
@@ -131,14 +204,14 @@ function CandidateItem({ candidate }: { candidate: Candidate }) {
       <p className="legal" data-legal={legal.state}>
         {lookup(`detailed.legal.${legal.state}`, legal.state)} {t("detailed.disclaimer")}
       </p>
-      <p className="note" data-depth={candidate.depth}>
-        {t("detailed.depthNotEstimated")}
-      </p>
+      <Depth depth={candidate.depth} />
+      {candidate.cost && <Cost cost={candidate.cost} />}
       <details>
         <summary>{t("detailed.why")}</summary>
         <Inputs estimate={estimate} />
         <Missing estimate={estimate} />
         <ConfidenceBreakdown confidence={estimate.confidence} />
+        <ValidationNote validation={estimate.validation} />
         <EstimateSources estimate={estimate} />
       </details>
     </li>

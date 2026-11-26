@@ -106,6 +106,13 @@ con su margen (o "desconocida" y por qué) y un rango de coste de perforación. 
 están en `config/defaults/drilling.yaml`; pon el presupuesto de tu pocero en
 `config/owner.yaml` para sustituirlos.
 
+**Informe y paquete profesional.** Con el mapa detallado de un área calculado, el panel
+ofrece "Descargar el informe (PDF)" y "Descargar el paquete (ZIP)": el PDF es para un
+hidrogeólogo o el organismo de cuenca; el ZIP añade las capas para un SIG (GeoPackage y
+COG) y tablas CSV. Las fotos y notas de voz de campo solo entran si marcas la casilla. El
+PDF necesita Pango y HarfBuzz: en macOS `brew install pango`; en Linux
+`apt install libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0`.
+
 La primera vez, `make check` descarga el Chromium de Playwright para los tests en
 navegador.
 

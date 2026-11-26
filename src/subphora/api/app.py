@@ -24,6 +24,10 @@
   and ranked candidates) and its layers once done.
 - ``GET /api/parcel/{id}/explain?lon=&lat=``: the detailed map's estimate at a point.
 - ``GET /api/parcel/{id}/layers/{layer}``: a layer of the detailed map as one PNG.
+- ``GET /api/parcel/{id}/report.pdf``: the area's PDF report; ``GET
+  /api/parcel/{id}/pack.zip?media=``: the export pack (the PDF, a GeoPackage, COGs and CSV
+  tables; photos and voice memos only with ``media=true``). Both are downloads, sent
+  nowhere else.
 - ``GET /api/legal?lon=&lat=&region=``: the legal status at a point of a region (ISO
   3166-2): its water authority, groundwater body and status, the rules that apply there
   with their sources and dates, the verdict and the disclaimer; an area's legal panel.
@@ -36,6 +40,8 @@
 """
 
 import logging
+import os
+import tempfile
 from collections.abc import AsyncIterator
 from concurrent.futures import Executor, ProcessPoolExecutor
 from contextlib import AsyncExitStack, asynccontextmanager
@@ -44,8 +50,9 @@ from typing import Annotated, Literal
 
 import fastapi
 from fastapi import FastAPI, Query, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import Field, ValidationError
+from starlette.background import BackgroundTask
 
 from subphora import __version__
 from subphora.api.map import MapConfig, map_config
@@ -70,8 +77,10 @@ from subphora.domain.parcels import Position
 from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
 from subphora.domain.section import CrossSection, SectionError, SectionFailure
 from subphora.geo import MAX_TILE_ZOOM
+from subphora.report import CatalogueError, ReportService
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
+from subphora.services.export import ExportService
 from subphora.services.field import FieldService
 from subphora.services.layers import LayerService
 from subphora.services.legal import LegalService
@@ -209,6 +218,9 @@ def create_app(
             )
             app.state.section = SectionService(client, settings, cache, root)
             app.state.field = FieldService(settings, root)
+            app.state.report = ReportService(
+                settings, ExportService(settings, app.state.parcel, app.state.field)
+            )
             stack.callback(app.state.national.close)
             stack.push_async_callback(app.state.parcel.close)
             yield
@@ -244,6 +256,13 @@ def create_app(
         return JSONResponse(
             status_code=_NATIONAL_STATUS[exc.failure],
             content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    @app.exception_handler(CatalogueError)
+    async def catalogue_failed(_request: Request, exc: CatalogueError) -> JSONResponse:
+        _log.error("the report's catalogue cannot be used: %s", exc)
+        return JSONResponse(
+            status_code=500, content={"code": "catalogue_unreadable", "detail": str(exc)}
         )
 
     @app.exception_handler(ParcelError)
@@ -387,6 +406,42 @@ def create_app(
         request: Request,
     ) -> ParcelExplanation:
         return await parcel(request).explain(area_id, lon, lat)
+
+    def report(request: Request) -> ReportService:
+        service: ReportService = request.app.state.report
+        return service
+
+    @app.get("/api/parcel/{area_id}/report.pdf", response_class=Response)
+    async def parcel_report(area_id: Annotated[str, _AREA_ID], request: Request) -> Response:
+        content = await report(request).pdf(area_id)
+        return Response(
+            content=content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="subphora-{area_id}.pdf"',
+                "Cache-Control": "no-store",
+            },
+        )
+
+    @app.get("/api/parcel/{area_id}/pack.zip", response_class=FileResponse)
+    async def parcel_pack(
+        area_id: Annotated[str, _AREA_ID], request: Request, media: bool = False
+    ) -> FileResponse:
+        handle, name = tempfile.mkstemp(prefix="subphora-pack-", suffix=".zip")
+        os.close(handle)
+        target = Path(name)
+        try:
+            await report(request).pack(area_id, media, target)
+        except BaseException:
+            target.unlink(missing_ok=True)
+            raise
+        return FileResponse(
+            target,
+            media_type="application/zip",
+            filename=f"subphora-{area_id}.zip",
+            headers={"Cache-Control": "no-store"},
+            background=BackgroundTask(target.unlink, missing_ok=True),
+        )
 
     @app.get("/api/parcel/{area_id}/layers/{layer_id}", response_class=Response)
     async def parcel_layer(

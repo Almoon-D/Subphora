@@ -167,6 +167,26 @@ class FieldStore:
         except OSError as exc:
             raise FieldError(FieldFailure.STORE_UNAVAILABLE, "the file cannot be written") from exc
 
+    async def records(self) -> list[tuple[Observation, Path | None]]:
+        """Every record in the order recorded, each with its stored file (None without)."""
+        return await asyncio.to_thread(self._records)
+
+    def _records(self) -> list[tuple[Observation, Path | None]]:
+        if not self._database.exists():
+            return []
+        with self._connect() as db:
+            rows = db.execute(
+                "SELECT o.body, m.file FROM observations o LEFT JOIN media m ON m.id = o.id"
+                " ORDER BY o.recorded_at, o.id"
+            ).fetchall()
+        return [
+            (
+                Observation.model_validate_json(body),
+                None if file is None else self._media_dir / file,
+            )
+            for body, file in rows
+        ]
+
     async def summary(self) -> FieldSummary:
         return await asyncio.to_thread(self._summary)
 

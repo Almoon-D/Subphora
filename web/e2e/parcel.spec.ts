@@ -115,6 +115,13 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   await expect(candidates.first()).toContainText("Coste de perforación: entre");
   await expect(panel(page).locator('[data-validation="validated"]').first()).toContainText("AUC");
   await expect(page.locator(".candidate-marker")).toHaveCount(5);
+  // The report and the pack are downloads; the pack takes the photos only when ticked.
+  const downloads = panel(page).locator(`[data-downloads="${DAIMIEL_ID}"]`);
+  await expect(downloads.locator('[data-download="report"]')).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/report.pdf`);
+  const pack = downloads.locator('[data-download="pack"]');
+  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=false`);
+  await downloads.getByLabel("Incluir en el paquete las fotos y notas de voz de campo").check();
+  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=true`);
   // The index is drawn first; another layer replaces it.
   await expect(map(page)).toHaveAttribute("data-parcel", `${DAIMIEL_ID}:potential-index:5`);
   await expect.poll(() => mocks.images).toContain(`/api/parcel/${DAIMIEL_ID}/layers/potential-index`);

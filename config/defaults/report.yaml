@@ -1,0 +1,29 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The per-area PDF report and the professional export pack (MASTER_PLAN §4.6, decision
+# 0038), made from a finished detailed map.
+
+# The Spanish catalogue the report's text comes from: the web interface's own file, so a
+# message is written once. Relative to the repository root unless absolute.
+catalogue: web/src/i18n/es.json
+
+# Dates and times are shown in the area's local time: the zone of the grid's CRS when it
+# has one here, else the default.
+time_zone: Europe/Madrid
+time_zones:
+  "EPSG:4083": Atlantic/Canary
+
+# The detailed map's layers drawn as maps in the PDF and written as COGs in the pack (the
+# depth grid joins them when levels were imported).
+layers: [potential-index, potential-confidence]
+# A map image has at most this many pixels on its longer side (cells are skipped evenly
+# beyond it), and is printed this many millimetres wide.
+map_max_px: 1400
+map_width_mm: 170
+# The colours of the area's outline and of the candidate spots on the maps.
+outline_colour: "#1d3557"
+candidate_colour: "#d62828"
+
+pack:
+  # COG tiles and compression.
+  cog_blocksize: 256
+  cog_compress: deflate

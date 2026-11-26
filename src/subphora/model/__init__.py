@@ -9,7 +9,14 @@ The model receives grids and never fetches anything: it imports neither ``source
 """
 
 from subphora.model.candidates import AreaMeans, CriterionMeans, area_means, select_candidates
-from subphora.model.depth import PiezometerPoint, depth_at, drilling_cost, water_table
+from subphora.model.depth import (
+    DepthGrid,
+    PiezometerPoint,
+    depth_at,
+    depth_grid,
+    drilling_cost,
+    water_table,
+)
 from subphora.model.evaluate import Category, Evaluation, InputGrids, Quality, evaluate
 from subphora.model.explain import confidence_of, explain_cell
 from subphora.model.quality import dataset_quality
@@ -25,6 +32,7 @@ __all__ = [
     "AreaMeans",
     "Category",
     "CriterionMeans",
+    "DepthGrid",
     "Evaluation",
     "InputGrids",
     "Labelled",
@@ -34,6 +42,7 @@ __all__ = [
     "confidence_of",
     "dataset_quality",
     "depth_at",
+    "depth_grid",
     "drilling_cost",
     "evaluate",
     "explain_cell",

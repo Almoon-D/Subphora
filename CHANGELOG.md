@@ -7,6 +7,18 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.16.0] - 2026-11-26
+
+- Report: once an area's detailed map is done, "Descargar el informe (PDF)" gives a report a
+  hydrogeologist or the basin authority can read: maps, every candidate with its index and
+  confidence, explanation, depth, drilling cost and legal status, the model's measured
+  skill, field notes, every source with its date and licence, the limitations and the
+  legal disclaimer.
+- Professional pack: "Descargar el paquete (ZIP)" adds the layers for a GIS (a GeoPackage
+  with the area, candidates and field records, and COG rasters of the index, confidence
+  and depth to water) and CSV tables; field photos and voice memos only when ticked.
+- Anything missing (no depth without imported levels, no field records) is said, with why.
+
 ## [0.15.0] - 2026-11-26
 
 - Offline packs: before going to a site, download a pack of the selected area and the map

@@ -72,6 +72,7 @@ from subphora.model import (
     confidence_of,
     dataset_quality,
     depth_at,
+    depth_grid,
     drilling_cost,
     evaluate,
     explain_cell,
@@ -87,7 +88,7 @@ from subphora.services.national_compute import (
 from subphora.services.validation import domain_codes, domain_keys, domain_validations, skill_grid
 from subphora.store.national import Category as StoredCategory
 from subphora.store.national import CriterionQuality, RegionManifest, write_region
-from subphora.store.parcels import write_analysis, write_image
+from subphora.store.parcels import write_analysis, write_depth, write_image, write_outline
 
 _LON_LAT = "EPSG:4326"
 _INSIDE = 1.0
@@ -373,6 +374,9 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
         validation=validations,
     )
     write_region(spec.root, manifest, dict(grids))
+    write_outline(spec.root, spec.area_id, spec.area)
+    if spec.levels is not None:
+        _write_depth(spec, window, grids, body_categories)
     layers = [spec.national.tiles.layer(layer_id) for layer_id in spec.parcel.layers]
     corners = _write_images(spec, window, grids, layers)
     candidates, no_candidates = _candidates(
@@ -395,6 +399,34 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
     )
     write_analysis(spec.root, analysis)
     return analysis
+
+
+def _write_depth(
+    spec: ParcelJobSpec,
+    window: GridWindow,
+    grids: dict[Variable, FloatGrid],
+    body_categories: list[Category],
+) -> None:
+    """The depth grid of the area, for the export pack."""
+    columns = window.west + (np.arange(window.width) + 0.5) * window.cell_m
+    rows = window.north - (np.arange(window.height) + 0.5) * window.cell_m
+    xs, ys = np.meshgrid(columns, rows)
+    grid = depth_grid(
+        xs,
+        ys,
+        grids[Variable.ELEVATION_M],
+        grids[Variable.GROUNDWATER_BODY],
+        [c.cls for c in body_categories],
+        spec.piezometers,
+        spec.piezometry.water_table,
+    )
+    write_depth(
+        spec.root,
+        spec.area_id,
+        window.crs,
+        window.transform,
+        {"depth_m": grid.depth, "low_m": grid.low, "high_m": grid.high},
+    )
 
 
 def _lon_lat_box(window: GridWindow) -> tuple[float, float, float, float]:

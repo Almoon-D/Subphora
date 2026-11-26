@@ -19,8 +19,8 @@
 | 09a | `docs/sessions/done/09a-legal-all-districts.md` | Opus 5.5, high | done |
 | 10 | `docs/sessions/done/10-field-mode.md` | Opus 5.5, high | done |
 | 11 | `docs/sessions/done/11-offline-packs.md` | Opus 5.5, high | done |
-| 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | next |
-| 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | planned — version 1 |
+| 12 | `docs/sessions/done/12-report.md` | Opus 5.5, medium | done |
+| 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | next — version 1 |
 | 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | planned |
 | 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | planned |
 | 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
@@ -110,6 +110,9 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- The report's maps have no base map (no network while printing); a PNOA image under them
+  would need its terms read for reproduction in a document. The report is Spanish only. (12)
 
 - A pack holds one area; a trip to several parcels takes one pack each. Official water and
   geology layers stay out until their terms are read for offline use (`offline:
@@ -228,6 +231,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 12 — Per-area report and professional pack (2026-11-26, version 0.16.0)
+
+- Landed: `report/` (decision 0038): `GET /api/parcel/{id}/report.pdf`, a PDF (WeasyPrint)
+  with the area, mean index and confidence, index and confidence maps with outline and
+  numbered candidates, every candidate's score, explanation, depth, cost and legal status,
+  the measured skill, field records, every source with date, attribution and licence, the
+  limitations and the disclaimer; `GET …/pack.zip?media=` adds `layers.gpkg`, COGs (index,
+  confidence, depth), CSV tables and a manifest of what is missing. Buttons in the panel.
+- The Spanish catalogue is now `web/src/i18n/es.json`, shared by the app and the report.
+- The detailed map also writes its outline and a depth grid (`model.depth_grid`, the same
+  rules as `depth_at`); maps computed by 0.15 are computed again.
+- Tests: sections and attributions in the PDF text, missing depth, cost and observations
+  written as missing, the GeoPackage and COGs opened with their CRS, media only when asked,
+  refusals; Playwright checks the download links.
+- Prompt edits: 13 (ship `web/src/i18n/es.json` and Pango/HarfBuzz in the API image).
 
 ### 11 — Offline map packs (2026-11-26, version 0.15.0)
 

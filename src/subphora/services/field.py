@@ -94,5 +94,21 @@ class FieldService:
             )
         return await self._store.put_media(observation_id, declared, extension, content)
 
+    async def records_near(
+        self, area_id: str, bbox: tuple[float, float, float, float]
+    ) -> list[tuple[Observation, Path | None]]:
+        """The records made inside an area's box (west, south, east, north in degrees), or
+        guided to one of its spots, each with its stored file."""
+        west, south, east, north = bbox
+        found = []
+        for observation, file in await self._store.records():
+            fix, target = observation.position, observation.target
+            inside = fix is not None and (
+                west <= fix.longitude <= east and south <= fix.latitude <= north
+            )
+            if inside or (target is not None and target.area_id == area_id):
+                found.append((observation, file))
+        return found
+
     async def summary(self) -> FieldSummary:
         return await self._store.summary()

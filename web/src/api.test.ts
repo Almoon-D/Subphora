@@ -1,7 +1,16 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 import { describe, expect, it } from "vitest";
 
-import { drawnPoint, drawnPolygon, fetchFeatureInfo, fetchMapConfig, resolveArea, searchText } from "./api.ts";
+import {
+  drawnPoint,
+  drawnPolygon,
+  fetchFeatureInfo,
+  fetchMapConfig,
+  packPath,
+  reportPath,
+  resolveArea,
+  searchText,
+} from "./api.ts";
 
 function answering(status: number, body: string): typeof fetch {
   return () => Promise.resolve(new Response(body, { status, headers: { "content-type": "application/json" } }));
@@ -172,5 +181,13 @@ describe("fetchFeatureInfo", () => {
   it("reports an unreachable server", async () => {
     const offline: typeof fetch = () => Promise.reject(new TypeError("Failed to fetch"));
     expect(await fetchFeatureInfo("x", 0, 0, 10, offline)).toEqual({ ok: false, layerId: "x", failure: "network" });
+  });
+});
+
+describe("report downloads", () => {
+  it("names the area's report and pack, with photos only when asked", () => {
+    expect(reportPath("0123456789abcdef")).toBe("/api/parcel/0123456789abcdef/report.pdf");
+    expect(packPath("0123456789abcdef", false)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=false");
+    expect(packPath("0123456789abcdef", true)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=true");
   });
 });

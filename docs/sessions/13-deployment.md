@@ -21,6 +21,8 @@ and installs on a phone: the owner completes the version-1 flow in the field.
    ARM64; the Docker ecosystem in `.github/dependabot.yml`; a step-by-step guide for the
    owner in Spanish. The PWA's service worker is `/sw.js` at the site root (decision 0037):
    Caddy serves it with `Cache-Control: no-cache` so that an update reaches the phones.
+   The API image carries the report's needs (decision 0038): `web/src/i18n/es.json` (the
+   catalogue the PDF reads) and Pango, HarfBuzz-subset and a font for WeasyPrint.
 3. Login: a few users, hashed passwords, secure cookies, a command to add a user; every API
    route behind it.
 4. Nightly backups of `data/` to a destination the owner chooses; a restore test.

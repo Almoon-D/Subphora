@@ -8,7 +8,8 @@
 - The index is the weighted mean of the suitabilities present: the weights renormalised
   over the criteria present at that cell. No input present: no index (NaN).
 - Confidence is the weighted sum of five components (coverage, resolution, age,
-  evidence, skill); a cell without an index has no confidence either.
+  evidence, skill); a cell without an index has no confidence either. The skill is the
+  measured skill of the cell's domain, or ``skill_not_measured`` where it has none.
 """
 
 from collections.abc import Mapping, Sequence
@@ -107,9 +108,10 @@ def evaluate(
     grids: InputGrids,
     quality: Mapping[str, Quality],
     evidence_distance_m: NDArray[np.floating],
+    skill: NDArray[np.floating] | None = None,
 ) -> Evaluation:
     """Index and confidence on the grids; ``quality`` per criterion whose variable is
-    among the grids."""
+    among the grids; ``skill`` per cell, NaN (or no grid) where its domain is unmeasured."""
     shape = np.shape(evidence_distance_m)
     total_weight = sum(c.weight for c in model.criteria)
     weighted = np.zeros(shape)
@@ -141,7 +143,13 @@ def evaluate(
         ComponentId.EVIDENCE: evidence_component(
             np.asarray(evidence_distance_m, dtype=np.float64), settings
         ),
-        ComponentId.SKILL: np.full(shape, settings.skill_not_measured),
+        ComponentId.SKILL: np.full(shape, settings.skill_not_measured)
+        if skill is None
+        else np.where(
+            np.isnan(np.asarray(skill, dtype=np.float64)),
+            settings.skill_not_measured,
+            np.asarray(skill, dtype=np.float64),
+        ),
     }
     confidence = sum(
         (settings.weights[component] * grid for component, grid in components.items()),

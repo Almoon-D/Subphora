@@ -12,6 +12,7 @@ from pathlib import Path
 
 from subphora.config import Settings
 from subphora.domain.potential import (
+    AUXILIARY,
     CATEGORICAL,
     RESULTS,
     CellExplanation,
@@ -20,6 +21,7 @@ from subphora.domain.potential import (
     PotentialEstimate,
     Variable,
 )
+from subphora.domain.validation import NO_BODY, DomainValidation
 from subphora.geo import tile_exists
 from subphora.geo.grid import GridWindow, transform_xy
 from subphora.geo.render import transparent_png
@@ -75,9 +77,10 @@ class NationalMapService:
         content = await asyncio.to_thread(archive.get, z, x, y)
         if content is not None:
             return content
-        if not tiles_path(self._root, layer_id).exists():
+        if not tiles_path(self._root, layer_id).exists() and not map_path(self._root).exists():
             raise NationalError(NationalFailure.NOT_BUILT, "the national map is not built yet")
-        # Inside the archive's bounds but without a value there (the sea, unbuilt regions).
+        # No value there: the sea, unbuilt regions, or a layer with no value anywhere (the
+        # skill where no domain has enough wells).
         return self._empty
 
     async def _manifests(self) -> list[RegionManifest]:
@@ -135,7 +138,7 @@ def estimate_at(
     if cell is None:
         return None
     values = read_cell(root, manifest, *cell)
-    inputs = {v: value for v, value in values.items() if v not in RESULTS}
+    inputs = {v: value for v, value in values.items() if v not in RESULTS | AUXILIARY}
     if all(math.isnan(value) for value in inputs.values()):
         return None
     return explain_cell(
@@ -150,4 +153,13 @@ def estimate_at(
         manifest.sources,
         values[Variable.WATER_POINT_DISTANCE_M],
         manifest.caps(),
+        domain_validation(manifest, values.get(Variable.GROUNDWATER_BODY, math.nan)),
     )
+
+
+def domain_validation(manifest: RegionManifest, body_code: float) -> DomainValidation:
+    """The validation of the domain a cell's body code names (the outside for none)."""
+    bodies = manifest.categories.get(Variable.GROUNDWATER_BODY, ())
+    code = -1 if math.isnan(body_code) else int(body_code)
+    domain = bodies[code].cls if 0 <= code < len(bodies) else NO_BODY
+    return manifest.validation_of(domain)

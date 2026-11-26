@@ -24,7 +24,15 @@ from subphora.domain.potential import (
     PotentialEstimate,
     Variable,
 )
-from subphora.model import Category, InputGrids, Quality, dataset_quality, evaluate, explain_cell
+from subphora.model import (
+    Category,
+    InputGrids,
+    Quality,
+    dataset_quality,
+    evaluate,
+    explain_cell,
+    not_validated,
+)
 from subphora.model.evaluate import ABSENT, label, suitability
 from subphora.model.quality import age_fit, ground_resolution_m
 
@@ -43,6 +51,7 @@ SOURCE = InputSource(
     resolution_m=25,
 )
 SOURCES = {c.id: SOURCE for c in MODEL.criteria if c.variable is not None}
+UNVALIDATED = not_validated("none", "Outside every groundwater body", "No national map.")
 # Every input at a value whose suitability is 1 in the default lookups.
 BEST: dict[Variable, float] = {
     Variable.PERMEABILITY_CLASS: 0.0,  # ALTA is 0.8, see below
@@ -168,7 +177,7 @@ def test_quality_from_the_stated_detail_and_unknown_is_never_good() -> None:
 
 def explain(values: dict[Variable, float], evidence: float = 100.0) -> PotentialEstimate:
     caps = dict.fromkeys(DISTANCES, 10_000.0)
-    return explain_cell(MODEL, values, CATEGORIES, QUALITY, SOURCES, evidence, caps)
+    return explain_cell(MODEL, values, CATEGORIES, QUALITY, SOURCES, evidence, caps, UNVALIDATED)
 
 
 def test_the_explanation_of_a_cell_matches_the_grid() -> None:
@@ -217,7 +226,7 @@ def complete() -> PotentialEstimate:
     return explain(dict(BEST))
 
 
-def test_an_estimate_cannot_be_a_probability() -> None:
+def test_an_estimate_is_a_probability_only_with_one() -> None:
     body = complete().model_dump()
     body["kind"] = "probability"
     with pytest.raises(ValidationError):

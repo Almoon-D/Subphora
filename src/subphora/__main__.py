@@ -48,6 +48,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         "degrees (repeatable)",
     )
     target.add_argument("--all", action="store_true", help="every province of Spain")
+    piezometry = sub.add_parser("piezometry", help="the piezometric levels (depth to water)")
+    piezometry_sub = piezometry.add_subparsers(dest="piezometry_command", required=True)
+    piezometry_import = piezometry_sub.add_parser(
+        "import",
+        help="summarise the national piezometry database you downloaded by hand "
+        "(config/defaults/piezometry.yaml: input) for the depth to water",
+    )
+    piezometry_import.add_argument(
+        "--file", metavar="PATH", help="the downloaded .zip or .accdb instead of the configured one"
+    )
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -60,6 +70,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _serve(settings)
     if args.command == "national":
         return _national_build(settings, args.region, all_provinces=args.all)
+    if args.command == "piezometry":
+        return _piezometry_import(settings, args.file)
     if args.sources_command == "list":
         print(_catalogue_table(settings))
         return 0
@@ -150,7 +162,11 @@ def _national_build(settings: Settings, specs: list[str] | None, *, all_province
             with ProcessPoolExecutor(max_workers=workers) as executor:
                 report = await builder.build(regions, executor, workers)
         for result in report.built:
-            print(f"{result.region_id}: built, {result.scored} of {result.cells} cells scored")
+            print(
+                f"{result.region_id}: built, {result.scored} of {result.cells} cells scored; "
+                f"domains: {result.validated} validated, {result.chance} no better than "
+                f"chance, {result.unmeasured} without enough wells"
+            )
         for failure in report.failed:
             print(f"{failure.region_id}: FAILED: {failure.detail}")
         for layer, count in report.tiles.items():
@@ -160,6 +176,32 @@ def _national_build(settings: Settings, specs: list[str] | None, *, all_province
         return EXIT_FAILED_CHECK if report.failed else 0
 
     return asyncio.run(run())
+
+
+def _piezometry_import(settings: Settings, file: str | None) -> int:
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from subphora.config import REPO_ROOT
+    from subphora.services.piezometry import import_piezometry
+    from subphora.sources.piezometry import PiezometryReadError
+
+    if file is not None:
+        piezometry = settings.piezometry.model_copy(update={"input": Path(file).resolve()})
+        settings = settings.model_copy(update={"piezometry": piezometry})
+    try:
+        dataset = import_piezometry(settings, REPO_ROOT, datetime.now(UTC))
+    except (PiezometryReadError, ValueError) as exc:
+        print(f"FAILED: {exc}")
+        return EXIT_FAILED_CHECK
+    source = dataset.source
+    print(
+        f"{len(dataset.piezometers)} piezometers kept of {dataset.piezometers_read} "
+        f"({dataset.left_out} left out), from {dataset.levels_read} levels "
+        f"{source.levels_from} to {source.levels_to}"
+    )
+    print(f"Written to {settings.piezometry.output_path(REPO_ROOT)}")
+    return 0
 
 
 def _catalogue_table(settings: Settings) -> str:

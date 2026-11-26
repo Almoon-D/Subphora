@@ -477,6 +477,24 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
+  - id: miteco-piezometry-db
+    name: National piezometry database (Access file, hand download)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: download
+    coverage: [ES]
+    # The database holds the 16 continental districts and the Balearics, not the Canaries.
+    coverage_excludes: [ES-CN]
+    base_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/descargas/agua/red-seguimiento-estado-cuantitativo.html
+    licence: "Not stated on the download page; MITECO's data are reused with the source cited (VERIFY-LIVE(basin-terms))"
+    attribution: "© Ministerio para la Transición Ecológica y el Reto Demográfico, Red de seguimiento del estado cuantitativo"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/descargas/agua/red-seguimiento-estado-cuantitativo.html
+    knowledge: docs/knowledge/water-authorities.md
+    politeness: {max_concurrent: 1, min_interval_s: 2.0, cache_lifetime_s: 604800}
+    sample:
+      description: the download page that links the database (its form is human-only; the file is never fetched)
+      expect_content_type: text/html
+      expect_text: "basedatospiezometria"
+
   - id: miteco-public-water-domain
     name: Public water domain, mapped estimate (WMS)
     publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)

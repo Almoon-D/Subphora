@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Drilling cost (MASTER_PLAN §4.3, cost): the metres drilled (the depth range plus
+# `below_water_table_m`) times the cost per metre, plus fixed costs. Amounts are decimal
+# strings in euros. Replace them with local quotes in config/owner.yaml (drilling: ...).
+currency: EUR
+per_metre: {low: "38", high: "120"}
+fixed: {low: "350", high: "3000"}
+# A well is drilled below the water table to hold the pump and the seasonal drawdown.
+below_water_table_m: 20
+source: >-
+  Per metre: 38 EUR/m for a cased borehole of about 180 mm (administrativando.es, March
+  2023) up to 120 EUR/m, an expert allowance for hard rock and wider casing (cronoshare.com,
+  January 2026, quotes 60-500 EUR/m without method or diameter). Fixed: 350 EUR to install
+  the pump (habitissimo.es, September 2026) up to 3,000 EUR adding mobilisation, project
+  and permits, which no source priced (expert default). Not a quote: VERIFY-LIVE(drilling-prices).
+priced_on: 2026-11-26

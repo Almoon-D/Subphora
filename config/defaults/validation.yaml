@@ -1,0 +1,51 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Validation and calibration of the water-potential model against known wells (MASTER_PLAN
+# §4.3, decision 0030). Each build region validates each hydrogeological domain (a
+# groundwater body, or the land outside every body) it holds.
+
+# The labelled wells: IGME water points (national.yaml water_points) of a well kind. A
+# well with a recorded yield above productive_min_l_s is productive; one of a dry kind is
+# dry. A yield of 0 means "not recorded", not dry (docs/knowledge/igme.md), so such a
+# well is no label at all.
+labels:
+  yield_field: Caudal_Referencia_L_s
+  productive_min_l_s: 0.0
+  # Kinds (the start of Naturaleza, ignoring case) that are wells or boreholes.
+  well_kinds: [Pozo, Sondeo]
+  # Kinds that record a dry well. None is known in any public source yet:
+  # VERIFY-LIVE(dry-wells). Without one a domain is validated against a sample of its
+  # cells (presence-background) and never calibrated.
+  dry_kinds: []
+  source: >-
+    IGME water-point inventory: wells and boreholes with a recorded yield (productive);
+    no public source records dry wells yet.
+  # The criteria whose input is the labels themselves, left out of the index validated
+  # so that it is not graded on its own answer.
+  excluded_criteria: [water_points]
+
+# Spatial blocks: square blocks of this side, so that neighbouring wells (which share
+# their geology) are resampled and held out together.
+block_m: 10000
+
+# Presence-background: at most this many scored cells of a domain, drawn at random with
+# the seed below (the same build draws the same cells).
+background_per_domain: 2000
+seed: 20261126
+
+# The AUC's interval: a percentile bootstrap over spatial blocks.
+bootstrap:
+  samples: 400
+  level: 0.95
+
+# A domain is measured only with at least this many productive wells in at least this
+# many blocks (and as many dry wells, when dry wells are the other class).
+minimum:
+  productive: 30
+  dry: 30
+  blocks: 5
+
+# A calibration (index to probability) needs this many wells of each class, and is
+# checked by cross-validation over this many folds of spatial blocks.
+calibration:
+  min_per_class: 100
+  folds: 5

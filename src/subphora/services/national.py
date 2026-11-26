@@ -235,7 +235,7 @@ class NationalBuilder:
                 datasets.water_points.path,
                 window.bounds,
                 window.crs,
-                [datasets.water_points.kind_field],
+                [datasets.water_points.kind_field, self._settings.validation.labels.yield_field],
                 datasets.water_points.page_size,
             ),
         )
@@ -249,6 +249,7 @@ class NationalBuilder:
             built_at=self._clock(),
             national=national,
             model=self._settings.model,
+            validation=self._settings.validation,
             metres_per_scale_unit=self._settings.regional.rule.metres_per_scale_unit,
             sources={
                 "permeability": self._source("permeability", permeability[1]),

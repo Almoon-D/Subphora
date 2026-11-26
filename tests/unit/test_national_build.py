@@ -16,6 +16,7 @@ from subphora import __version__
 from subphora.api import create_app
 from subphora.config import Settings
 from subphora.domain.potential import Variable
+from subphora.domain.validation import NO_BODY, ValidationState
 from subphora.services.national import (
     BuildReport,
     NationalBuilder,
@@ -104,9 +105,18 @@ async def test_the_build_writes_grids_tiles_and_the_map(settings: Settings, tmp_
     published = read_map(root)
     assert published is not None
     assert [r.region_id for r in published.regions] == [manifest.region_id]
+    # The synthetic water points record no yield: every domain lacks labelled wells, says
+    # so, and has no skill to draw.
+    assert {v.domain: v.state for v in manifest.validation} == {
+        "ES030MSBT000": ValidationState.NOT_ENOUGH_LABELS,
+        NO_BODY: ValidationState.NOT_ENOUGH_LABELS,
+    }
+    assert (built.validated, built.chance, built.unmeasured) == (0, 0, 2)
+    assert np.isnan(bands["skill"]).all()
     for layer in settings.national.tiles.layers:
-        assert report.tiles[layer.id] > 0
-        assert tiles_path(root, layer.id).exists()
+        if layer.variable is not Variable.SKILL:
+            assert report.tiles[layer.id] > 0
+            assert tiles_path(root, layer.id).exists()
     # Paged: the permeability layer was asked for its second page.
     offsets = [
         r.url.params["resultOffset"] for r in spain.requests if "Permeabilidad" in r.url.path
@@ -158,12 +168,11 @@ async def test_a_service_error_inside_a_page_is_asked_again(
     refused = {"count": 0}
 
     class Flaky(FakeSpain):
-        @staticmethod
-        def _water_points(request: httpx.Request) -> httpx.Response:
+        def _water_points(self, request: httpx.Request) -> httpx.Response:
             if refused["count"] == 0:
                 refused["count"] += 1
                 return httpx.Response(200, json={"error": {"message": "Failed to execute query."}})
-            return FakeSpain._water_points(request)
+            return super()._water_points(request)
 
     report = await build(settings, tmp_path, Flaky())
     assert report.failed == []
@@ -174,8 +183,7 @@ async def test_a_service_error_that_persists_fails_the_region(
     settings: Settings, tmp_path: Path
 ) -> None:
     class Refusing(FakeSpain):
-        @staticmethod
-        def _water_points(_request: httpx.Request) -> httpx.Response:
+        def _water_points(self, _request: httpx.Request) -> httpx.Response:
             return httpx.Response(200, json={"error": {"message": "Failed to execute query."}})
 
     report = await build(settings, tmp_path, Refusing())

@@ -12,6 +12,7 @@ import yaml
 from pydantic import model_validator
 
 from subphora.config.base import Section
+from subphora.config.depth import DrillingSettings, PiezometrySettings
 from subphora.config.map import Legend, MapSettings
 from subphora.config.model import BreaksLookup, ModelSettings
 from subphora.config.national import NationalSettings
@@ -20,6 +21,7 @@ from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.search import SearchSettings
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
+from subphora.config.validation import ValidationSettings
 from subphora.domain.potential import Variable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -30,16 +32,19 @@ __all__ = [
     "REPO_ROOT",
     "ApiSettings",
     "CoreSettings",
+    "DrillingSettings",
     "MapSettings",
     "ModelSettings",
     "NationalSettings",
     "ParcelSettings",
+    "PiezometrySettings",
     "RegionalSettings",
     "SearchSettings",
     "Section",
     "Settings",
     "SourcesSettings",
     "StoreSettings",
+    "ValidationSettings",
     "load_settings",
 ]
 
@@ -61,6 +66,20 @@ class Settings(Section):
     model: ModelSettings
     national: NationalSettings
     parcel: ParcelSettings
+    validation: ValidationSettings
+    piezometry: PiezometrySettings
+    drilling: DrillingSettings
+
+    @model_validator(mode="after")
+    def _validation_and_depth_consistent(self) -> Self:
+        """The criteria left out of the validated index exist, and the piezometric levels
+        are a catalogued download."""
+        ids = {c.id for c in self.model.criteria}
+        unknown = sorted(set(self.validation.labels.excluded_criteria) - ids)
+        if unknown:
+            raise ValueError(f"validation.labels.excluded_criteria: {unknown} are not criteria")
+        self._catalogued("piezometry.service", self.piezometry.service, "download")
+        return self
 
     @model_validator(mode="after")
     def _map_layers_are_drawable(self) -> Self:

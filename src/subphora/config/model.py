@@ -99,6 +99,7 @@ class ConfidenceSettings(Section):
     evidence_full_within_m: float = Field(ge=0)
     evidence_none_beyond_m: PositiveFloat
     skill_not_measured: float = _UNIT
+    skill_full_at_auc: float = Field(gt=0.5, le=1)
     ageing: dict[str, Ageing] = Field(min_length=1)
 
     @model_validator(mode="after")

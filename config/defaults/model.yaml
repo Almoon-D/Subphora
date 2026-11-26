@@ -1,8 +1,8 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
 # The water-potential model (MASTER_PLAN §4.3, decisions 0006 and 0027): the criteria, their
 # weights and suitability lookups, and how confidence is computed. Every weight and class
-# names its source. Until session 07 calibrates it against wells, the score is a relative
-# potential index, never a probability.
+# names its source. The score is a relative potential index; only in a hydrogeological
+# domain calibrated against wells (validation.yaml) does an estimate add a probability.
 #
 # Per criterion: weight (the criteria's weights add up to 1; at a cell they are
 # renormalised over the criteria whose input is present there); variable, the grid an
@@ -158,7 +158,8 @@ criteria:
   - id: piezometric_depth
     weight: 0.10
     weight_source: Expert default.
-    # Water-table depth comes with the piezometric levels of session 07.
+    # No grid yet: the depth to water is estimated per candidate spot (piezometry.yaml),
+    # not as a criterion over the map (a follow-up in docs/ROADMAP.md).
     variable: null
 
 # Confidence (0-1): a weighted sum of five components (MASTER_PLAN §4.3), labelled low,
@@ -171,9 +172,9 @@ confidence:
     resolution: 0.20
     # How recent each present input is, by its ageing profile.
     age: 0.15
-    # How near the nearest validation evidence is (the IGME water points until session 07).
+    # How near the nearest validation evidence is (the IGME water points).
     evidence: 0.15
-    # The model's measured skill in the hydrogeological domain (session 07).
+    # The model's measured skill in the cell's hydrogeological domain (validation.yaml).
     skill: 0.20
   # value >= medium is medium, >= high is high, below medium is low.
   thresholds: {medium: 0.4, high: 0.7}
@@ -183,8 +184,14 @@ confidence:
   # Evidence counts fully within this distance and not at all beyond the second.
   evidence_full_within_m: 1000
   evidence_none_beyond_m: 10000
-  # Skill is not measured until session 07: it contributes nothing.
+  # Where the domain is not measured (too few wells, or no national map): it contributes
+  # nothing.
   skill_not_measured: 0.0
+  # The skill component is 0 where the AUC interval's lower bound is at or below 0.5 (no
+  # better than chance), rising linearly to 1 where it reaches this value: 0.8 is where
+  # discrimination is "excellent" (Hosmer and Lemeshow 2000, Applied Logistic Regression,
+  # 2nd ed., p. 162).
+  skill_full_at_auc: 0.8
   # How an input's age (build year minus edition year) lowers its age component: 1 up to
   # full_years, falling linearly to 0 at zero_years.
   ageing:

@@ -6,8 +6,11 @@ httpx.MockTransport, answering any window with made-up but well-formed data.
   valley running north-south whose floor falls to the south.
 - SoilGrids WCS: 25 % clay everywhere.
 - IGME permeability: one polygon over the whole window, class ALTA, in two pages.
-- IGME water points: two springs and a surface stream at the window's centre.
-- MITECO groundwater bodies: one body over the window's west half, status Malo.
+- IGME water points: two springs and a surface stream at the window's centre, none with a
+  recorded yield; with ``wells``, also a productive borehole every ``wells`` metres along
+  the valley floor and a borehole without a recorded yield beside each.
+- MITECO groundwater bodies: one body over the window's west half (all of it with
+  ``whole_body``), status Malo.
 - IGN administrative units: a small square around a point in Madrid.
 - IGME MAGNA faults: a fault running north-south through the window's centre and a
   contact (not a fault) running east-west.
@@ -25,6 +28,7 @@ from urllib.parse import parse_qs
 import httpx
 import numpy as np
 import rasterio
+from pyproj import Transformer
 from rasterio.transform import from_origin
 
 from subphora.config import Settings
@@ -32,9 +36,17 @@ from tests.support import fast_settings
 
 type Handler = Callable[[httpx.Request], httpx.Response]
 
+# The valley floor of the synthetic terrain: a north-south line at this easting.
+_VALLEY_CRS = "EPSG:25830"
+_VALLEY_X = 440_000.0
 # A small area in Madrid (degrees), the boundary of the synthetic province.
 MADRID = (-3.71, 40.41, -3.69, 40.43)
 _NUMBER = r"(-?\d+(?:\.\d+)?)"
+
+
+def terrain_elevation(xs: Any, ys: Any) -> Any:
+    """The synthetic terrain (EPSG:25830): a valley at ``_VALLEY_X`` falling to the south."""
+    return 600 + np.abs(xs - _VALLEY_X) * 0.05 + (ys - 4_470_000) * 0.01
 
 
 def small_settings() -> Settings:
@@ -118,9 +130,13 @@ class FakeSpain:
         *,
         bedding: bool = True,
         timeout: frozenset[str] = frozenset(),
+        wells: float | None = None,
+        whole_body: bool = False,
     ) -> None:
         self.fail = fail or {}
         self.bedding = bedding
+        self.wells = wells
+        self.whole_body = whole_body
         # Hosts whose every request times out.
         self.timeout = timeout
         self.requests: list[httpx.Request] = []
@@ -162,12 +178,7 @@ class FakeSpain:
         coverage = request.url.params["CoverageId"]
         crs = f"EPSG:{coverage.removeprefix('Elevacion').split('_')[0]}"
         cell = float(coverage.split("_")[1])
-        centre = 440_000.0
-
-        def valley(xs: np.ndarray, ys: np.ndarray) -> np.ndarray:
-            return 600 + np.abs(xs - centre) * 0.05 + (ys - 4_470_000) * 0.01
-
-        content = geotiff(box, crs, cell, valley, "int16")
+        content = geotiff(box, crs, cell, terrain_elevation, "int16")
         return httpx.Response(200, content=content, headers={"content-type": "image/tiff"})
 
     @staticmethod
@@ -184,15 +195,29 @@ class FakeSpain:
         )
         return _collection([blank])
 
-    @staticmethod
-    def _water_points(request: httpx.Request) -> httpx.Response:
+    def _water_points(self, request: httpx.Request) -> httpx.Response:
         west, south, east, north = _box(request, "geometry")
         x, y = (west + east) / 2, (south + north) / 2
 
-        def point(dx: float, kind: str) -> dict[str, Any]:
-            return _feature({"type": "Point", "coordinates": [x + dx, y]}, Naturaleza=kind)
+        def point(px: float, py: float, kind: str, **extra: Any) -> dict[str, Any]:
+            return _feature({"type": "Point", "coordinates": [px, py]}, Naturaleza=kind, **extra)
 
-        points = [point(0, "Manantial"), point(300, "Sondeo"), point(-3000, "Cauce superficial")]
+        points = [
+            point(x, y, "Manantial"),
+            point(x + 300, y, "Sondeo"),
+            point(x - 3000, y, "Cauce superficial"),
+        ]
+        if self.wells:
+            crs = f"EPSG:{request.url.params['outSR']}"
+            to_grid = Transformer.from_crs(_VALLEY_CRS, crs, always_xy=True)
+            to_valley = Transformer.from_crs(crs, _VALLEY_CRS, always_xy=True)
+            _, low = to_valley.transform(x, south)
+            _, high = to_valley.transform(x, north)
+            for northing in np.arange(low, high, self.wells):
+                px, py = to_grid.transform(_VALLEY_X, float(northing))
+                points.append(point(px, py, "Sondeo", Caudal_Referencia_L_s=2.5))
+                qx, qy = to_grid.transform(_VALLEY_X + 2500, float(northing))
+                points.append(point(qx, qy, "Pozo", Caudal_Referencia_L_s=0.0))
         return _collection(points, exceededTransferLimit=False)
 
     @staticmethod
@@ -222,12 +247,11 @@ class FakeSpain:
             [measurement(0, "Estratificación", 20), measurement(30, "Primera esquistosidad", 80)]
         )
 
-    @staticmethod
-    def _bodies(request: httpx.Request) -> httpx.Response:
+    def _bodies(self, request: httpx.Request) -> httpx.Response:
         raw = request.url.params["bbox"].split(",")
         west, south, east, north = (float(v) for v in raw[:4])
         body = _feature(
-            _square(west, south, (west + east) / 2, north),
+            _square(west, south, east if self.whole_body else (west + east) / 2, north),
             cod_masa="ES030MSBT000",
             nom_masa="Synthetic body",
             est_cu_desc="Malo",

@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Piezometric levels and the water table (MASTER_PLAN §4.3, depth; decision 0031).
+#
+# The national piezometry database is a hand download (its form is human-only, never
+# automated: docs/knowledge/water-authorities.md). `subphora piezometry import` reads it
+# with mdbtools' mdb-export and writes one summary per piezometer to `output`.
+
+service: miteco-piezometry-db
+# Relative to the repository root unless absolute (data/ is git-ignored).
+input: data/piezometry/basedatospiezometria.zip
+output: data/piezometry/piezometers.json
+mdb_export: mdb-export
+tables: {piezometers: 01_Piezometros, levels: 02_Niveles}
+# The columns read. The coordinates are in the UTM zone of `zone` (30 or 31), despite
+# their names; `body` is the groundwater body the piezometer monitors, compared with the
+# bodies layer's codes: VERIFY-LIVE(piezometer-body-codes), the synthetic tests assume they match.
+columns:
+  id: IDPIEZ
+  code: PIEZCOD
+  name: PIEZNOM
+  x: CX89_HUSO30
+  y: CY89_HUSO30
+  zone: PIEZHUSO
+  ground: CZ
+  body: MAS_CONTROL
+  body_label: NOM MAS CONTROL
+  level_id: IDPIEZ
+  date: FechaP
+  level: Cota_NP_msnm
+zones: {"30": "EPSG:25830", "31": "EPSG:25831"}
+
+# A piezometer's level: the median of its measurements in the `recent_years` before its
+# last one, with the quantiles below as its seasonal range. It is left out with fewer than
+# `min_measurements` there, or when its last one is older than `max_age_years`.
+summary:
+  recent_years: 5
+  min_measurements: 4
+  max_age_years: 15
+  low_quantile: 0.1
+  high_quantile: 0.9
+
+# The water table at a spot: inverse-distance weighting (this power) of the nearest
+# `max_piezometers` piezometers of the spot's groundwater body within `max_distance_m`;
+# "unknown" beyond. Its range is the piezometers' weighted seasonal range widened by
+# `growth_m_per_km` for each kilometre to the nearest one. Expert defaults.
+water_table:
+  max_distance_m: 5000
+  max_piezometers: 6
+  power: 2
+  growth_m_per_km: 2.0
+
+# Permeability-map labels (DCO) that start with these are carbonate rock: possible karst,
+# where a water table between piezometers is unreliable (flagged, not hidden).
+karst_labels: [CARBONATADAS]

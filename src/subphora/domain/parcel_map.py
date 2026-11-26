@@ -2,8 +2,10 @@
 """The detailed potential map of one area of interest (MASTER_PLAN §4.3, parcel scale).
 
 A job computes it on demand; its result is an ``AreaAnalysis``: where the grid is, the
-area's summary (mean index and confidence, with what forms them), and the ranked candidate
-spots, each a full estimate with its legal status (hard rules 1 and 2).
+area's summary (mean index and confidence, with what forms them, and the validation of
+each hydrogeological domain it touches), and the ranked candidate spots, each a full
+estimate with its legal status (hard rules 1 and 2), its depth to water and drilling cost
+or an explicit "unknown".
 """
 
 from enum import StrEnum
@@ -12,6 +14,7 @@ from typing import Literal, Self
 from pydantic import AwareDatetime, Field, model_validator
 
 from subphora.domain import DomainModel
+from subphora.domain.depth import DepthEstimate, DrillingCost
 from subphora.domain.legal import LegalStatus
 from subphora.domain.parcels import LocalPoint
 from subphora.domain.potential import (
@@ -21,6 +24,7 @@ from subphora.domain.potential import (
     PotentialEstimate,
     Variable,
 )
+from subphora.domain.validation import DomainValidation
 
 _TOLERANCE = 1e-4
 _UNIT = Field(ge=0, le=1)
@@ -36,13 +40,16 @@ class Candidate(DomainModel):
     local: LocalPoint
     estimate: PotentialEstimate
     legal: LegalStatus
-    # The depth to water comes with session 07.
-    depth: Literal["not_estimated"] = "not_estimated"
+    depth: DepthEstimate
+    # The cost of drilling to that depth; exactly when the depth is estimated.
+    cost: DrillingCost | None
 
     @model_validator(mode="after")
     def _scored(self) -> Self:
         if self.estimate.score is None:
             raise ValueError("a candidate has a score")
+        if (self.cost is not None) != (self.depth.state == "estimated"):
+            raise ValueError("a candidate has a cost exactly when its depth is estimated")
         return self
 
 
@@ -80,6 +87,8 @@ class AreaSummary(DomainModel):
     contributions: tuple[CriterionSummary, ...]
     # Criteria whose input is present at no cell of the area.
     missing: tuple[MissingInput, ...]
+    # The validation of each hydrogeological domain with a cell in the area.
+    validation: tuple[DomainValidation, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -93,6 +102,9 @@ class AreaSummary(DomainModel):
         names = [c.criterion for c in self.contributions] + [m.criterion for m in self.missing]
         if not names or len(set(names)) != len(names):
             raise ValueError("each criterion is present or missing, once")
+        domains = [v.domain for v in self.validation]
+        if len(set(domains)) != len(domains):
+            raise ValueError("each domain is validated once")
         if self.mean_index is not None:
             if abs(sum(c.mean_share for c in self.contributions) - 1) > _TOLERANCE:
                 raise ValueError("the mean shares must add up to 1")

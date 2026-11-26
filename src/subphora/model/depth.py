@@ -1,0 +1,142 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+"""The depth to water at a spot and the cost of drilling to it (MASTER_PLAN §4.3).
+
+- The water table is interpolated only from piezometers of the spot's own groundwater
+  body: inverse-distance weighting of the nearest ones within the maximum distance. A
+  piezometer of another body is never used, however near.
+- Its range is the piezometers' weighted seasonal half-range, widened with the distance to
+  the nearest one; past the maximum distance the depth is "unknown".
+- Depth = ground elevation (the terrain model) - water table, never below 0; the range
+  follows from the water table's. Carbonate rock (possible karst) is flagged.
+- Cost = metres drilled (depth range + the drilling below the water table) x cost per
+  metre + fixed costs, in ``Decimal`` euros rounded to the euro.
+"""
+
+import math
+from collections.abc import Sequence
+from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
+
+from subphora.config.depth import DrillingSettings, WaterTableSettings
+from subphora.domain.depth import (
+    DepthEstimate,
+    DepthUnknown,
+    DrillingCost,
+    LevelsSource,
+    WaterTable,
+)
+
+# Nearer than this, a piezometer stands at the spot: its level is taken alone.
+_AT_SPOT_M = 1.0
+_EURO = Decimal(1)
+_DECIMETRE = Decimal("0.1")
+
+
+@dataclass(frozen=True, slots=True)
+class PiezometerPoint:
+    """A piezometer in the grid's CRS, with its level and seasonal range (m a.s.l.)."""
+
+    x: float
+    y: float
+    body: str
+    level_m: float
+    low_m: float
+    high_m: float
+
+
+def water_table(
+    x: float,
+    y: float,
+    body: str,
+    body_label: str,
+    piezometers: Sequence[PiezometerPoint],
+    settings: WaterTableSettings,
+) -> WaterTable | None:
+    """The water table at (x, y) from ``body``'s piezometers; None when none is within the
+    maximum distance."""
+    near = sorted(
+        (math.hypot(p.x - x, p.y - y), p)
+        for p in piezometers
+        if p.body == body and math.hypot(p.x - x, p.y - y) <= settings.max_distance_m
+    )[: settings.max_piezometers]
+    if not near:
+        return None
+    nearest = near[0][0]
+    if nearest < _AT_SPOT_M:
+        near = near[:1]
+    weights = [1.0 if d < _AT_SPOT_M else 1 / d**settings.power for d, _ in near]
+    total = sum(weights)
+    level = sum(w * p.level_m for w, (_, p) in zip(weights, near, strict=True)) / total
+    spread = (
+        sum(w * (p.high_m - p.low_m) / 2 for w, (_, p) in zip(weights, near, strict=True)) / total
+    )
+    half = spread + settings.growth_m_per_km * nearest / 1000
+    return WaterTable(
+        elevation_m=level,
+        low_m=level - half,
+        high_m=level + half,
+        body=body,
+        body_label=body_label,
+        piezometers=len(near),
+        nearest_m=nearest,
+    )
+
+
+def depth_at(
+    x: float,
+    y: float,
+    ground_m: float,
+    body: tuple[str, str] | None,
+    piezometers: Sequence[PiezometerPoint],
+    settings: WaterTableSettings,
+    karst: bool,
+    source: LevelsSource | None,
+) -> DepthEstimate:
+    """The depth to water at a spot; ``body`` is its groundwater body (code, label) or
+    None outside every body; ``source`` is None when no levels were imported."""
+
+    def unknown(reason: DepthUnknown) -> DepthEstimate:
+        return DepthEstimate(state="unknown", reason=reason, karst=karst)
+
+    if source is None:
+        return unknown(DepthUnknown.NOT_IMPORTED)
+    if body is None:
+        return unknown(DepthUnknown.OUTSIDE_BODIES)
+    if math.isnan(ground_m):
+        return unknown(DepthUnknown.NO_GROUND_ELEVATION)
+    table = water_table(x, y, body[0], body[1], piezometers, settings)
+    if table is None:
+        return unknown(DepthUnknown.NO_PIEZOMETER_NEARBY)
+    return DepthEstimate(
+        state="estimated",
+        ground_m=ground_m,
+        water_table=table,
+        depth_m=max(0.0, ground_m - table.elevation_m),
+        low_m=max(0.0, ground_m - table.high_m),
+        high_m=max(0.0, ground_m - table.low_m),
+        karst=karst,
+        source=source,
+    )
+
+
+def drilling_cost(depth: DepthEstimate, settings: DrillingSettings) -> DrillingCost | None:
+    """The cost range of drilling to an estimated depth; None for an unknown one."""
+    if depth.state != "estimated" or depth.low_m is None or depth.high_m is None:
+        return None
+    below = Decimal(str(settings.below_water_table_m))
+    drilled_low = (Decimal(str(depth.low_m)) + below).quantize(_DECIMETRE, ROUND_HALF_UP)
+    drilled_high = (Decimal(str(depth.high_m)) + below).quantize(_DECIMETRE, ROUND_HALF_UP)
+    per_metre, fixed = settings.per_metre, settings.fixed
+    return DrillingCost(
+        currency=settings.currency,
+        low=(drilled_low * per_metre.low + fixed.low).quantize(_EURO, ROUND_HALF_UP),
+        high=(drilled_high * per_metre.high + fixed.high).quantize(_EURO, ROUND_HALF_UP),
+        drilled_low_m=drilled_low,
+        drilled_high_m=drilled_high,
+        per_metre_low=per_metre.low,
+        per_metre_high=per_metre.high,
+        fixed_low=fixed.low,
+        fixed_high=fixed.high,
+        source=settings.source,
+        priced_on=settings.priced_on,
+    )

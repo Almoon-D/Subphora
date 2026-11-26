@@ -2,7 +2,9 @@
 """The explanation of one cell: the same arithmetic as the grids, as a domain estimate.
 
 The cell is evaluated as a one-cell grid by ``evaluate``, so the explanation can never
-disagree with the published index and confidence of the same build.
+disagree with the published index and confidence of the same build. Its skill comes from
+the validation of the cell's domain by ``skill_of``, the same function the grids use; a
+calibrated domain adds the probability at the cell's score.
 """
 
 import math
@@ -23,7 +25,9 @@ from subphora.domain.potential import (
     PotentialEstimate,
     Variable,
 )
+from subphora.domain.validation import MEASURED, DomainValidation
 from subphora.model.evaluate import ABSENT, Category, InputGrids, Quality, evaluate, label
+from subphora.model.validation import probability_of, skill_of
 
 
 def _value(
@@ -51,15 +55,24 @@ def explain_cell(
     sources: Mapping[str, InputSource],
     evidence_distance_m: float,
     distance_caps_m: Mapping[Variable, float],
+    validation: DomainValidation,
 ) -> PotentialEstimate:
     """``values`` are the cell's raw inputs (NaN where none; a variable left out has no
     input at this scale); ``quality`` and ``sources`` are per criterion whose variable is
-    among them; a distance at its cap in ``distance_caps_m`` is "at least" that far."""
+    among them; a distance at its cap in ``distance_caps_m`` is "at least" that far;
+    ``validation`` is that of the cell's domain."""
     grids = InputGrids(
         values={v: np.array([value], dtype=np.float64) for v, value in values.items()},
         categories=categories,
     )
-    result = evaluate(model, grids, quality, np.array([evidence_distance_m]))
+    skill = skill_of(validation, model.confidence)
+    result = evaluate(
+        model,
+        grids,
+        quality,
+        np.array([evidence_distance_m]),
+        np.array([math.nan if skill is None else skill]),
+    )
     present = [
         c
         for c in model.criteria
@@ -104,26 +117,33 @@ def explain_cell(
         if c.id not in present_ids
     )
     score = sum(c.contribution for c in contributions) if contributions else None
+    probability = None if score is None else probability_of(validation, score)
     return PotentialEstimate(
+        kind="index" if probability is None else "probability",
         score=score,
         confidence=confidence_of(
             {component: float(grid[0]) for component, grid in result.components.items()},
             model.confidence,
+            skill_measured=validation.state in MEASURED,
         ),
         contributions=tuple(contributions),
         missing=missing,
+        validation=validation,
+        probability=probability,
     )
 
 
-def confidence_of(values: Mapping[ComponentId, float], settings: ConfidenceSettings) -> Confidence:
-    """The confidence of its component values: their weighted sum and its label. The
-    model's skill is not measured until session 07."""
+def confidence_of(
+    values: Mapping[ComponentId, float], settings: ConfidenceSettings, *, skill_measured: bool
+) -> Confidence:
+    """The confidence of its component values: their weighted sum and its label; the
+    skill is measured only where the domain was validated."""
     components = tuple(
         ConfidenceComponent(
             id=component,
             weight=settings.weights[component],
             value=value,
-            measured=component is not ComponentId.SKILL,
+            measured=component is not ComponentId.SKILL or skill_measured,
         )
         for component, value in values.items()
     )

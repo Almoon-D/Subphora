@@ -10,6 +10,9 @@
   process (never in the event loop) and writes its result under ``jobs.output_dir``.
 - A failed job says why (an upstream service, or the computing); asking again retries it.
   A finished one is read from disk, so it survives a restart of the server.
+- The job reads the national map's validation of the domains near the area and the
+  imported piezometric levels; a new national build or a new import changes the area's id,
+  so its map is computed again.
 """
 
 import asyncio
@@ -34,6 +37,7 @@ from subphora.domain.parcel_map import (
     ParcelFailure,
     ParcelJob,
 )
+from subphora.domain.validation import MEASURED, DomainValidation
 from subphora.geo.grid import (
     Bounds,
     GridWindow,
@@ -50,11 +54,13 @@ from subphora.services.fetching import Fetched
 from subphora.services.inputs import Features, InputFailure, InputFetcher
 from subphora.services.national_map import estimate_at
 from subphora.services.parcel_compute import ParcelInputs, ParcelJobSpec, compute_parcel
+from subphora.services.piezometry import piezometer_points
 from subphora.sources import CatalogueClient
 from subphora.store import FileCache
 from subphora.store.file_cache import Clock, utc_now
-from subphora.store.national import read_manifest
+from subphora.store.national import map_path, read_manifest, read_manifests
 from subphora.store.parcels import image_path, read_analysis
+from subphora.store.piezometry import read_piezometry
 
 _log = logging.getLogger(__name__)
 
@@ -98,6 +104,10 @@ def _disc(x: float, y: float, radius: float) -> Geometry:
     return {"type": "Polygon", "coordinates": [ring]}
 
 
+def _rank(validation: DomainValidation) -> tuple[bool, int]:
+    return (validation.state in MEASURED, validation.productive)
+
+
 def _ring_area(ring: list[list[float]]) -> float:
     return abs(sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in pairwise(ring)) / 2)
 
@@ -116,6 +126,8 @@ class ParcelMapService:
         self._settings = settings
         self._parcel = settings.parcel
         self._root = settings.parcel.jobs.output_path(root)
+        self._national_root = settings.national.build.output_path(root)
+        self._levels_path = settings.piezometry.output_path(root)
         self._executor = executor
         self._clock = clock
         self._jobs: dict[str, _Job] = {}
@@ -126,6 +138,8 @@ class ParcelMapService:
                 settings.parcel.model_dump_json(),
                 settings.model.model_dump_json(),
                 settings.national.datasets.model_dump_json(),
+                settings.piezometry.model_dump_json(),
+                settings.drilling.model_dump_json(),
             )
         )
 
@@ -140,8 +154,18 @@ class ParcelMapService:
             task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
 
+    def _data_stamp(self) -> str:
+        """When the national map was rendered and the levels imported, as file times."""
+        stamps = []
+        for path in (map_path(self._national_root), self._levels_path):
+            try:
+                stamps.append(str(path.stat().st_mtime_ns))
+            except FileNotFoundError:
+                stamps.append("-")
+        return ",".join(stamps)
+
     def area_id(self, area: AreaOfInterest) -> str:
-        content = f"{self._fingerprint}|{area.geometry.model_dump_json()}"
+        content = f"{self._fingerprint}|{self._data_stamp()}|{area.geometry.model_dump_json()}"
         return hashlib.sha256(content.encode()).hexdigest()[:_ID_LENGTH]
 
     def plan(self, area: AreaOfInterest) -> AreaPlan:
@@ -321,6 +345,14 @@ class ParcelMapService:
         (permeability, bodies, points, faults, bedding), (terrain, soil) = await asyncio.gather(
             features, rasters
         )
+        validations = await asyncio.to_thread(self._validations, area_bounds, crs)
+        levels = await asyncio.to_thread(read_piezometry, self._levels_path)
+        reach = self._settings.piezometry.water_table.max_distance_m
+        piezometers = (
+            []
+            if levels is None
+            else await asyncio.to_thread(piezometer_points, levels, crs, area_bounds, reach)
+        )
         sources = {
             "permeability": inputs.source(
                 national.permeability.service, national.permeability.detail, permeability[1]
@@ -347,8 +379,13 @@ class ParcelMapService:
             parcel=parcel,
             national=self._settings.national,
             model=self._settings.model,
+            piezometry=self._settings.piezometry,
+            drilling=self._settings.drilling,
             metres_per_scale_unit=self._settings.regional.rule.metres_per_scale_unit,
             sources=sources,
+            validations=validations,
+            piezometers=piezometers,
+            levels=None if levels is None else levels.source,
             inputs=ParcelInputs(
                 permeability=permeability[0],
                 terrain=terrain[0],
@@ -359,6 +396,27 @@ class ParcelMapService:
                 bedding=bedding[0],
             ),
         )
+
+    def _validations(self, bounds: Bounds, crs: str) -> dict[str, DomainValidation]:
+        """Per domain, the national map's validation from the regions that overlap the
+        area: a measured one before an unmeasured one, then the most productive wells.
+        Blocks; an unreadable national map counts as none (its domains: not validated)."""
+        west, south, east, north = transform_bounds(bounds, crs, _LON_LAT)
+        try:
+            manifests = read_manifests(self._national_root)
+        except ValueError:
+            _log.warning("the national map cannot be read: its validation is not used")
+            return {}
+        best: dict[str, DomainValidation] = {}
+        for manifest in manifests:
+            m_west, m_south, m_east, m_north = manifest.bbox
+            if not (m_west < east and west < m_east and m_south < north and south < m_north):
+                continue
+            for validation in manifest.validation:
+                held = best.get(validation.domain)
+                if held is None or _rank(validation) > _rank(held):
+                    best[validation.domain] = validation
+        return best
 
     async def _done(self, area_id: str) -> AreaAnalysis:
         job = await self.job(area_id)

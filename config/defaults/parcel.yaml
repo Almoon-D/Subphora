@@ -101,7 +101,13 @@ candidates:
 # The map layers published at the grid's resolution: national.yaml tile layers, coloured
 # and explained by the same legends. Each is one image over the grid, at most
 # image_max_px on its longer side.
-layers: [potential-index, potential-confidence, terrain-slope, terrain-drainage, terrain-wetness]
+layers:
+  - potential-index
+  - potential-confidence
+  - model-skill
+  - terrain-slope
+  - terrain-drainage
+  - terrain-wetness
 image_max_px: 2048
 
 # Jobs: how many areas compute at once (each in its own worker process), how soon the page

@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+"""The imported piezometric levels: one summary per piezometer of the national database
+(MASTER_PLAN §4.3, depth), written by ``subphora piezometry import`` under ``data/``.
+
+A piezometer's level is the median of its measurements over the recent window the import
+settings name, with the 10th and 90th percentiles as its seasonal range. A piezometer
+without enough recent measurements is left out, never filled in.
+"""
+
+from datetime import date
+from typing import Self
+
+from pydantic import Field, model_validator
+
+from subphora.domain import DomainModel
+from subphora.domain.depth import LevelsSource
+
+
+class Piezometer(DomainModel):
+    id: int
+    code: str = Field(min_length=1)
+    name: str
+    # The groundwater body it monitors (its EU code), and that body's name.
+    body: str = Field(min_length=1)
+    body_label: str
+    longitude: float = Field(ge=-180, le=180)
+    latitude: float = Field(ge=-90, le=90)
+    ground_m: float | None
+    # Water-table elevation in metres above sea level.
+    level_m: float
+    level_low_m: float
+    level_high_m: float
+    measurements: int = Field(ge=1)
+    first: date
+    last: date
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if not self.level_low_m <= self.level_m <= self.level_high_m:
+            raise ValueError("a piezometer's level lies inside its range")
+        if self.last < self.first:
+            raise ValueError("a piezometer's last measurement follows its first")
+        return self
+
+
+class PiezometryDataset(DomainModel):
+    source: LevelsSource
+    # sha256 of the file imported, to tell one download from another.
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    # Rows read, and piezometers left out for too few recent measurements or no body.
+    piezometers_read: int = Field(ge=0)
+    levels_read: int = Field(ge=0)
+    left_out: int = Field(ge=0)
+    piezometers: tuple[Piezometer, ...]

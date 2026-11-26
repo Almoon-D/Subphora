@@ -560,7 +560,17 @@ export interface DepthEstimate {
   high_m: number | null;
   /** Carbonate rock (possible karst): the depth is unreliable. */
   karst: boolean;
-  source: { attribution: string; file_name: string; imported_at: string; levels_from: string; levels_to: string } | null;
+  /** The sources of the piezometers' levels used, national first; empty when unknown. */
+  sources: LevelsSource[];
+}
+
+export interface LevelsSource {
+  service_id: string;
+  attribution: string;
+  file_name: string;
+  imported_at: string;
+  levels_from: string;
+  levels_to: string;
 }
 
 /** The drilling cost range in euros; amounts are decimal strings. */

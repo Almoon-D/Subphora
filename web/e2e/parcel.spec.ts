@@ -97,6 +97,7 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   await expect(candidates.first().locator(".depth")).toHaveAttribute("data-depth", "estimated");
   await expect(candidates.first()).toContainText("Profundidad del agua: unos");
   await expect(candidates.first()).toContainText("posible karst");
+  await expect(candidates.first().locator('[data-levels-source="miteco-piezometry-db"]')).toContainText("Niveles del");
   await expect(candidates.first()).toContainText("Coste de perforación: entre");
   await expect(panel(page).locator('[data-validation="validated"]').first()).toContainText("AUC");
   await expect(page.locator(".candidate-marker")).toHaveCount(5);

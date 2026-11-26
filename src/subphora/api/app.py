@@ -24,6 +24,8 @@
   and ranked candidates) and its layers once done.
 - ``GET /api/parcel/{id}/explain?lon=&lat=``: the detailed map's estimate at a point.
 - ``GET /api/parcel/{id}/layers/{layer}``: a layer of the detailed map as one PNG.
+- ``POST /api/section`` (a line's two ends): the interpretive geological cross-section
+  under it, with the confidence of every cell and "unknown" below the evidence.
 """
 
 import logging
@@ -50,6 +52,7 @@ from subphora.domain.layers import LayerError, LayerFailure, LayerFeatureInfo
 from subphora.domain.parcel_map import JobState, ParcelError, ParcelExplanation, ParcelFailure
 from subphora.domain.parcels import Position
 from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
+from subphora.domain.section import CrossSection, SectionError, SectionFailure
 from subphora.geo import MAX_TILE_ZOOM
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
@@ -57,6 +60,7 @@ from subphora.services.layers import LayerService
 from subphora.services.national_map import NationalMapService
 from subphora.services.parcel import ParcelMapService
 from subphora.services.parcels import ParcelService
+from subphora.services.section import SectionService
 from subphora.sources import CatalogueClient
 from subphora.sources.client import Transport
 from subphora.store import FileCache
@@ -107,6 +111,15 @@ _PARCEL_STATUS = {
     ParcelFailure.UNKNOWN_LAYER: 404,
     ParcelFailure.UNREADABLE: 500,
 }
+_SECTION_STATUS = {
+    SectionFailure.INVALID_LINE: 400,
+    SectionFailure.TOO_SHORT: 422,
+    SectionFailure.TOO_LONG: 422,
+    SectionFailure.OUTSIDE_TERRITORY: 422,
+    SectionFailure.OUTSIDE_COVERAGE: 422,
+    SectionFailure.UPSTREAM_ERROR: 502,
+    SectionFailure.UPSTREAM_TIMEOUT: 504,
+}
 _AREA_ID = fastapi.Path(pattern=r"^[0-9a-f]{16}$")
 _PNG = "image/png"
 _ZOOM = Query(ge=0, le=MAX_TILE_ZOOM)
@@ -118,6 +131,13 @@ class DrawnPolygon(DomainModel):
 
     type: Literal["Polygon"]
     coordinates: tuple[tuple[Position, ...]] = Field(min_length=1, max_length=1)
+
+
+class DrawnLine(DomainModel):
+    """The body of ``POST /api/section``: a straight line's two ends, in degrees."""
+
+    start: Position
+    end: Position
 
 
 def create_app(
@@ -146,6 +166,7 @@ def create_app(
             app.state.layers = LayerService(client, settings, cache, app.state.areas)
             app.state.national = NationalMapService(settings, root)
             app.state.parcel = ParcelMapService(client, settings, cache, root, workers)
+            app.state.section = SectionService(client, settings, cache, root)
             stack.callback(app.state.national.close)
             stack.push_async_callback(app.state.parcel.close)
             yield
@@ -334,6 +355,27 @@ def create_app(
         return Response(
             content=content, media_type=_PNG, headers={"Cache-Control": "private, max-age=86400"}
         )
+
+    @app.exception_handler(SectionError)
+    async def section_failed(_request: Request, exc: SectionError) -> JSONResponse:
+        if exc.failure in (SectionFailure.UPSTREAM_ERROR, SectionFailure.UPSTREAM_TIMEOUT):
+            _log.warning("a section failed upstream: %s", exc.detail)
+        return JSONResponse(
+            status_code=_SECTION_STATUS[exc.failure],
+            content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    @app.post("/api/section")
+    async def section(request: Request) -> CrossSection:
+        try:
+            line = DrawnLine.model_validate_json(await request.body())
+        except ValidationError as exc:
+            raise SectionError(SectionFailure.INVALID_LINE, "the body is not a line") from exc
+        for lon, lat in (line.start, line.end):
+            if not (-180 <= lon <= 180 and -90 <= lat <= 90):
+                raise SectionError(SectionFailure.INVALID_LINE, "an end is not in degrees")
+        service: SectionService = request.app.state.section
+        return await service.section(line.start, line.end)
 
     @app.get("/api/areas/{area_id}")
     async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:

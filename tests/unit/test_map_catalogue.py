@@ -14,6 +14,7 @@ from subphora.config import load_settings
 from subphora.domain.aoi import AreaOfInterest, SearchAnswer
 from subphora.domain.parcel_map import ParcelExplanation
 from subphora.domain.potential import CellExplanation
+from subphora.domain.section import CrossSection
 from tests.national_support import small_settings
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -201,6 +202,9 @@ def test_the_browser_test_fixtures_match_the_api() -> None:
     assert national.layers == national_map(small_settings(), None).layers
     explained = CellExplanation.model_validate_json((fixtures / "explain-madrid.json").read_bytes())
     assert explained.estimate.kind == "index"
+    section = CrossSection.model_validate_json((fixtures / "section-daimiel.json").read_bytes())
+    assert section.label == "interpretation"
+    assert section.faults
     # The detailed maps of the Daimiel point and the Campos enclosure on the synthetic Spain.
     queued = ParcelAnswer.model_validate_json((fixtures / "parcel-queued.json").read_bytes())
     assert queued.job.state == "queued"

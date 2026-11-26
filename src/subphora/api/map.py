@@ -107,11 +107,19 @@ class SearchConfig(DomainModel):
     session_areas: int
 
 
+class SectionLimits(DomainModel):
+    """How long a drawn cross-section's line may be."""
+
+    min_length_m: float
+    max_length_m: float
+
+
 class MapConfig(DomainModel):
     initial_view: View
     area_padding_px: int
     point_zoom: float
     search: SearchConfig
+    section: SectionLimits
     base_maps: tuple[BaseMap, ...]
     cadastre: CadastreOverlay
     overlay_groups: tuple[str, ...]
@@ -239,6 +247,10 @@ def map_config(settings: Settings) -> MapConfig:
         search=SearchConfig(
             max_vertices=settings.search.drawn_polygon.max_vertices,
             session_areas=settings.search.session_areas,
+        ),
+        section=SectionLimits(
+            min_length_m=settings.section.min_length_m,
+            max_length_m=settings.section.max_length_m,
         ),
         base_maps=tuple(_base_map(settings, base) for base in settings.map.base_maps),
         cadastre=CadastreOverlay(

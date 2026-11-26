@@ -1,0 +1,73 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The interpretive geological cross-section along a line the user draws (MASTER_PLAN §4.4,
+# decision 0033): the ground profile from the detailed map's terrain (parcel.yaml), the
+# MAGNA 1:50,000 units the line crosses with their contacts projected downward by the
+# nearest bedding measurement (parcel.yaml `bedding`), the MAGNA faults it crosses
+# (parcel.yaml `faults`), the public boreholes near it (national.yaml `water_points`) and
+# the water table of session 07 (piezometry.yaml). Every part is an interpretation.
+
+# A line is straight, from its first point to its second, at least this long and at most
+# this long (a longer one is refused: the window it reads grows with its square).
+min_length_m: 100
+max_length_m: 5000
+# The ground profile is read every sample_m along the line: the terrain's cell (MDT05).
+sample_m: 5
+# The section's cells: a column every column_m along the line, a row every row_m below
+# the ground, down to depth_m below the ground at each column.
+column_m: 25
+row_m: 10
+depth_m: 300
+
+# MAGNA 1:50,000 lithology (REST layer 11): polygons, each with a free-text description of
+# its unit per sheet (docs/knowledge/igme.md). Read over the line's box plus window_m.
+lithology:
+  service: igme-rest
+  path: /Cartografia_Geologica/IGME_MAGNA_50/MapServer/11/query
+  label_field: DLO
+  page_size: 1000
+  window_m: 50
+  detail: {scale_denominator: 50000}
+  ageing: geology
+
+# The bedding measurements are parcel.yaml's `bedding` (the same types), with their dip
+# direction: degrees clockwise from north, the way the layer dips ("Dirección de
+# buzamiento" in its feature info, tests/fixtures/layers/igme_magna_dip.json).
+bedding_direction_field: DIRECCION
+# A contact is projected downward with the dip of the nearest bedding measurement within
+# this distance of it; farther from every one it is drawn vertical and marked "not
+# projected" (its dip is unknown, not assumed).
+dip_max_distance_m: 1500
+
+# Public boreholes: the national water-point inventory (national.yaml `water_points`, its
+# kinds), with a depth recorded, within max_distance_m of the line, the nearest
+# max_count. The inventory holds each borehole's depth and ground elevation but not its
+# lithological log (docs/knowledge/igme.md), so a borehole shows how deep it went, not
+# what it crossed.
+boreholes:
+  depth_field: PROF_m
+  ground_field: COTA_msnm
+  max_distance_m: 500
+  max_count: 20
+
+# The water table (session 07, piezometry.yaml `water_table`) every this many metres
+# along the line, or "unknown" with its reason.
+water_table_every_m: 50
+
+# The confidence of each cell: (map_only + (1 - map_only) x evidence) x depth, where
+# evidence falls linearly from 1 at a bedding measurement or a borehole to 0 at
+# evidence_range_m from the nearest, and depth falls linearly from 1 at the ground to 0
+# at depth_range_m below it. Within fault_zone_m of a fault crossed it is multiplied by
+# fault_factor (a fault's dip is not mapped, so where it runs at depth is not known).
+# Labels use model.yaml's confidence thresholds.
+confidence:
+  # The geological map alone, at the ground: below "medium" on purpose.
+  map_only: 0.3
+  evidence_range_m: 1500
+  depth_range_m: 300
+  fault_zone_m: 100
+  fault_factor: 0.5
+  # How deep the evidence reaches below the ground: the map alone, a bedding measurement
+  # within evidence_range_m, a borehole within it its own depth. Below the deepest reach
+  # at a column the section is "unknown", drawn as such.
+  map_reach_m: 30
+  dip_reach_m: 150

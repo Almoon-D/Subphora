@@ -18,7 +18,7 @@ from subphora.domain.aoi import AreaOfInterest
 from subphora.services import parcel as parcel_service
 from subphora.store.national import region_tif
 from tests.national_support import FakeSpain
-from tests.parcel_support import parcel_settings, point_area, polygon_area, serve
+from tests.parcel_support import parcel_settings, point_area, polygon_area, serve, write_levels
 
 # A square of about 300 m by 300 m in Madrid.
 SQUARE = [(-3.702, 40.418), (-3.6985, 40.418), (-3.6985, 40.4207), (-3.702, 40.4207)]
@@ -364,60 +364,6 @@ async def test_an_unreadable_result_is_reported(settings: Settings, tmp_path: Pa
 # ── Validation, depth and cost from the national map and the imported levels ──────────
 
 
-def _levels(settings: Settings, root: Path) -> None:
-    """Two piezometers of the synthetic body near Madrid, and one of another body nearer."""
-    from datetime import UTC, date, datetime
-
-    from subphora.domain.depth import LevelsSource
-    from subphora.domain.piezometry import Piezometer, PiezometryDataset
-    from subphora.store.piezometry import write_piezometry
-
-    def piezometer(key: int, lon: float, level: float, body: str) -> Piezometer:
-        return Piezometer(
-            id=str(key),
-            code=str(key),
-            name="Synthetic",
-            body=body,
-            body_label="Synthetic body",
-            longitude=lon,
-            latitude=40.42,
-            ground_m=None,
-            level_m=level,
-            level_low_m=level - 1,
-            level_high_m=level + 1,
-            measurements=12,
-            first=date(2024, 1, 1),
-            last=date(2024, 12, 1),
-            sources=("miteco-piezometry-db",),
-        )
-
-    write_piezometry(
-        settings.piezometry.output_path(root),
-        PiezometryDataset(
-            sources=(
-                LevelsSource(
-                    service_id="miteco-piezometry-db",
-                    publisher="MITECO",
-                    attribution="MITECO",
-                    file_name="basedatospiezometria.zip",
-                    imported_at=datetime(2026, 11, 26, tzinfo=UTC),
-                    levels_from=date(2024, 1, 1),
-                    levels_to=date(2024, 12, 1),
-                    sha256="0" * 64,
-                ),
-            ),
-            piezometers_read=3,
-            levels_read=36,
-            left_out=0,
-            piezometers=(
-                piezometer(1, -3.71, 560.0, "ES030MSBT000"),
-                piezometer(2, -3.69, 570.0, "ES030MSBT000"),
-                piezometer(3, -3.7001, 300.0, "ES099MSBT999"),
-            ),
-        ),
-    )
-
-
 async def test_a_map_takes_the_national_skill_and_gives_each_candidate_depth_and_cost(
     settings: Settings, tmp_path: Path
 ) -> None:
@@ -426,7 +372,7 @@ async def test_a_map_takes_the_national_skill_and_gives_each_candidate_depth_and
     national = await build(settings, tmp_path, FakeSpain(wells=700), "-3.80,40.30,-3.55,40.55")
     (region,) = national.built
     assert region.validated == 1
-    _levels(settings, tmp_path)
+    write_levels(settings, tmp_path)
     async with serve(settings, tmp_path, FakeSpain(whole_body=True)) as client:
         _, body = await analyse(client, point_area())
         analysis = body["job"]["analysis"]
@@ -464,6 +410,6 @@ async def test_a_new_import_or_build_makes_the_area_a_new_job(
 ) -> None:
     async with serve(settings, tmp_path) as client:
         before = (await start(client, point_area())).json()["job"]["id"]
-        _levels(settings, tmp_path)
+        write_levels(settings, tmp_path)
         after = (await start(client, point_area())).json()["job"]["id"]
     assert before != after

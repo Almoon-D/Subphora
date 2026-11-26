@@ -8,6 +8,8 @@ tests/national_support.py (no network): ``uv run python scripts/e2e_fixtures.py`
 - The detailed maps of the Daimiel point and the Campos enclosure on that synthetic Spain:
   ``parcel-queued.json``, ``parcel-daimiel.json``, ``explain-parcel-daimiel.json`` and
   ``parcel-campos.json``. Campos lies outside both boxes and far from every piezometer.
+- The cross-section under a 1.2 km line running east through the Daimiel point, across the
+  synthetic fault: ``section-daimiel.json``.
 
 The fixtures recorded from real services (areas, search, map) are not touched.
 """
@@ -42,6 +44,8 @@ BOXES = ("-3.80,40.30,-3.55,40.55", "-3.75,38.85,-3.50,39.30")
 # The water table under the synthetic terrain (tests/national_support.py's valley).
 DEPTH_BELOW_GROUND_M = 45.0
 WELL_SPACING_M = 700.0
+# A 1.2 km line running east through the Daimiel point (area-point-daimiel.json).
+SECTION_LINE = {"start": [-3.6184, 39.0675], "end": [-3.6046, 39.0675]}
 
 
 def _levels(root: Path, path: Path) -> None:
@@ -110,6 +114,12 @@ async def _settle(client: httpx.AsyncClient, area_id: str) -> dict[str, Any]:
         await asyncio.sleep(0.05)
 
 
+async def section(api: httpx.AsyncClient) -> None:
+    answer = await api.post("/api/section", json=SECTION_LINE)
+    answer.raise_for_status()
+    _write("section-daimiel.json", answer.json())
+
+
 async def main(root: Path) -> None:
     settings = small_settings()
     spain = FakeSpain(wells=WELL_SPACING_M)
@@ -146,6 +156,7 @@ async def main(root: Path) -> None:
                 _write("explain-parcel-daimiel.json", tapped.json())
                 started = (await api.post("/api/parcel", json=campos)).json()
                 _write("parcel-campos.json", await _settle(api, started["job"]["id"]))
+                await section(api)
 
 
 if __name__ == "__main__":

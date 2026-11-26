@@ -149,7 +149,7 @@ def _text(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
 
-def _lines(geometry: Any) -> list[list[tuple[float, float]]]:
+def line_vertices(geometry: Any) -> list[list[tuple[float, float]]]:
     """The vertex lists of a GeoJSON LineString or MultiLineString; none otherwise."""
     if not isinstance(geometry, dict):
         return []
@@ -172,7 +172,7 @@ def fault_lines(spec: ParcelJobSpec) -> list[list[tuple[float, float]]]:
     for feature in spec.inputs.faults:
         kind = _text((feature.get("properties") or {}).get(faults.type_field))
         if faults.is_fault(kind):
-            lines.extend(_lines(feature.get("geometry")))
+            lines.extend(line_vertices(feature.get("geometry")))
     return lines
 
 
@@ -190,7 +190,7 @@ def bedding_dips(spec: ParcelJobSpec) -> tuple[list[tuple[float, float]], list[f
             dip, int | float
         ):
             continue
-        for line in _lines(feature.get("geometry"))[:1]:
+        for line in line_vertices(feature.get("geometry"))[:1]:
             if line:
                 (x0, y0), (x1, y1) = line[0], line[-1]
                 positions.append(((x0 + x1) / 2, (y0 + y1) / 2))

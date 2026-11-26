@@ -19,6 +19,7 @@ from subphora.config.national import NationalSettings
 from subphora.config.parcel import ParcelSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
 from subphora.config.search import SearchSettings
+from subphora.config.section import SectionSettings
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
 from subphora.config.validation import ValidationSettings
@@ -41,6 +42,7 @@ __all__ = [
     "RegionalSettings",
     "SearchSettings",
     "Section",
+    "SectionSettings",
     "Settings",
     "SourcesSettings",
     "StoreSettings",
@@ -69,6 +71,7 @@ class Settings(Section):
     validation: ValidationSettings
     piezometry: PiezometrySettings
     drilling: DrillingSettings
+    section: SectionSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
@@ -85,6 +88,15 @@ class Settings(Section):
             services.append(basin.service)
         if len(set(services)) != len(services):
             raise ValueError("piezometry: each source of levels is imported once")
+        return self
+
+    @model_validator(mode="after")
+    def _section_inputs_consistent(self) -> Self:
+        """The section's lithology is a catalogued REST layer with a defined ageing profile."""
+        lithology = self.section.lithology
+        self._catalogued("section.lithology", lithology.service, "rest")
+        if lithology.ageing not in self.model.confidence.ageing:
+            raise ValueError(f"section.lithology: no ageing profile {lithology.ageing!r}")
         return self
 
     @model_validator(mode="after")

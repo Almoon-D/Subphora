@@ -22,6 +22,7 @@ explanation and the detailed maps come from the synthetic Spain and are regenera
 | `parcel-daimiel.json` | `GET /api/parcel/{id}` once that job is done, on the synthetic services with synthetic piezometric levels nearby: a validated domain, each candidate with its depth and cost |
 | `parcel-campos.json` | the same for `area-sigpac-campos.json`, outside the national build and far from every piezometer: not validated, depth unknown |
 | `explain-parcel-daimiel.json` | `GET /api/parcel/{id}/explain` at the Daimiel map's first candidate |
+| `section-daimiel.json` | `POST /api/section` along a 1.2 km line running east through the Daimiel point, on the synthetic services: three units, a projected contact, the fault, a borehole and the water table |
 
 `tests/unit/test_map_catalogue.py` checks that they still match the API's models (and
 `map.json` its answer); regenerate them when it fails.

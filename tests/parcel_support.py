@@ -107,3 +107,57 @@ async def serve(
             asgi = httpx.ASGITransport(app=app)
             async with httpx.AsyncClient(transport=asgi, base_url="http://test") as client:
                 yield client
+
+
+def write_levels(settings: Settings, root: Path) -> None:
+    """Two piezometers of the synthetic body near Madrid, and one of another body nearer."""
+    from datetime import UTC, date, datetime
+
+    from subphora.domain.depth import LevelsSource
+    from subphora.domain.piezometry import Piezometer, PiezometryDataset
+    from subphora.store.piezometry import write_piezometry
+
+    def piezometer(key: int, lon: float, level: float, body: str) -> Piezometer:
+        return Piezometer(
+            id=str(key),
+            code=str(key),
+            name="Synthetic",
+            body=body,
+            body_label="Synthetic body",
+            longitude=lon,
+            latitude=40.42,
+            ground_m=None,
+            level_m=level,
+            level_low_m=level - 1,
+            level_high_m=level + 1,
+            measurements=12,
+            first=date(2024, 1, 1),
+            last=date(2024, 12, 1),
+            sources=("miteco-piezometry-db",),
+        )
+
+    write_piezometry(
+        settings.piezometry.output_path(root),
+        PiezometryDataset(
+            sources=(
+                LevelsSource(
+                    service_id="miteco-piezometry-db",
+                    publisher="MITECO",
+                    attribution="MITECO",
+                    file_name="basedatospiezometria.zip",
+                    imported_at=datetime(2026, 11, 26, tzinfo=UTC),
+                    levels_from=date(2024, 1, 1),
+                    levels_to=date(2024, 12, 1),
+                    sha256="0" * 64,
+                ),
+            ),
+            piezometers_read=3,
+            levels_read=36,
+            left_out=0,
+            piezometers=(
+                piezometer(1, -3.71, 560.0, "ES030MSBT000"),
+                piezometer(2, -3.69, 570.0, "ES030MSBT000"),
+                piezometer(3, -3.7001, 300.0, "ES099MSBT999"),
+            ),
+        ),
+    )

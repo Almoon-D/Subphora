@@ -14,8 +14,8 @@
 | 05 | `docs/sessions/done/05-national-map.md` | Opus 5.5, high | done |
 | 06 | `docs/sessions/done/06-parcel-detail.md` | Opus 5.5, high | done |
 | 07 | `docs/sessions/done/07-validation-depth-cost.md` | Opus 5.5, high | done |
-| 08 | `docs/sessions/08-cross-section.md` | Opus 5.5, high | next |
-| 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | planned |
+| 08 | `docs/sessions/done/08-cross-section.md` | Opus 5.5, high | done |
+| 09 | `docs/sessions/09-legal-filter.md` | Opus 5.5, high | next |
 | 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | planned |
 | 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | planned |
 | 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | planned |
@@ -28,6 +28,11 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(magna-section): draw a section in `make dev` on the owner's test area and check
+  that MAGNA layer 11 answers `DLO` per unit and that a contact's projected dip matches the
+  dip symbols on the MAGNA WMS (`DIRECCION` read as dip direction). Queued by 08; IGME
+  answers 403 from the cloud, so it needs the owner's machine.
 
 - VERIFY-LIVE(dependabot-merge): the first green minor or patch Dependabot PR merges by
   itself, including a github-actions one (it changes `.github/workflows/`, which the
@@ -94,6 +99,11 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- The section's answer is about 170 KB per kilometre of line (every cell spelled out); a
+  compact encoding would help phones on mobile data. (08)
+- IGME's IRYDA boreholes hold a water level and transmissivity per borehole: the section
+  could show them beside the water-point depths once their fields are verified live. (08)
 
 - CH Ebro's per-piezometer sheets end in 2021 and add 30 piezometers; worth importing only
   if the CHE publishes newer series. Other basins (Segura, Tajo, Miño-Sil) still publish no
@@ -189,6 +199,18 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 08 — Interpretive geological cross-section (2026-11-26, version 0.11.0)
+
+- Landed: `POST /api/section` and "Dibujar un corte": a straight line's MDT05 profile, the
+  MAGNA units it crosses, contacts projected with the nearest bedding's apparent dip (or
+  vertical, "not projected"), faults as block edges, public boreholes within 500 m with
+  their depth, session 07's water table, and per-cell confidence with an "unknown" zone
+  below the evidence (decision 0033); a bottom sheet draws it with the "interpretation"
+  label, vertical exaggeration, legend and tap-to-explain.
+- Live: none from the cloud (IGME 403); the device bridge was offline.
+- Deferred: borehole lithology logs (not public), IRYDA levels, a compact answer.
+- VERIFY-LIVE: magna-section (new).
 
 ### 07b — Basin piezometry spreadsheets (2026-11-26, version 0.10.0)
 

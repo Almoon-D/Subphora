@@ -44,7 +44,10 @@ En la caja de búsqueda escribe cualquiera de estas cosas y pulsa *Buscar*:
   (sin huso, la aplicación prueba los de España y se queda con los que caen en tierra).
 
 Si el texto admite varias lecturas, te pregunta cuál querías. También puedes **dibujar un
-punto o un polígono** en el mapa con los botones de debajo de la caja. El lugar elegido
+punto o un polígono** en el mapa con los botones de debajo de la caja, o **un corte**: toca
+el inicio y el final de una línea recta (de 100 m a 5 km) y debajo del mapa aparece el
+corte geológico interpretativo del terreno bajo ella, con su confianza; toca cualquier
+parte del corte para saber qué es y de dónde sale. El lugar elegido
 aparece en amarillo sobre la ortofoto PNOA, con su ficha (provincia, superficie, fuente y
 fecha); las áreas de la sesión quedan en una lista para volver a ellas (solo en esa
 pestaña del navegador). `Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC

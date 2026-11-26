@@ -114,6 +114,9 @@ function stored(page: Page): Promise<string[]> {
 }
 
 test("a downloaded pack shows the area, its detailed map and its tiles with no network", async ({ context, page }) => {
+  // A full download then an offline reload of the dev server's modules: about 19 s on a
+  // fast machine, past the 30 s default on a loaded CI runner. Three times the budget.
+  test.slow();
   const network = await mockNetwork(context);
   await open(page);
   await computeDetailedMap(page);

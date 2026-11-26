@@ -211,3 +211,48 @@ def test_a_depth_names_only_the_sources_of_the_piezometers_it_used() -> None:
     result = depth([near, far], sources=named)
     assert result.sources == (SOURCE, basin)
     assert depth([], sources=named).sources == ()
+
+
+def test_the_depth_grid_is_the_depth_at_every_cell() -> None:
+    import numpy as np
+
+    from subphora.model import depth_grid
+
+    other = ("ES040MSBT000030608", "Otra")
+    points = [
+        piezometer(-1000, 600, spread=2.0),
+        piezometer(3000, 680),
+        piezometer(250, 640, body=other[0]),
+        # Exactly at the maximum distance from the cell at x = -2000 (kept, as depth_at keeps it).
+        piezometer(-2000 - TABLE.max_distance_m, 610),
+        PiezometerPoint(
+            x=500.0, y=0.5, body=BODY[0], level_m=650, low_m=649, high_m=651, sources=("x",)
+        ),
+    ]
+    xs = np.array([[-2000.0, -1000.0, 0.0, 500.0, 20000.0, 0.0, 0.0]])
+    ys = np.zeros_like(xs)
+    ground = np.array([[700, 700, 690, 660, 700, np.nan, 700]], dtype=np.float32)
+    # Codes into [BODY, other]: the last cell is outside every body, the one before has no
+    # ground elevation.
+    bodies = np.array([[0, 0, 0, 0, 0, 0, -1]], dtype=np.float32)
+    grid = depth_grid(xs, ys, ground, bodies, [BODY[0], other[0]], points, TABLE)
+    for column in range(xs.shape[1]):
+        body = BODY if bodies[0, column] == 0 else None
+        one = depth_at(
+            float(xs[0, column]),
+            0.0,
+            float(ground[0, column]),
+            body,
+            points,
+            TABLE,
+            False,
+            {SOURCE.service_id: SOURCE, "x": SOURCE},
+        )
+        figures = (grid.depth[0, column], grid.low[0, column], grid.high[0, column])
+        if one.state == "estimated":
+            assert figures == pytest.approx((one.depth_m, one.low_m, one.high_m), abs=1e-3)
+        else:
+            assert all(np.isnan(f) for f in figures)
+    # The far cell, the cell without ground and the cell outside every body are unknown.
+    assert np.isnan(grid.depth[0, 4:]).all()
+    assert not np.isnan(grid.depth[0, :4]).any()

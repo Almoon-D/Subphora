@@ -438,6 +438,10 @@ class ParcelMapService:
                     best[validation.domain] = validation
         return best
 
+    async def analysis(self, area_id: str) -> AreaAnalysis:
+        """The finished analysis; raises ParcelError while it is not done."""
+        return await self._done(area_id)
+
     async def _done(self, area_id: str) -> AreaAnalysis:
         job = await self.job(area_id)
         if job.analysis is None:

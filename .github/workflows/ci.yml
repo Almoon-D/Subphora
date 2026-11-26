@@ -75,6 +75,11 @@ jobs:
         if: steps.scope.outputs.code == 'true'
         run: uv sync --locked
 
+      # WeasyPrint prints the PDF report with Pango and HarfBuzz (decision 0038).
+      - name: Install the report's system libraries
+        if: steps.scope.outputs.code == 'true'
+        run: sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core
+
       # Node from .nvmrc for the front end (web/); decision 0017 records the minutes.
       - if: steps.scope.outputs.code == 'true'
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0

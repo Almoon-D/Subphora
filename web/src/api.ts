@@ -885,6 +885,16 @@ export function parcelPath(id: string): string {
   return `/api/parcel/${encodeURIComponent(id)}`;
 }
 
+/** The API's paths of an area's PDF report and of its export pack (with or without the
+ * field photos and voice memos). Both are downloads the browser saves. */
+export function reportPath(id: string): string {
+  return `${parcelPath(id)}/report.pdf`;
+}
+
+export function packPath(id: string, media: boolean): string {
+  return `${parcelPath(id)}/pack.zip?media=${String(media)}`;
+}
+
 export async function fetchParcel(id: string, fetchFn: Fetch = fetch): Promise<ParcelResult> {
   const answer = await askParcel(() => fetchFn(parcelPath(id)));
   return answer.ok ? { ok: true, answer: answer.body as ParcelAnswer } : answer;

@@ -2,7 +2,11 @@
 // The selected area's detailed map: the button that asks for it, its job while it runs or
 // why it failed, then its mean index and confidence and how well the model did against
 // wells there, its layers with their legends, and its ranked candidate spots, each with its
-// explanation, legal status, depth to water and drilling cost (or why they are unknown).
+// explanation, legal status, depth to water and drilling cost (or why they are unknown);
+// and the downloads of its PDF report and export pack.
+import { useState } from "react";
+
+import { packPath, reportPath } from "../api.ts";
 import type { AreaAnalysis, Candidate, DepthEstimate, DrillingCost, ParcelFailure, ParcelLayer } from "../api.ts";
 import { formatArea, formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import {
@@ -251,6 +255,38 @@ function Candidates({ analysis }: { analysis: AreaAnalysis }) {
   );
 }
 
+/** The area's PDF report and export pack, saved by the browser; field photos and voice
+ * memos go in the pack only when ticked. */
+function Downloads({ analysis }: { analysis: AreaAnalysis }) {
+  const [media, setMedia] = useState(false);
+  return (
+    <div className="downloads" data-downloads={analysis.id}>
+      <h3>{t("report.download.heading")}</h3>
+      <p className="note">{t("report.download.hint")}</p>
+      <p>
+        <a className="button" href={reportPath(analysis.id)} download data-download="report">
+          {t("report.download.pdf")}
+        </a>
+      </p>
+      <label>
+        <input
+          type="checkbox"
+          checked={media}
+          onChange={(event) => {
+            setMedia(event.target.checked);
+          }}
+        />{" "}
+        {t("report.download.media")}
+      </label>
+      <p>
+        <a className="button" href={packPath(analysis.id, media)} download data-download="pack">
+          {t("report.download.pack")}
+        </a>
+      </p>
+    </div>
+  );
+}
+
 function Failure({ failure, onStart }: { failure: ParcelFailure; onStart: () => void }) {
   return (
     <>
@@ -293,6 +329,7 @@ function Body({ view, layer, onStart, onLayer }: Props) {
       <Summary analysis={job.analysis} />
       <Layers layers={layers} layer={layer} onLayer={onLayer} />
       <Candidates analysis={job.analysis} />
+      <Downloads analysis={job.analysis} />
       <p className="note">{t("detailed.built", { date: formatDate(job.analysis.built_at) })}</p>
     </>
   );

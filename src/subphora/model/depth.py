@@ -8,6 +8,8 @@
   the nearest one; past the maximum distance the depth is "unknown".
 - Depth = ground elevation (the terrain model) - water table, never below 0; the range
   follows from the water table's. Carbonate rock (possible karst) is flagged.
+- The same rules give a depth grid over a whole area (``depth_grid``), for the export
+  pack; a cell where the depth is unknown has no value there.
 - Cost = metres drilled (depth range + the drilling below the water table) x cost per
   metre + fixed costs, in ``Decimal`` euros rounded to the euro.
 """
@@ -16,6 +18,10 @@ import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
+
+import numpy as np
+from numpy.typing import NDArray
+from scipy.spatial import cKDTree
 
 from subphora.config.depth import DrillingSettings, WaterTableSettings
 from subphora.domain.depth import (
@@ -132,6 +138,71 @@ def depth_at(
         karst=karst,
         sources=tuple(s for key, s in sources.items() if key in used),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class DepthGrid:
+    """Metres below ground to the water table at each cell, with its range; NaN where the
+    depth is unknown."""
+
+    depth: NDArray[np.float32]
+    low: NDArray[np.float32]
+    high: NDArray[np.float32]
+
+
+def depth_grid(
+    xs: NDArray[np.float64],
+    ys: NDArray[np.float64],
+    ground: NDArray[np.float32],
+    body_codes: NDArray[np.float32],
+    body_ids: Sequence[str],
+    piezometers: Sequence[PiezometerPoint],
+    settings: WaterTableSettings,
+) -> DepthGrid:
+    """``depth_at`` at every cell: ``xs`` and ``ys`` are the cells' centres, ``body_codes``
+    the index of each cell's body in ``body_ids`` (-1 or NaN outside every body)."""
+    shape = ground.shape
+    depth = np.full(shape, np.nan, dtype=np.float32)
+    low = np.full(shape, np.nan, dtype=np.float32)
+    high = np.full(shape, np.nan, dtype=np.float32)
+    codes = np.where(np.isnan(body_codes), -1, body_codes).astype(np.int64)
+    # cKDTree's bound is strict; ``depth_at`` keeps a piezometer at exactly the maximum.
+    reach = float(np.nextafter(settings.max_distance_m, math.inf))
+    for code, body in enumerate(body_ids):
+        points = [p for p in piezometers if p.body == body]
+        cells = (codes == code) & ~np.isnan(ground)
+        if not points or not cells.any():
+            continue
+        k = min(settings.max_piezometers, len(points))
+        tree = cKDTree(np.array([(p.x, p.y) for p in points]))
+        query = np.column_stack((xs[cells], ys[cells]))
+        found = tree.query(query, k=k, distance_upper_bound=reach)
+        distances = np.asarray(found[0], dtype=np.float64).reshape(len(query), k)
+        indices = np.asarray(found[1], dtype=np.int64).reshape(len(query), k)
+        used = np.isfinite(distances)
+        # A piezometer at the spot is taken alone.
+        used[distances[:, 0] < _AT_SPOT_M, 1:] = False
+        with np.errstate(divide="ignore"):
+            weights = np.where(distances < _AT_SPOT_M, 1.0, 1.0 / distances**settings.power)
+        weights = np.where(used, weights, 0.0)
+        safe = np.where(used, indices, 0)
+        levels = np.array([p.level_m for p in points])[safe]
+        halves = np.array([(p.high_m - p.low_m) / 2 for p in points])[safe]
+        known = used[:, 0]
+        total = np.where(known, weights.sum(axis=1), 1.0)
+        level = (weights * levels).sum(axis=1) / total
+        half = (weights * halves).sum(axis=1) / total + settings.growth_m_per_km * np.where(
+            known, distances[:, 0], 0.0
+        ) / 1000
+        surface = ground[cells].astype(np.float64)
+        rows = np.flatnonzero(cells.ravel())[known]
+        for grid, values in (
+            (depth, surface - level),
+            (low, surface - (level + half)),
+            (high, surface - (level - half)),
+        ):
+            grid.ravel()[rows] = np.maximum(0.0, values[known])
+    return DepthGrid(depth=depth, low=low, high=high)
 
 
 def drilling_cost(depth: DepthEstimate, settings: DrillingSettings) -> DrillingCost | None:

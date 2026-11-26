@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "subphora"
-version = "0.15.0"
+version = "0.16.0"
 description = "Groundwater likelihood map for any Spanish parcel: where to look, how deep, how sure, and whether drilling is allowed."
 readme = "README.md"
 license = "LicenseRef-Proprietary"
@@ -28,11 +28,13 @@ dependencies = [
     "pmtiles>=3.8.1,<4",
     "pydantic>=2.12,<3",
     "pyflwdir>=0.6,<1",
+    "pyogrio>=0.13,<1",
     "pyproj>=3.8,<4",
     "PyYAML>=6.0.3,<7",
     "rasterio>=1.5.2,<2",
     "scipy>=1.18,<2",
     "uvicorn>=0.54,<1",
+    "weasyprint>=70,<71",
 ]
 
 [project.scripts]
@@ -42,6 +44,7 @@ subphora = "subphora.__main__:main"
 dev = [
     "import-linter>=2.5",
     "mypy>=2.0",
+    "pypdf>=6",
     "pytest>=9.0",
     "pytest-asyncio>=1.3",
     "pytest-cov>=7.0",
@@ -87,7 +90,7 @@ plugins = ["pydantic.mypy"]
 
 # Libraries without type information: their calls are wrapped in typed functions in geo/.
 [[tool.mypy.overrides]]
-module = ["rasterio.*", "pyflwdir.*", "scipy.*"]
+module = ["rasterio.*", "pyflwdir.*", "scipy.*", "pyogrio.*", "weasyprint.*"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]
@@ -139,6 +142,7 @@ containers = ["subphora"]
 layers = [
     "__main__",
     "api",
+    "report",
     "services",
     "model | legal",
     "countries | geo | sources | store",
@@ -159,6 +163,7 @@ source_modules = [
     "subphora.store",
     "subphora.services",
     "subphora.api",
+    "subphora.report",
     "subphora.__main__",
 ]
 forbidden_modules = ["httpx", "httpcore", "http"]
@@ -185,3 +190,19 @@ forbidden_modules = [
     "subphora.geo",
     "subphora.model",
 ]
+
+# The report presents what the services assembled (MASTER_PLAN §4.2, §4.6): it reads no
+# grid, store or service itself, so every file it writes comes from a use case.
+[[tool.importlinter.contracts]]
+name = "The report imports only domain, config and services"
+type = "forbidden"
+source_modules = ["subphora.report"]
+forbidden_modules = [
+    "subphora.sources",
+    "subphora.store",
+    "subphora.countries",
+    "subphora.geo",
+    "subphora.model",
+    "subphora.legal",
+]
+allow_indirect_imports = true

@@ -21,6 +21,7 @@ from subphora.config.national import NationalSettings
 from subphora.config.packs import PacksSettings
 from subphora.config.parcel import ParcelSettings
 from subphora.config.regional import RegionalSettings, qualification_failures
+from subphora.config.report import ReportSettings
 from subphora.config.search import SearchSettings
 from subphora.config.section import SectionSettings
 from subphora.config.server import ApiSettings, StoreSettings
@@ -46,6 +47,7 @@ __all__ = [
     "ParcelSettings",
     "PiezometrySettings",
     "RegionalSettings",
+    "ReportSettings",
     "SearchSettings",
     "Section",
     "SectionSettings",
@@ -81,6 +83,7 @@ class Settings(Section):
     legal: LegalSettings
     field: FieldSettings
     packs: PacksSettings
+    report: ReportSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
@@ -318,6 +321,13 @@ class Settings(Section):
         undrawn = sorted(set(self.packs.layers) - set(self.parcel.layers))
         if undrawn:
             raise ValueError(f"packs.layers: {undrawn} are not drawn by the detailed map")
+        return self
+
+    @model_validator(mode="after")
+    def _report_layers_drawn(self) -> Self:
+        unknown = sorted(set(self.report.layers) - set(self.parcel.layers))
+        if unknown:
+            raise ValueError(f"report.layers: {unknown} are not layers of the detailed map")
         return self
 
     @staticmethod

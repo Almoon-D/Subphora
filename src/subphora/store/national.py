@@ -240,6 +240,26 @@ def read_cell(root: Path, manifest: RegionManifest, row: int, column: int) -> di
     return {variable: float(values[index, 0, 0]) for index, variable in enumerate(manifest.bands)}
 
 
+def read_bands(
+    path: Path, names: Sequence[str]
+) -> tuple[dict[str, NDArray[np.float32]], rasterio.Affine, str]:
+    """Whole bands of a stack by their descriptions, with its transform and CRS; raises
+    ValueError when a band is missing or the file is unreadable."""
+    try:
+        with rasterio.open(path) as dataset:
+            descriptions = list(dataset.descriptions)
+            missing = [name for name in names if name not in descriptions]
+            if missing:
+                raise ValueError(f"{path.name}: no band {missing}")
+            bands = {
+                name: np.asarray(dataset.read(descriptions.index(name) + 1), dtype=np.float32)
+                for name in names
+            }
+            return bands, dataset.transform, str(dataset.crs)
+    except rasterio.errors.RasterioIOError as exc:
+        raise ValueError(f"{path.name}: {exc}") from exc
+
+
 def read_decimated(
     root: Path,
     manifest: RegionManifest,

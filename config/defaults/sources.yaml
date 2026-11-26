@@ -10,7 +10,9 @@
 # layers, feature types, coverages or collections of interest; web_mercator (wms, wmts and
 # wfs only) says whether EPSG:3857 is offered; cors says whether a browser may call the
 # service directly. Politeness is per service; services on one host share the strictest.
-# A cache lifetime of 0 means never cache.
+# A cache lifetime of 0 means never cache. offline says whether the terms let the data be
+# stored on a device for use without coverage (an offline pack, session 11): allowed,
+# forbidden, or not_evaluated (the default, treated as forbidden: hard rule 4).
 
 client:
   user_agent: "subphora/{version}"
@@ -42,6 +44,9 @@ services:
     terms_url: https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    # Its terms forbid tiled requests and massive downloads: no cadastral image goes offline;
+    # a pack carries the parcel's geometry from the WFS instead.
+    offline: forbidden
     sample:
       description: one 256-pixel map of the parcels around the Praza do Obradoiro, Santiago de Compostela
       params: {SERVICE: WMS, VERSION: 1.3.0, REQUEST: GetMap, LAYERS: CP.CadastralParcel, STYLES: "", CRS: "EPSG:3857", BBOX: "-951500,5293500,-950900,5294100", WIDTH: "256", HEIGHT: "256", FORMAT: image/png, TRANSPARENT: "true"}
@@ -64,6 +69,8 @@ services:
     terms_url: https://www.catastro.hacienda.gob.es/webinspire/documentos/Licencia.pdf
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    # One parcel's geometry per pack, for the owner's own use: never a massive download.
+    offline: allowed
     sample:
       description: the public parcel of the Praza do Obradoiro (UTM zone 29) by cadastral reference
       params: {service: WFS, version: 2.0.0, request: GetFeature, STOREDQUERY_ID: GetParcel, refcat: 7279701NH3477G, srsname: "EPSG::25830"}
@@ -84,6 +91,8 @@ services:
     terms_url: https://www.catastro.hacienda.gob.es/ws/Webservices_Libres.pdf
     knowledge: docs/knowledge/catastro.md
     politeness: {max_concurrent: 1, min_interval_s: 1.0, cache_lifetime_s: 604800}
+    # The non-protected data of the one parcel a pack is made for, for the owner's own use.
+    offline: allowed
     sample:
       description: non-protected data of the Roman theatre parcel, Mérida
       path: /COVCCallejero.svc/json/Consulta_DNPRC
@@ -124,6 +133,8 @@ services:
     terms_url: https://sigpac-hubcloud.es/
     knowledge: docs/knowledge/sigpac.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+    # CC BY 4.0 allows copying and storing, with the attribution kept.
+    offline: allowed
     sample:
       description: enclosure 34:48:0:0:13:12:1 (Tierra de Campos)
       path: /query/recinfo/34/48/0/0/13/12/1.json
@@ -161,6 +172,8 @@ services:
     terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
+    # CC BY 4.0 allows copying and storing, with the attribution kept (ign-cnig.md).
+    offline: allowed
     sample:
       description: the zoom-12 tile over Zaragoza
       params: {service: WMTS, request: GetTile, version: 1.0.0, layer: OI.OrthoimageCoverage, style: default, format: image/jpeg, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1525", tilecol: "2037"}
@@ -197,6 +210,8 @@ services:
     terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 6, min_interval_s: 0.0, cache_lifetime_s: 2592000}
+    # CC BY 4.0 allows copying and storing, with the attribution kept (ign-cnig.md).
+    offline: allowed
     sample:
       description: the zoom-12 base-map tile over Zaragoza
       params: {service: WMTS, request: GetTile, version: 1.0.0, layer: IGNBaseTodo, style: default, format: image/png, tilematrixset: GoogleMapsCompatible, tilematrix: "12", tilerow: "1525", tilecol: "2037"}
@@ -233,6 +248,8 @@ services:
     terms_url: https://www.ign.es/resources/licencia/Condiciones_licenciaUso_IGN.pdf
     knowledge: docs/knowledge/ign-cnig.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    # CC BY 4.0 allows copying and storing, with the attribution kept.
+    offline: allowed
     sample:
       description: candidates for the name Zaragoza
       path: /candidates

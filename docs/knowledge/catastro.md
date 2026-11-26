@@ -119,5 +119,10 @@ session with the `subphora/0.1.0` User-Agent.
   Catastro may suspend a user whose intensity or frequency harms others. No fixed
   attribution text is given: cite "Dirección General del Catastro". `(Licencia.pdf, 2026-11-24)`
 - No published rate limit. The catalogue sets one request at a time, one second apart.
+- Offline packs (session 11): the WMS is `offline: forbidden` in `sources.yaml`, so no
+  cadastral image is ever stored; a pack keeps instead the one parcel's geometry and
+  non-protected data that the WFS and the OVC returned for the search (`offline: allowed`):
+  the owner's own use, never a tiled request or a massive download. A pack opened with no
+  coverage shows the parcel's outline over the PNOA, and the map draws no cadastral layer.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

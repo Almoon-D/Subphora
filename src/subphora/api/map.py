@@ -9,6 +9,7 @@ inside their areas (decision 0023), which the browser clips to the boundaries it
 from ``GET /api/areas/{id}``.
 """
 
+from typing import Literal
 from urllib.parse import urlencode
 
 from subphora.config import Settings
@@ -134,6 +135,43 @@ class FieldConfig(DomainModel):
     media_types: tuple[str, ...]
 
 
+class PackBaseMap(DomainModel):
+    id: str
+    tile_bytes: int
+
+
+class ExcludedLayer(DomainModel):
+    """A map layer an offline pack does not carry, and why: its service's terms forbid
+    storing it, they were not read for that use (hard rule 4), or packs.yaml leaves it out."""
+
+    id: str
+    kind: Literal["base_map", "cadastre", "overlay", "regional"]
+    service_id: str
+    reason: Literal["forbidden", "not_evaluated", "not_chosen"]
+
+
+class PacksConfig(DomainModel):
+    """What the browser needs to plan, estimate and download an offline pack."""
+
+    buffer_m: float
+    min_zoom: int
+    max_zoom: int
+    max_bytes: int
+    base_maps: tuple[PackBaseMap, ...]
+    # National tile layers, stored as tiles and as the detailed map's images.
+    layers: tuple[str, ...]
+    national_tile_bytes: int
+    parcel_image_bytes: int
+    concurrency: int
+    retries: int
+    progress_every: int
+    network_timeout_ms: int
+    # The services whose terms allow storing their data: an area's geometry is stored only
+    # when every source of it is one of them.
+    storable_services: tuple[str, ...]
+    excluded: tuple[ExcludedLayer, ...]
+
+
 class MapConfig(DomainModel):
     initial_view: View
     area_padding_px: int
@@ -141,6 +179,7 @@ class MapConfig(DomainModel):
     search: SearchConfig
     section: SectionLimits
     field: FieldConfig
+    packs: PacksConfig
     base_maps: tuple[BaseMap, ...]
     cadastre: CadastreOverlay
     overlay_groups: tuple[str, ...]
@@ -277,6 +316,49 @@ def _field(settings: Settings) -> FieldConfig:
     )
 
 
+def _excluded(
+    settings: Settings, layer_id: str, kind: str, service_id: str, chosen: bool
+) -> ExcludedLayer | None:
+    offline = settings.sources.service(service_id).offline
+    if offline == "allowed" and chosen:
+        return None
+    reason = "not_chosen" if offline == "allowed" else offline
+    return ExcludedLayer.model_validate(
+        {"id": layer_id, "kind": kind, "service_id": service_id, "reason": reason}
+    )
+
+
+def _packs(settings: Settings) -> PacksConfig:
+    packs = settings.packs
+    chosen = {base.id for base in packs.base_maps}
+    layers = [
+        ("base_map", base.id, base.service, base.id in chosen) for base in settings.map.base_maps
+    ]
+    layers.append(("cadastre", "cadastre", settings.map.cadastre.service, False))
+    for overlay in settings.map.overlays.layers:
+        layers.append(("overlay", overlay.id, overlay.service, False))
+        layers += [
+            ("regional", r.id, r.service, False) for r in settings.regional.of_theme(overlay.id)
+        ]
+    excluded = (_excluded(settings, i, kind, service, c) for kind, i, service, c in layers)
+    return PacksConfig(
+        buffer_m=packs.buffer_m,
+        min_zoom=packs.zoom.min,
+        max_zoom=packs.zoom.max,
+        max_bytes=packs.max_bytes,
+        base_maps=tuple(PackBaseMap(id=b.id, tile_bytes=b.tile_bytes) for b in packs.base_maps),
+        layers=tuple(packs.layers),
+        national_tile_bytes=packs.national_tile_bytes,
+        parcel_image_bytes=packs.parcel_image_bytes,
+        concurrency=packs.download.concurrency,
+        retries=packs.download.retries,
+        progress_every=packs.download.progress_every,
+        network_timeout_ms=packs.network_timeout_ms,
+        storable_services=tuple(s.id for s in settings.sources.services if s.offline == "allowed"),
+        excluded=tuple(layer for layer in excluded if layer is not None),
+    )
+
+
 def map_config(settings: Settings) -> MapConfig:
     cadastre = settings.map.cadastre
     cadastre_service = settings.sources.service(cadastre.service)
@@ -294,6 +376,7 @@ def map_config(settings: Settings) -> MapConfig:
             max_length_m=settings.section.max_length_m,
         ),
         field=_field(settings),
+        packs=_packs(settings),
         base_maps=tuple(_base_map(settings, base) for base in settings.map.base_maps),
         cadastre=CadastreOverlay(
             service_id=cadastre_service.id,

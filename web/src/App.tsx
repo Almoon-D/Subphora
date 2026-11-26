@@ -36,7 +36,7 @@ import { formatArea, formatDate, formatNumber, lookup, t } from "./i18n/index.ts
 import { InfoPanel, type Tap } from "./map/InfoPanel.tsx";
 import { LayerPanel } from "./map/LayerPanel.tsx";
 import { initialLayers, type MapLayers, queryableOverlays } from "./map/layers.ts";
-import { type Draft, type FieldDrawing, MapView, type ParcelDrawing } from "./map/MapView.tsx";
+import { type Draft, type FieldDrawing, mapWorkerUrl, MapView, type ParcelDrawing } from "./map/MapView.tsx";
 import { nationalAnswersTap } from "./map/national.ts";
 import { Comparison } from "./parcel/Comparison.tsx";
 import {
@@ -49,6 +49,10 @@ import {
   withParcelResult,
 } from "./parcel/parcel.ts";
 import { LegalPanel } from "./legal/LegalPanel.tsx";
+import { usePacks } from "./packs/hooks.ts";
+import { PacksPanel } from "./packs/PacksPanel.tsx";
+import { type PackRecord, withStoredAnswers } from "./packs/store.ts";
+import { registerServiceWorker } from "./sw/register.ts";
 import { ParcelPanel } from "./parcel/ParcelPanel.tsx";
 import { SectionPanel, type SectionView } from "./section/SectionPanel.tsx";
 import {
@@ -274,6 +278,25 @@ export function App() {
   const fieldDb = store.state === "open" ? store.db : null;
   const outbox = useOutbox(fieldDb, config?.field ?? null);
   const located = useGeolocation(config?.field.geolocation ?? NO_GEOLOCATION, field.on && config !== null);
+  const packs = usePacks(config?.packs ?? null);
+
+  // The service worker, once the settings name its network timeout: from then on the app
+  // opens with no coverage, and a pack's map draws from the device.
+  const networkTimeout = config?.packs.network_timeout_ms;
+  useEffect(() => {
+    if (networkTimeout !== undefined) {
+      void registerServiceWorker(networkTimeout, [mapWorkerUrl]);
+    }
+  }, [networkTimeout]);
+
+  function onOpenPack(pack: PackRecord) {
+    const packArea = pack.area;
+    if (!packArea) {
+      return;
+    }
+    setSearch({ state: "idle" });
+    setSession((current) => withArea(current, packArea, config?.search.session_areas ?? 1));
+  }
 
   useEffect(() => {
     saveFieldSession(field);
@@ -443,7 +466,9 @@ export function App() {
   }
 
   const area = selectedArea(session);
-  const parcelView = area ? parcels[areaKey(area)] : undefined;
+  // The detailed maps of this page, and those that complete packs bring back.
+  const views = withStoredAnswers(parcels, packs.packs);
+  const parcelView = area ? views[areaKey(area)] : undefined;
   const selectedAnalysis = analysisOf(parcelView);
   const parcelLayers = parcelView?.state === "answered" ? parcelView.answer.layers : [];
   const chosenLayer = parcelLayer === undefined ? initialParcelLayer(parcelLayers) : parcelLayer;
@@ -595,7 +620,17 @@ export function App() {
             setSession((current) => ({ ...current, selected: index }));
           }}
         />
-        <Comparison rows={comparable(session.areas, parcels)} />
+        <Comparison rows={comparable(session.areas, views)} />
+        {config && (
+          <PacksPanel
+            config={config}
+            national={national}
+            area={area}
+            answer={parcelView?.state === "answered" && selectedAnalysis ? parcelView.answer : null}
+            packs={packs}
+            onOpen={onOpenPack}
+          />
+        )}
         {config && layers && (
           <>
             <InfoPanel tap={tap} />

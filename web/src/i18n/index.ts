@@ -64,6 +64,12 @@ export function formatArea(squareMetres: number): string {
   return `${metres} (${formatNumber(squareMetres / hectare, 2)} ha)`;
 }
 
+/** A size in bytes, in megabytes with one decimal. */
+export function formatMegabytes(bytes: number): string {
+  const megabyte = 1_048_576;
+  return `${formatNumber(bytes / megabyte, 1)} MB`;
+}
+
 /** A date in the viewer's own time zone. */
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(LOCALE, { dateStyle: "long" }).format(new Date(iso));

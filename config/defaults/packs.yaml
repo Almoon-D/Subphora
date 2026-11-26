@@ -1,0 +1,38 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Offline packs (MASTER_PLAN §4.7, decision 0037): before going to a site, the browser
+# stores what the map needs there with no coverage: the base-map tiles around the area, our
+# potential and confidence layers (the national tiles and the detailed map's images), the
+# area's geometry and its candidate spots. Only layers whose service's terms allow storing
+# them (sources.yaml → offline: allowed) can be listed; every other map layer stays out
+# and the pack says so.
+
+# Tiles cover the area's box widened by this distance on every side.
+buffer_m: 500
+# The zoom levels stored. Beyond max the map enlarges the deepest level stored; a layer
+# whose own tiles stop below min gets its deepest level.
+zoom: {min: 10, max: 18}
+# A pack whose estimate is larger is refused before anything is downloaded.
+max_bytes: 262144000
+
+# The base maps stored, each with the size a tile is estimated at. PNOA tiles averaged
+# 19 KB and reached 24 KB over three areas at zooms 12-18 (docs/knowledge/ign-cnig.md).
+base_maps:
+  - id: pnoa
+    tile_bytes: 24000
+
+# Our layers stored (national.yaml tile layers that the detailed map also draws), with the
+# estimated size of one national tile and of one detailed-map image.
+layers: [potential-index, potential-confidence]
+national_tile_bytes: 8000
+parcel_image_bytes: 400000
+
+# The download: files fetched at a time, retries of a failed file, and how often (in
+# files) the progress is written down so that an interrupted download resumes there.
+download:
+  concurrency: 4
+  retries: 2
+  progress_every: 20
+
+# The service worker answers from what is stored when the network has not answered a
+# stored file within this time (a weak signal), and serves the app itself the same way.
+network_timeout_ms: 4000

@@ -18,8 +18,8 @@
 | 09 | `docs/sessions/done/09-legal-filter.md` | Opus 5.5, high | done |
 | 09a | `docs/sessions/done/09a-legal-all-districts.md` | Opus 5.5, high | done |
 | 10 | `docs/sessions/done/10-field-mode.md` | Opus 5.5, high | done |
-| 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | next |
-| 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | planned |
+| 11 | `docs/sessions/done/11-offline-packs.md` | Opus 5.5, high | done |
+| 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | next |
 | 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | planned — version 1 |
 | 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | planned |
 | 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | planned |
@@ -29,6 +29,11 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(offline-pack-phone): on a phone over HTTPS (session 13), download a pack of the
+  owner's parcel, switch to airplane mode, close and reopen the app: the parcel, its
+  candidates and the PNOA must show; check Safari's storage (persistence granted or not, and
+  whether iOS clears the pack after days unused). Queued by 11.
 
 - VERIFY-LIVE(field-phone): on a phone (after session 13 serves HTTPS), check the
   Geolocation API's accuracy and heading while walking, the camera through the photo input,
@@ -106,8 +111,11 @@
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
 
-- Field mode survives a reload only while the page can load: reloading with no coverage at
-  all needs the app shell cached by the service worker, which session 11 creates. (10)
+- A pack holds one area; a trip to several parcels takes one pack each. Official water and
+  geology layers stay out until their terms are read for offline use (`offline:
+  not_evaluated` in `sources.yaml`). (11)
+- The service worker's app cache keeps every build's hashed files; a later session can drop
+  those no page names after an update. Each pack keeps its own `/api/map` copy. (11)
 - Editing a field record (a new version naming the one it replaces, §4.7) has no screen
   yet; records are only added. A record the server refuses stays on the device, counted
   and exportable, with no "retry refused" button. (10)
@@ -220,6 +228,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 11 — Offline map packs (2026-11-26, version 0.15.0)
+
+- Landed: "Paquetes sin conexión" (decision 0037): a pack of the selected area holds PNOA
+  tiles over its box plus 500 m at zooms 10-18, the national index and confidence tiles, the
+  detailed map's two images, `/api/parcel`, `/api/legal` and `/api/map` answers, the outline
+  and candidates; estimate, 250 MB limit, free-quota check, persistent storage asked,
+  progress, pause, resume from the cache, list, open, delete (`config/defaults/packs.yaml`).
+- Hard rule 4: `offline: allowed | forbidden | not_evaluated` per service; Catastro's WMS is
+  forbidden and never stored, the parcel's WFS geometry is; the settings refuse the rest.
+- Service worker (`src/sw/`, built as `/sw.js`): the app opens and reloads with no network.
+- Tests: plan, estimate, limit, exclusions, storage refusals, interrupted and resumed
+  downloads, strategy; Playwright offline reload, a reload mid-download, no space, no
+  persistence. Live (`make dev`, real IGN and Catastro): Santiago's parcel, 205 files in
+  13 s, 3.3 MB stored against 4.6 MB estimated; offline reload drew outline and PNOA.
+- VERIFY-LIVE: offline-pack-phone (new). Prompt edits: 13 (serve `/sw.js`, decision 0037).
 
 ### 10 — Field mode (2026-11-26, version 0.14.0)
 

@@ -50,3 +50,16 @@ export function compassPoint(bearing_deg: number): "n" | "ne" | "e" | "se" | "s"
   const points = ["n", "ne", "e", "se", "s", "sw", "w", "nw"] as const;
   return points[Math.round((((bearing_deg % 360) + 360) % 360) / 45) % 8] ?? "n";
 }
+
+/** A west, south, east, north box widened by `distance_m` on every side: its north and south
+ * edges moved along the meridian, its east and west edges at the latitude where a degree of
+ * longitude is shortest, so that the whole box keeps at least that margin. */
+export function widen(box: readonly [number, number, number, number], distance_m: number): [number, number, number, number] {
+  const [west, south, east, north] = box;
+  const north2 = WGS84.Direct(north, west, 0, distance_m, END_POINT).lat2 ?? north;
+  const south2 = WGS84.Direct(south, west, 180, distance_m, END_POINT).lat2 ?? south;
+  const widest = Math.abs(north2) > Math.abs(south2) ? north2 : south2;
+  const east2 = WGS84.Direct(widest, east, 90, distance_m, END_POINT).lon2 ?? east;
+  const west2 = WGS84.Direct(widest, west, 270, distance_m, END_POINT).lon2 ?? west;
+  return [west2, south2, east2, north2];
+}

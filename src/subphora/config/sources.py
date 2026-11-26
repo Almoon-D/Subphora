@@ -14,6 +14,10 @@ from pydantic import Field, PositiveFloat, PositiveInt, model_validator
 from subphora.config.base import Section
 
 ServiceKind = Literal["wms", "wmts", "wfs", "wcs", "ogc_api", "rest", "download"]
+# Whether the service's terms let its data be stored on a device for use without coverage
+# (an offline pack): allowed, forbidden, or not read for that use, which counts as
+# forbidden (hard rule 4).
+OfflineUse = Literal["allowed", "forbidden", "not_evaluated"]
 
 # Kinds whose capabilities document lists layers and the CRS they can be drawn in.
 KINDS_WITH_CRS: frozenset[str] = frozenset({"wms", "wmts", "wfs"})
@@ -107,6 +111,8 @@ class Service(Section):
     # Name of the environment variable holding the key; keys never live in config/.
     key_env: str | None = None
     politeness: Politeness
+    # What its terms say of offline packs; the evidence is in its knowledge file.
+    offline: OfflineUse = "not_evaluated"
     sample: SampleRequest | None = None
 
     @property
@@ -138,6 +144,8 @@ class Service(Section):
             raise ValueError(f"{self.id}: a {self.kind} service names its layers of interest")
         if self.sample is None and self.kind not in KINDS_WITH_CAPABILITIES:
             raise ValueError(f"{self.id}: a {self.kind} service needs a sample request")
+        if self.offline == "allowed" and self.politeness.cache_lifetime_s == 0:
+            raise ValueError(f"{self.id}: a service that is never cached cannot go offline")
         return self
 
 

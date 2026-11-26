@@ -16,6 +16,8 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${String(port)}`,
     trace: "off",
     locale: "es-ES",
+    // The service worker would answer requests the tests route; e2e/packs.spec.ts allows it.
+    serviceWorkers: "block",
   },
   projects: [
     {

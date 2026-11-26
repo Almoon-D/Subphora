@@ -68,7 +68,8 @@ Findings observed on 2026-11-24.
 
 ## Terms
 
-- CC BY 4.0, per the catalogue page. Attribution used: "SIGPAC, FEGA, CC BY 4.0". No
+- CC BY 4.0, per the catalogue page. Attribution used: "SIGPAC, FEGA, CC BY 4.0". It allows
+  storing: an offline pack keeps an enclosure's geometry (`sigpac-queries`: `offline: allowed`). No
   published rate limit; the catalogue sets two requests at a time, half a second apart.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

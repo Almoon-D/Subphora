@@ -61,6 +61,17 @@ servidor cuando hay conexión (sin duplicar nada) y queda en `data/field/`. El p
 lo que falta por enviar y lo exporta a un archivo. Para probarlo sin conexión: en el
 navegador, herramientas de desarrollo → Red → *Sin conexión*, registra algo, vuelve a
 conectar y mira cómo baja el contador; `uv run subphora field summary` cuenta lo recibido.
+
+**Paquetes sin conexión.** Antes de ir al terreno, elige la zona (y calcula su mapa
+detallado si quieres los candidatos) y pulsa *Descargar el paquete* en el apartado
+*Paquetes sin conexión*: guarda en el navegador la ortofoto PNOA de la zona y 500 m
+alrededor (zooms 10 a 18), el índice y su confianza, el contorno de la parcela y los
+candidatos. Antes de descargar dice qué guarda, qué no (el mapa catastral nunca: sus
+condiciones lo prohíben; se guarda el contorno de la parcela) y cuánto ocupará; rechaza
+paquetes de más de 250 MB. Si la descarga se corta, *Reanudar* sigue donde quedó. Sin
+cobertura, la página abre igualmente (aunque la recargues) y muestra la zona del paquete;
+*Abrir* la vuelve a seleccionar y *Borrar* libera el espacio. Para probarlo: descarga un
+paquete, pon el navegador *Sin conexión* y recarga.
 `Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC
 y CartoCiudad se guardan en `data/cache/` (no se sube al repositorio).
 

@@ -1,0 +1,53 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Field mode (MASTER_PLAN §4.7, decision 0036): the live position, guidance to a chosen
+# spot, and the observations recorded on site (notes, photos, voice memos, the track),
+# kept in the browser's IndexedDB and synced later to the server's store in data/.
+
+# A position counts as "at the spot" only within this distance of it, and never while the
+# device's reported accuracy is worse than this distance.
+at_spot_m: 10
+# The longest note, in characters.
+note_max_chars: 5000
+
+# The browser's Geolocation API: ask for the best fix the device has, wait this long for
+# one, and accept a cached fix no older than this.
+geolocation:
+  high_accuracy: true
+  timeout_ms: 20000
+  maximum_age_ms: 0
+
+# While the track is on, a fix becomes a track point once this many seconds have passed
+# since the last point, or once the device moved this far from it.
+track:
+  min_interval_s: 10
+  min_distance_m: 10
+
+# The outbox sends this many records per request (the server refuses more) and, while
+# any wait, tries again this often.
+sync:
+  batch_size: 50
+  retry_s: 30
+
+# Photos and voice memos: the content types accepted, each with the extension its file
+# takes in the store, and the largest file. A larger one is refused when it is recorded,
+# so that nothing is kept that could never sync.
+media:
+  max_bytes: 31457280
+  types:
+    image/jpeg: jpg
+    image/png: png
+    image/webp: webp
+    image/heic: heic
+    audio/webm: webm
+    audio/ogg: ogg
+    audio/mp4: m4a
+    audio/mpeg: mp3
+    audio/wav: wav
+
+# The server's store: one SQLite database of the records and a folder of their media
+# files, relative to the repository root unless absolute (data/ is git-ignored, hard
+# rule 6). A busy database is waited for this long before the request fails.
+store:
+  database: data/field/field.sqlite
+  media_dir: data/field/media
+  busy_timeout_s: 5

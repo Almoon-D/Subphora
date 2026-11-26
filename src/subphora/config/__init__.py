@@ -13,6 +13,7 @@ from pydantic import model_validator
 
 from subphora.config.base import Section
 from subphora.config.depth import DrillingSettings, PiezometrySettings
+from subphora.config.field import FieldSettings
 from subphora.config.legal import LegalSettings
 from subphora.config.map import Legend, MapSettings
 from subphora.config.model import BreaksLookup, ModelSettings
@@ -35,6 +36,7 @@ __all__ = [
     "ApiSettings",
     "CoreSettings",
     "DrillingSettings",
+    "FieldSettings",
     "LegalSettings",
     "MapSettings",
     "ModelSettings",
@@ -75,6 +77,7 @@ class Settings(Section):
     drilling: DrillingSettings
     section: SectionSettings
     legal: LegalSettings
+    field: FieldSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:

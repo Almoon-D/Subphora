@@ -114,12 +114,33 @@ class SectionLimits(DomainModel):
     max_length_m: float
 
 
+class FieldGeolocation(DomainModel):
+    high_accuracy: bool
+    timeout_ms: int
+    maximum_age_ms: int
+
+
+class FieldConfig(DomainModel):
+    """What field mode needs in the browser (MASTER_PLAN §4.7)."""
+
+    at_spot_m: float
+    note_max_chars: int
+    geolocation: FieldGeolocation
+    track_min_interval_s: float
+    track_min_distance_m: float
+    sync_batch_size: int
+    sync_retry_s: float
+    media_max_bytes: int
+    media_types: tuple[str, ...]
+
+
 class MapConfig(DomainModel):
     initial_view: View
     area_padding_px: int
     point_zoom: float
     search: SearchConfig
     section: SectionLimits
+    field: FieldConfig
     base_maps: tuple[BaseMap, ...]
     cadastre: CadastreOverlay
     overlay_groups: tuple[str, ...]
@@ -236,6 +257,26 @@ def _overlay(settings: Settings, overlay: OverlaySettings) -> Overlay:
     )
 
 
+def _field(settings: Settings) -> FieldConfig:
+    field = settings.field
+    geolocation = field.geolocation
+    return FieldConfig(
+        at_spot_m=field.at_spot_m,
+        note_max_chars=field.note_max_chars,
+        geolocation=FieldGeolocation(
+            high_accuracy=geolocation.high_accuracy,
+            timeout_ms=geolocation.timeout_ms,
+            maximum_age_ms=geolocation.maximum_age_ms,
+        ),
+        track_min_interval_s=field.track.min_interval_s,
+        track_min_distance_m=field.track.min_distance_m,
+        sync_batch_size=field.sync.batch_size,
+        sync_retry_s=field.sync.retry_s,
+        media_max_bytes=field.media.max_bytes,
+        media_types=tuple(field.media.types),
+    )
+
+
 def map_config(settings: Settings) -> MapConfig:
     cadastre = settings.map.cadastre
     cadastre_service = settings.sources.service(cadastre.service)
@@ -252,6 +293,7 @@ def map_config(settings: Settings) -> MapConfig:
             min_length_m=settings.section.min_length_m,
             max_length_m=settings.section.max_length_m,
         ),
+        field=_field(settings),
         base_maps=tuple(_base_map(settings, base) for base in settings.map.base_maps),
         cadastre=CadastreOverlay(
             service_id=cadastre_service.id,

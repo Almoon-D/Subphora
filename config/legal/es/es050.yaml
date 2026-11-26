@@ -1,13 +1,13 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
 # Guadalquivir (area ES050): the 2022-2027 basin plan, Real Decreto 35/2023, normative
-# provisions in its Annex VII (BOE no. 35, 10/02/2023). Read on 2026-11-24
+# provisions in its Annex VII (BOE no. 35, 10/02/2023). Read on 2026-11-24, re-read on 2026-11-26
 # (docs/knowledge/legal-groundwater.md).
 
 rules:
   - id: phg-38-4-no-concessions
     area: ES050
     kind: no_new_concessions
-    above_volume_m3: 7000
+    applies_above_m3: 7000
     title:
       en: "No new concessions in a body in poor quantitative status"
       es: "No se admiten concesiones nuevas en una masa en mal estado cuantitativo"
@@ -19,7 +19,7 @@ rules:
       url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
       article: "art. 38.4"
       published: 2023-02-10
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: phg-50-2-at-risk
     area: ES050
@@ -34,7 +34,7 @@ rules:
       url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
       article: "art. 50.2"
       published: 2023-02-10
-      checked: 2026-11-24
+      checked: 2026-11-26
 
   - id: phg-50-3-distance
     area: ES050
@@ -56,4 +56,4 @@ rules:
       url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
       article: "art. 50.3"
       published: 2023-02-10
-      checked: 2026-11-24
+      checked: 2026-11-26

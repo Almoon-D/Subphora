@@ -1,0 +1,64 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Tinto, Odiel y Piedras (area ES064): the 2022-2027 basin plan (Real Decreto 689/2023), normative
+# content published by Orden de 9 de octubre de 2023 (BOJA no. 199, 17/10/2023). Read on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md): arts. 39 and 53 say what those of the
+# Cuencas Mediterráneas Andaluzas plan say; its preventive-control bodies are its Apéndice 14.
+
+rules:
+  - id: phtop-53-1-authorisation
+    area: ES064
+    kind: body_authorisation
+    declared_at_risk: true
+    marked:
+      - layer: andalusia-preventive-control
+        field: control_preventivo
+        values: ["Sometida a control preventivo"]
+    max_volume_m3: 7000
+    title:
+      en: "From a body overexploited, at risk or under preventive control, a small-use well needs the Consejería's prior authorisation"
+      es: "En una masa sobreexplotada, en riesgo o en control preventivo, un pozo de uso privativo necesita autorización previa de la Consejería"
+    source:
+      name: "Plan Hidrológico del Tinto, Odiel y Piedras 2022-2027, Orden de 9 de octubre de 2023"
+      url: "https://www.juntadeandalucia.es/boja/2023/199/44"
+      article: "art. 53.1"
+      published: 2023-10-17
+      checked: 2026-11-26
+
+  - id: phtop-39-preventive
+    area: ES064
+    kind: body_authorisation
+    marked:
+      - layer: andalusia-preventive-control
+        field: control_preventivo
+        values: ["Sometida a control preventivo"]
+    title:
+      en: "In a body under preventive control, any abstraction needs a prior report of compatibility with the plan"
+      es: "En una masa en control preventivo, toda captación necesita un informe previo de compatibilidad con el plan"
+    source:
+      name: "Plan Hidrológico del Tinto, Odiel y Piedras 2022-2027, Orden de 9 de octubre de 2023"
+      url: "https://www.juntadeandalucia.es/boja/2023/199/44"
+      article: "art. 39 and Apéndice 14"
+      published: 2023-10-17
+      checked: 2026-11-26
+
+  - id: phtop-53-5-distance
+    area: ES064
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [good], max_volume_m3: 1500, distance_m: 50}
+      - {bodies: [good], distance_m: 100}
+      - {bodies: [outside], distance_m: 100}
+      - {bodies: [poor], none_set: true}
+    title:
+      en: "Minimum distance to other wells, springs and channels"
+      es: "Distancia mínima a otros pozos, manantiales y cauces"
+    uncertain:
+      en: "The article sets no distance for bodies in poor status (the authorisation decides there), and does not say which side exactly 1,500 m³/year falls on. Stricter protection perimeters prevail."
+      es: "El artículo no fija distancia para masas en mal estado (allí decide la autorización), ni dice a qué lado cae exactamente 1.500 m³/año. Prevalecen los perímetros de protección más estrictos."
+    source:
+      name: "Plan Hidrológico del Tinto, Odiel y Piedras 2022-2027, Orden de 9 de octubre de 2023"
+      url: "https://www.juntadeandalucia.es/boja/2023/199/44"
+      article: "art. 53.5"
+      published: 2023-10-17
+      checked: 2026-11-26

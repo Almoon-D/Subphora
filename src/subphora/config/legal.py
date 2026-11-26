@@ -75,9 +75,27 @@ class Areas(Section):
 
 
 class Where(Section):
-    """Narrows a rule to some districts of its area (a regional law, for instance)."""
+    """Narrows a rule to some districts of its area (a regional law, for instance), or to
+    some groundwater bodies (a plan's list of bodies). A body code matches as written or
+    with a suffix after an underscore (ES100MSBT18 matches ES100MSBT18_01)."""
 
-    districts: list[Annotated[str, Field(pattern=_DISTRICT)]] = Field(min_length=1)
+    districts: list[Annotated[str, Field(pattern=_DISTRICT)]] | None = Field(
+        default=None, min_length=1
+    )
+    bodies: list[Annotated[str, Field(pattern=r"^ES\d{3}MSBT[\w.-]+$")]] | None = Field(
+        default=None, min_length=1
+    )
+
+    @model_validator(mode="after")
+    def _something(self) -> Self:
+        if self.districts is None and self.bodies is None:
+            raise ValueError("a 'where' names districts, bodies or both")
+        return self
+
+    def has_body(self, code: str) -> bool:
+        return self.bodies is not None and any(
+            code == listed or code.startswith(f"{listed}_") for listed in self.bodies
+        )
 
 
 class _Rule(Section):
@@ -88,6 +106,9 @@ class _Rule(Section):
     where: Where | None = None
     # An open question the text does not settle, shown with the outcome.
     uncertain: Translated | None = None
+    # The rule binds only wells above this volume (concessions), or up to it (small use).
+    applies_above_m3: PositiveFloat | None = None
+    applies_up_to_m3: PositiveFloat | None = None
 
 
 class NoticeRule(_Rule):
@@ -141,11 +162,12 @@ class BodyAuthorisationRule(_Rule):
 
 
 class NoNewConcessionsRule(_Rule):
-    """No new concession in a body in poor quantitative status."""
+    """No new abstraction right: in a body in poor quantitative status (``poor``), or
+    wherever the rule applies (``always``: a plan's listed bodies, a whole basin). Its
+    ``applies_above_m3`` keeps it to concessions; without it every new well is refused."""
 
     kind: Literal["no_new_concessions"]
-    # Wells up to this volume are not concessions and the rule does not touch them.
-    above_volume_m3: PositiveFloat
+    when: Literal["poor", "always"] = "poor"
 
 
 BodyClass = Literal["good", "poor", "outside", "any"]
@@ -158,11 +180,14 @@ class DistanceCase(Section):
     applies only when the planned flow is known to be below it."""
 
     bodies: list[BodyClass] = Field(min_length=1)
-    # The case applies only to wells of at most this volume (m³/year).
+    # The case applies only to wells of at most this volume (m³/year), or below it.
     max_volume_m3: PositiveFloat | None = None
+    volume_below_m3: PositiveFloat | None = None
     distance_m: PositiveFloat | None = None
     curve: list[tuple[float, float]] | None = Field(default=None, min_length=2)
     flow_below_l_s: PositiveFloat | None = None
+    # As flow_below_l_s, the planned flow known to be at most this.
+    flow_up_to_l_s: PositiveFloat | None = None
     none_set: bool = False
 
     @model_validator(mode="after")
@@ -286,9 +311,12 @@ class LegalSettings(Section):
             raise ValueError("legal rule ids must be unique")
         known = {"ES", *self.areas.districts, *self.areas.regions}
         for rule in self.rules:
+            low, high = rule.applies_above_m3, rule.applies_up_to_m3
+            if low is not None and high is not None and low >= high:
+                raise ValueError(f"rule {rule.id}: its volume range is empty")
             if rule.area not in known:
                 raise ValueError(f"rule {rule.id}: no area {rule.area!r}")
-            if rule.where is not None:
+            if rule.where is not None and rule.where.districts is not None:
                 outside = set(rule.where.districts) - set(self.areas.districts)
                 if outside:
                     raise ValueError(f"rule {rule.id}: unknown districts {sorted(outside)}")

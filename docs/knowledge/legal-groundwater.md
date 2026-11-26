@@ -3,28 +3,46 @@
 The texts behind the rules of `config/legal/es/` (decision 0034). Every rule has its
 official source, article and the date it was read. **Uncertain** marks what the text does not
 settle; the filter shows those as a condition with the open question, never as a verdict.
-Nothing here is legal advice. Read on 2026-11-24.
+Nothing here is legal advice. First read on 2026-11-24; every source re-read, and the rest
+read, on 2026-11-26.
 
-**Coverage:** the national law, one regional water law (Andalusia), two basin plans
-(Guadalquivir, Andalusian Mediterranean) and the closed zones of two more (Guadiana appendix
-11.1, Duero annex IV art. 33, through their authorities' map layers: `regional-layers.md`).
+**Coverage:** the national law and the mining-safety rules; the water law of every region;
+the plans of 17 of the 25 river-basin districts in full, four Canary island plans in part
+(`areas.yaml` says what is missing in each).
 
-## Not read yet (2026-11-26)
+## Not read (2026-11-26)
 
-- **Why:** session 09 could not reach any official host from the cloud: the network policy
-  refused `www.boe.es`, `www.miteco.gob.es`, `gis.miteco.gob.es` and
-  `www.juntadeandalucia.es` (HTTP 403 from the proxy), the fetch tool could not read the
-  BOE's robots.txt, and the owner's computer was offline. No source above was re-checked;
-  their dates are those of 2026-11-24. `(GET, 2026-11-26)`
-- **Basin plans not read:** ES010, ES014, ES017, ES018, ES030, ES070, ES080, ES091, ES100,
-  ES110, ES120, ES122–ES127, ES150, ES160, and the normative text of ES020 and ES040 beyond
-  their zoning. Each says "rules not loaded" with this reason (`areas.yaml`).
-- **Regional water laws not read:** every region but Andalusia. Whether each adds
-  conditions to a well is unknown; none is assumed to add none.
-- **Mining-safety rules** for water boreholes: still not read (below).
-- Session 09a reads all of these (VERIFY-LIVE(legal-sources)).
+- **ES014 Galicia-Costa:** the Xunta's hosts (`www.xunta.gal`, `augasdegalicia.xunta.gal`,
+  `www.xunta.gal/dog`) reset every connection from the cloud (curl error 35); the copies
+  that could be read (hispagua, a mirror of the DOG text) end at art. 30.4 and art. 31.3,
+  before the articles on distances (38) and groundwater bodies (40). `(GET, 2026-11-26)`
+- **ES122 Fuerteventura:** Decreto 139/2024 is published through a download service of the
+  Gobierno de Canarias the session did not reach. **ES125 La Palma:** Decreto 6/2025 is a
+  scanned image at the BOC, without a text layer. **ES126 La Gomera:** the BOC entry of
+  Decreto 102/2023 holds the decree, not the plan's normative articles.
+- **Partial:** ES120 Gran Canaria and ES124 Tenerife (their protection spaces around existing
+  galleries and wells: no layer maps them); ES123 Lanzarote and ES127 El Hierro (searched for
+  wells, distances and small-use volumes, none found beyond the Canary Water Law; not read in
+  full).
+- **Not mapped, shown as open questions:** distances to the monitoring networks (Duero art.
+  20.5, Tajo art. 22.3, Segura art. 46), the Tajo's appendix 11 sub-basins, the Catalan
+  safeguard of art. 43, coastal strips; no official layer gives them.
+
+## Live layers: the body and its status
+
+- MITECO's WMS `estado_masas_aguasub_2027` and `masas_aguasub_riesgo_2027` answer
+  GetFeatureInfo (WMS 1.3.0, EPSG:4258) with the fields `legal.yaml` reads: "Cód. Masa de
+  agua", "Nombre masa de agua", "Estado cuantitativo"; "Código de masa", "Declaración de
+  riesgo". Madrid: ES030MSBT030-010, "Bueno"; Mancha Occidental I: declared at risk.
+  VERIFY-LIVE(legal-taps) closed. `(GetFeatureInfo, 2026-11-26)`
+- The layer writes the plans' codes its own way: the Tajo with a hyphen (ES030MSBT030-010
+  where the plan writes 030.010), Catalonia with MSBT and a split suffix (ES100MSBT18_01 for
+  the plan's MAS 18), the Guadiana padded (ES040MSBT000030606), the Canaries with the island
+  (ES120MSBTES70GC003). A rule's `where.bodies` lists the layer's form.
 
 ## National: Water Law and Public Water Domain Regulation
+
+Re-read 2026-11-26: the consolidated texts are unchanged since the dates below.
 
 - **TRLA** — Real Decreto Legislativo 1/2001, texto refundido de la Ley de Aguas,
   `https://www.boe.es/buscar/act.php?id=BOE-A-2001-14276` (consolidated, last update
@@ -135,12 +153,93 @@ Nothing here is legal advice. Read on 2026-11-24.
     orthophoto at 1:5,000, borehole and casing profiles, water level and date, pump).
     `(Orden 9/10/2023 art. 47, 2026-11-24)`
 
-## Drilling permits beyond water law — uncertain
+## The other basin plans of RD 35/2023 (BOE-A-2023-3511, BOE no. 35, 10/02/2023)
 
-- Not read in this session: the mining-safety rules for water boreholes (Reglamento General
-  de Normas Básicas de Seguridad Minera and its technical instructions, which require a
-  drilling project and the regional mining authority's authorisation) and municipal
-  planning licences. Session 09 reads them at the source before turning them into rules;
-  until then the app says "drilling permits: not evaluated".
+All read at `https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511`, the annex of each plan.
+The Supreme Court's annulments published since (BOE-A-2025-11326, Tajo appendix 10;
+BOE-A-2026-11702 and BOE-A-2026-21528, Segura art. 13.13.d; BOE-A-2025-15242 and
+BOE-A-2025-23548, appendices 13.4 and 7.8 and art. 26.1 of annexes V and VI) touch none of
+the articles below. `(BOE, 2026-11-26)`
+
+- **Miño-Sil (ES010, Annex III).** Art. 32: distance to other wells and springs 100 m; under
+  1 l/s and 3,650 m³/year 50 m; under 0.15 l/s and 3,650 m³/year 10 m in urban land and 20 m
+  elsewhere (20 m used, the land class not known). Art. 34.2 restates RDPH 84.2.
+- **Cantábrico Oriental and Occidental (ES017, ES018, Annexes I, II).** Art. 34.3: in bodies
+  in poor quantitative status the authority may refuse or limit new abstractions, small ones
+  included (shown as an authorisation).
+- **Duero (ES020, Annex IV).** Arts. 33 and 34.1.b: the groundwater zoning closes or limits
+  new **concessions** (above 7,000 m³/year); a 54.2 well is outside it. Art. 20.5: 400 m (or
+  100 m) to piezometers, not mapped.
+- **Tajo (ES030, Annex V).** Art. 22 and appendix 12: 100 m under 1,000 m³/year, 250 m up to
+  7,000, then rising to 400 m at a rate per body (Torrelaguna 030.004: 1 m per 1,000 m³;
+  Madrid 030.010–012: 3 m; 030.018, 025, 026: 6 m; elsewhere 4 m, the stricter of the
+  basin's two scales). Art. 35.1 and appendices 15–16: concessions in the seven bodies at
+  risk need the action programme's authorisation. Art. 35.2: in Madrid's three bodies a
+  well is at most 200 m deep with a pump of at most 11 kW (open question).
+- **Guadiana (ES040, Annex VI).** Art. 23.2: 100 m between wells. Art. 31.1 and appendix 5.4:
+  no new concessions in the eleven bodies listed (Mancha Occidental, Campo de Montiel…);
+  appendix 11.1, the closed perimeters (`regional-layers.md`).
+- **Segura (ES070, Annex X).** Art. 46.1: 100 m; 500 m to piezometers above 15,000 m³/year
+  (not mapped). Art. 45.3–45.4: no new groundwater volumes beyond 54.2 wells. Art. 49: 54.2
+  wells in bodies at risk need an authorisation.
+- **Júcar (ES080, Annex XI).** Art. 45.6: no new concessions in bodies in poor quantitative
+  status. Art. 49.4: every 54.2 well needs the authority's authorisation. No distance of its
+  own: the national one applies.
+- **Ebro (ES091, Annex XII).** Art. 25.2.e: 100 m. Art. 45.4 and appendix 12.7: in 20 listed
+  bodies 200 m for 54.2 wells, 400 m above. Art. 45.2 and appendix 12.5.1: no new
+  concessions in ES091MSBT079.
+- **Ceuta and Melilla (ES150, ES160, Annexes VIII, IX).** Art. 21: concessions give way to
+  public supply and keep 100 m from other abstractions; nothing beyond the national rules
+  for a 54.2 well.
+
+## Plans published by their regions
+
+- **Guadalete-Barbate and Tinto-Odiel-Piedras (ES063, ES064).** Orden de 9 de octubre de
+  2023, BOJA no. 199 (`https://www.juntadeandalucia.es/boja/2023/199/43` and `/44`):
+  arts. 39, 53.1 and 53.5 word for word as the Andalusian Mediterranean plan's; their
+  preventive-control bodies are in Apéndice 14.
+- **Catalonia (ES100).** RD 690/2023, normative part annexed to Decret 91/2023 (ACA, Spanish
+  text, `https://info.aca.gencat.cat/ca/aca/informacio/geco/plans-programes/PDG/ES/01-00_Plan_gestion_2022-27.pdf`).
+  Art. 42.5 and annex 1.6: in 18 bodies even a 54.2 well needs an authorisation. Arts.
+  41.1–41.2: in bodies in poor status new abstractions are limited. Art. 43: a 300 m
+  safeguard around supply wells (not mapped).
+- **Balearics (ES110).** RD 49/2023, normative text in BOIB 2023/28
+  (`https://www.caib.es/eboibfront/pdf/es/2023/28/1130905`, read through the CAIB's
+  "Normativa" PDF because the BOIB annex's fonts do not extract). Arts. 113.1–113.3: every
+  new well needs an authorisation. Art. 113.7, cuadro 20: 20 m up to 0.15 l/s, 100 m to
+  0.5, 200 m to 1, 350 m to 2, 500 m to 5, a study above. Art. 123.4: no new abstractions
+  in bodies in poor status.
+- **Gran Canaria (ES120).** Decreto 370/2023, BOC 2023/191/001: art. 73, small abstraction
+  up to 1,500 m³/year by authorisation; art. 76, above it a concession.
+- **Tenerife (ES124).** Decreto 372/2023, BOC 2023/191/003: small abstraction up to 2,000
+  m³/year by authorisation; above it a concession.
+
+## Regional water laws
+
+- **Canarias:** Ley 12/1990 de Aguas (BOE-A-1990-23087, consolidated 29/06/2026), art.
+  73.2–73.3: any work to find or abstract groundwater needs the island water council's
+  authorisation. Loaded as `lac-73-title`.
+- **Andalusia:** above.
+- **Every other region** read at the BOE's consolidated texts on 2026-11-26; none adds a
+  condition to drilling a well, so each is loaded with no rules: Aragón (Ley 10/2014,
+  BOE-A-2015-185), Asturias (Ley 1/1994, BOE-A-1994-10719), Cantabria (Ley 2/2014,
+  BOE-A-2014-13624), Castilla-La Mancha (Ley 2/2022, BOE-A-2022-4920), Catalonia (Decreto
+  Legislativo 3/2003, texto refundido de la legislación en materia de aguas), Valencia (Ley
+  2/1992, BOE-A-1992-12147; its irrigation Ley 7/1986 was repealed in 2019), Extremadura
+  (Ley 1/2023, BOE-A-2023-6662), Galicia (Ley 9/2010, BOE-A-2010-18559), Madrid (Ley
+  17/1984, BOE-A-1985-2431), Murcia (Ley 3/2000, BOE-A-2001-542), Navarra (Ley Foral
+  10/1988, BOE-A-1989-2954), País Vasco (Ley 1/2006, BOE-A-2011-17399), La Rioja (Ley
+  5/2000, BOE-A-2000-20554), Illes Balears (Decreto Legislativo 1/2016, BOE-A-2016-4956).
+  They set sanitation and water levies, metering and sanctions. Castilla y León has no
+  water law; Ceuta and Melilla legislate none.
+
+## Drilling permits beyond water law
+
+- **Mining safety:** Real Decreto 863/1985, Reglamento General de Normas Básicas de Seguridad
+  Minera (`https://www.boe.es/buscar/act.php?id=BOE-A-1985-10836`, consolidated 18/03/2010),
+  arts. 108–109, and ITC 06.0.07 (Orden de 2 de octubre de 1985): a borehole for water
+  needs a project signed by a competent technician and approved by the region's mining
+  authority before drilling. Loaded as `rgnbsm-108-mining`, everywhere. `(BOE, 2026-11-26)`
+- **Municipal licence:** needed for the works; not evaluated (MASTER_PLAN §4.5).
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

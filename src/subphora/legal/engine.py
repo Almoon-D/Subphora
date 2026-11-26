@@ -109,7 +109,7 @@ def body_class(settings: LegalSettings, facts: PlaceFacts) -> str | None:
     return None
 
 
-def _applies(rule: Rule, district: str | None, region: str | None) -> bool:
+def _applies(rule: Rule, district: str | None, region: str | None, body: str | None) -> bool:
     if rule.area == "ES":
         area_ok = True
     elif rule.area.startswith("ES-"):
@@ -118,7 +118,16 @@ def _applies(rule: Rule, district: str | None, region: str | None) -> bool:
         area_ok = rule.area == district
     if not area_ok:
         return False
-    return rule.where is None or (district is not None and district in rule.where.districts)
+    where = rule.where
+    if where is None:
+        return True
+    if where.districts is not None and (district is None or district not in where.districts):
+        return False
+    return where.bodies is None or (body is not None and where.has_body(body))
+
+
+def _body_code(facts: PlaceFacts) -> str | None:
+    return None if facts.body is None else facts.body.code
 
 
 class _Evaluator:
@@ -147,6 +156,15 @@ class _Evaluator:
         )
 
     def evaluate(self, rule: Rule) -> Finding:
+        volume = self.facts.volume_m3_year
+        if rule.applies_above_m3 is not None and volume <= rule.applies_above_m3:
+            return self.finding(
+                rule, Outcome.NOT_APPLICABLE, "only_concessions", limit=rule.applies_above_m3
+            )
+        if rule.applies_up_to_m3 is not None and volume > rule.applies_up_to_m3:
+            return self.finding(
+                rule, Outcome.NOT_APPLICABLE, "above_small_use", limit=rule.applies_up_to_m3
+            )
         match rule:
             case NoticeRule():
                 return self.notice(rule)
@@ -220,10 +238,8 @@ class _Evaluator:
         return self.finding(rule, Outcome.CLEAR, "body_not_marked", body=body.name)
 
     def no_new_concessions(self, rule: NoNewConcessionsRule) -> Finding:
-        if self.facts.volume_m3_year <= rule.above_volume_m3:
-            return self.finding(
-                rule, Outcome.NOT_APPLICABLE, "only_concessions", limit=rule.above_volume_m3
-            )
+        if rule.when == "always":
+            return self.finding(rule, Outcome.BLOCKS, "no_new_concessions_here")
         if self.cls is None:
             return self.finding(rule, Outcome.CHECK, "status_unknown", body=self._body_name())
         if self.cls == "poor":
@@ -236,10 +252,15 @@ class _Evaluator:
     def _case_fits(self, case: DistanceCase, cls: str) -> bool:
         if "any" not in case.bodies and cls not in case.bodies:
             return False
-        if case.max_volume_m3 is not None and self.facts.volume_m3_year > case.max_volume_m3:
+        volume = self.facts.volume_m3_year
+        if case.max_volume_m3 is not None and volume > case.max_volume_m3:
+            return False
+        if case.volume_below_m3 is not None and volume >= case.volume_below_m3:
             return False
         flow = self.facts.max_flow_l_s
-        return case.flow_below_l_s is None or (flow is not None and flow < case.flow_below_l_s)
+        if case.flow_below_l_s is not None and (flow is None or flow >= case.flow_below_l_s):
+            return False
+        return case.flow_up_to_l_s is None or (flow is not None and flow <= case.flow_up_to_l_s)
 
     def _case_distance(self, case: DistanceCase) -> float | None:
         if case.distance_m is not None:
@@ -339,9 +360,11 @@ class _Evaluator:
         return self.finding(rule, Outcome.CLEAR, "far_from_channel", **values)
 
 
-def layers_read(settings: LegalSettings, district: str | None, region: str | None) -> list[str]:
-    """The map layers the rules that apply in this district and region read."""
-    applying = {r.id for r in settings.rules if _applies(r, district, region)}
+def layers_read(
+    settings: LegalSettings, district: str | None, region: str | None, body: str | None = None
+) -> list[str]:
+    """The map layers the rules that apply in this district, region and body read."""
+    applying = {r.id for r in settings.rules if _applies(r, district, region, body)}
     return list(dict.fromkeys(m.layer for rule, m in settings.layer_matches() if rule in applying))
 
 
@@ -407,7 +430,7 @@ def assess(settings: LegalSettings, facts: PlaceFacts, at: datetime) -> LegalSta
     state its findings support."""
     district = district_of(settings, facts.body)
     region = facts.region
-    applicable = [r for r in settings.rules if _applies(r, district, region)]
+    applicable = [r for r in settings.rules if _applies(r, district, region, _body_code(facts))]
     superseded: dict[str, str] = {}
     for rule in applicable:
         if isinstance(rule, WellDistanceRule):

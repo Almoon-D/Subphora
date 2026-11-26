@@ -1,0 +1,36 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Melilla (area ES160): the 2022-2027 basin plan, Real Decreto 35/2023, normative provisions in
+# its Annex IX (BOE no. 35, 10/02/2023). Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md). Its art. 21 rules concessions; a small-use well
+# follows the national rules.
+
+rules:
+  - id: phml-21-1-supply-first
+    area: ES160
+    kind: authorisation
+    applies_above_m3: 7000
+    title:
+      en: "As a rule only concessions for public supply are admitted; any other use needs the City's report"
+      es: "Con carácter general solo se admiten concesiones para abastecimiento; cualquier otro uso necesita informe de la Ciudad de Melilla"
+    source:
+      name: "Plan Hidrológico de Melilla 2022-2027 (Real Decreto 35/2023), Annex IX"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 21.1"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phml-21-2-distance
+    area: ES160
+    kind: well_distance
+    applies_above_m3: 7000
+    cases:
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance between concession wells: 100 m"
+      es: "Distancia mínima entre captaciones de una concesión: 100 m"
+    source:
+      name: "Plan Hidrológico de Melilla 2022-2027 (Real Decreto 35/2023), Annex IX"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 21.2.g"
+      published: 2023-02-10
+      checked: 2026-11-26

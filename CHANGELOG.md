@@ -7,6 +7,21 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.13.0] - 2026-11-26
+
+- The legal filter now knows the basin plans of 17 of Spain's 25 river-basin districts
+  (Miño-Sil, both Cantábricos, Duero, Tajo, Guadiana, Guadalquivir, the three Andalusian
+  ones, Segura, Júcar, Ebro, Catalonia, Balearics, Ceuta and Melilla) and part of four
+  Canary island plans, all read at their official sources on 2026-11-26.
+- Every region's water law has been read: the Canary Water Law adds an island council's
+  authorisation; the others add nothing to drilling a well, and the filter says so.
+- New conditions shown with their article: distances that grow with the volume (Tajo) or
+  the pump's flow (Balearics, Miño-Sil), bodies closed to new concessions (Guadiana, Ebro,
+  Segura), authorisations in listed bodies (Catalonia, Tajo) and the Júcar's for any well.
+- Every status now lists the regional mining authority's approval of the drilling project.
+- Where a plan could not be read (Galicia-Costa, Fuerteventura, La Palma, La Gomera) the
+  status still says "rules not loaded", and why.
+
 ## [0.12.0] - 2026-11-26
 
 - A legal panel opens first for every selected area: the water authority, the groundwater

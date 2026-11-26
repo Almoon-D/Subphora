@@ -71,11 +71,9 @@ async def test_a_closed_perimeter_of_the_guadiana_is_probably_not_allowed(
     assert findings["phgn-11-1-perimeters"]["values"] == {"zone": "Laguna de las Yeguas"}
     assert findings["rdph-84-2-at-risk"]["outcome"] == "authorisation"
     # No distances at an area's centre: measured per candidate.
-    assert findings["rdph-87-2-distance"]["message"] == "distance_not_measured"
-    assert {(n["scope"], n["area"]) for n in body["not_loaded"]} == {
-        ("basin_plan", "ES040"),
-        ("regional_law", "ES-CM"),
-    }
+    assert findings["phgn-23-2-distance"]["message"] == "distance_not_measured"
+    assert findings["rdph-87-2-distance"]["message"] == "superseded"
+    assert body["not_loaded"] == []
     assert body["disclaimer"].startswith("Guidance, not legal advice")
     # Only the layers of the rules that apply here were asked; Andalusia's was not.
     assert not upstream.asked("www.juntadeandalucia.es")

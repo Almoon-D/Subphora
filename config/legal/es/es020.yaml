@@ -1,13 +1,16 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
-# Duero (area ES020): only the 2022-2027 plan's groundwater zoning (Real Decreto 35/2023,
-# annex IV art. 33), as CH Duero's Mírame-IDEDuero layer draws it
-# (docs/knowledge/regional-layers.md, read 2026-11-24). The plan's normative text is not
-# loaded (areas.yaml says why).
+# Duero (area ES020): the 2022-2027 basin plan of its Spanish part, Real Decreto 35/2023,
+# normative provisions in its Annex IV (BOE no. 35, 10/02/2023). Read at the BOE on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md). The zoning of art. 33 is read through
+# CH Duero's Mírame-IDEDuero layer (regional-layers.md). The plan sets no distances between
+# wells of its own: the national ones (RDPH art. 87.2) apply; art. 34.2.b sends small-use
+# wells in poor bodies to the RDPH too.
 
 rules:
   - id: phd-33-zoning
     area: ES020
     kind: zone
+    applies_above_m3: 7000
     match:
       layer: duero-groundwater-zoning
       field: f_valoracion_final
@@ -15,11 +18,14 @@ rules:
     outcome: blocks
     label_field: nombre
     title:
-      en: "Groundwater zoning: zones not authorised for new abstractions, or with specific limitations"
-      es: "Zonificación de aguas subterráneas: zonas no autorizadas para nuevas captaciones, o con limitaciones específicas"
+      en: "Groundwater zoning: in zones not authorised no new concession adds abstraction"
+      es: "Zonificación de aguas subterráneas: en las zonas no autorizadas ninguna concesión nueva aumenta la extracción"
+    uncertain:
+      en: "The whole of a body in poor quantitative status is a zone not authorised. Public supply without another source is excepted. Any new well must also keep 400 m from the official piezometric network's points on public land and 100 m from those on private land (art. 20.5), which no layer here measures."
+      es: "Toda masa en mal estado cuantitativo es zona no autorizada. Se exceptúa el abastecimiento urbano sin otra fuente. Todo pozo nuevo debe además guardar 400 m a los puntos de la red piezométrica oficial en terreno público y 100 m a los de terreno privado (art. 20.5), que aquí ninguna capa mide."
     source:
-      name: "Plan Hidrológico del Duero 2022-2027 (Real Decreto 35/2023), annex IV"
+      name: "Plan Hidrológico del Duero 2022-2027 (Real Decreto 35/2023), Annex IV"
       url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
-      article: "art. 33"
+      article: "arts. 33 and 34.1.b"
       published: 2023-02-10
-      checked: 2026-11-24
+      checked: 2026-11-26

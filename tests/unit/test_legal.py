@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from subphora.config import load_settings
-from subphora.config.legal import LegalSettings
+from subphora.config.legal import LegalSettings, LoadState, Translated, Where
 from subphora.domain.legal import (
     BodyStatus,
     Finding,
@@ -31,10 +31,13 @@ POOR = "Malo"
 
 
 def body(
-    district: str = "ES050", status: str | None = GOOD, at_risk: bool | None = False
+    district: str = "ES050",
+    status: str | None = GOOD,
+    at_risk: bool | None = False,
+    code: str | None = None,
 ) -> BodyStatus:
     return BodyStatus(
-        code=f"{district}MSBT000000001",
+        code=code or f"{district}MSBT000000001",
         name="Test body",
         quantitative_status=status,
         declared_at_risk=at_risk,
@@ -158,16 +161,29 @@ def test_a_good_body_far_from_everything_meets_only_the_andalusian_open_question
     assert all("en" in p and "es" in p for p in status.permits)
 
 
-def test_outside_andalusia_the_guadalquivir_says_the_regional_law_is_not_read() -> None:
+def unread_region(region: str) -> LegalSettings:
+    """The rules with one region's water law not read (every region's is loaded)."""
+    areas = SETTINGS.areas
+    law = LoadState(state="not_read", reason=Translated(en="The law was not read.", es="No leída."))
+    regions = areas.regions | {region: areas.regions[region].model_copy(update={"water_law": law})}
+    return SETTINGS.model_copy(update={"areas": areas.model_copy(update={"regions": regions})})
+
+
+def test_outside_andalusia_the_guadalquivir_applies_no_andalusian_rule() -> None:
     status = run(facts(region="ES-CM"))
+    assert status.state is LegalState.CONDITIONS_APPLY
+    assert status.not_loaded == ()
+    assert not any(f.area == "ES-AN" for f in status.findings)
+
+
+def test_a_regional_law_not_read_says_so_and_why() -> None:
+    status = run(facts(region="ES-CM"), unread_region("ES-CM"))
     assert status.state is LegalState.RULES_NOT_LOADED
     (missing,) = status.not_loaded
     assert missing.scope is NotLoadedScope.REGIONAL_LAW
     assert missing.area == "ES-CM"
-    assert "not read" in missing.reason["en"]
-    assert missing.reason["es"]
+    assert missing.reason == {"en": "The law was not read.", "es": "No leída."}
     assert status.reason == missing.reason["en"]
-    assert not any(f.area == "ES-AN" for f in status.findings)
 
 
 def test_in_an_andalusian_district_the_junta_decides() -> None:
@@ -313,7 +329,8 @@ def test_outside_bodies_and_in_poor_ones_the_mediterranean_plan() -> None:
     ("flow", "minimum"), [(None, 100.0), (0.1, 20.0), (0.15, 100.0), (1.0, 100.0)]
 )
 def test_the_national_distance_depends_on_the_flow(flow: float | None, minimum: float) -> None:
-    place = facts(body=body("ES030"), region="ES-MD", max_flow_l_s=flow)
+    # The Júcar plan sets no distance of its own: the national one applies.
+    place = facts(body=body("ES080"), region="ES-VC", max_flow_l_s=flow)
     assert _distance(place, "rdph-87-2-distance").values["minimum"] == minimum
 
 
@@ -331,7 +348,7 @@ def test_a_distance_never_passes_unmeasured(
     point: Distance | None, outcome: Outcome, message: str
 ) -> None:
     result = _distance(
-        facts(body=body("ES030"), region="ES-MD", water_point=point), "rdph-87-2-distance"
+        facts(body=body("ES080"), region="ES-VC", water_point=point), "rdph-87-2-distance"
     )
     assert (result.outcome, result.message) == (outcome, message)
 
@@ -393,23 +410,282 @@ def test_a_closed_perimeter_of_the_guadiana_blocks(
         assert result.values["zone"] == "Laguna"
         # A blocking rule decides, whatever is not loaded.
         assert status.state is LegalState.PROBABLY_NOT_ALLOWED
-        assert status.not_loaded
     else:
-        assert status.state is LegalState.RULES_NOT_LOADED
+        assert status.state is LegalState.CONDITIONS_APPLY
 
 
 def test_the_duero_zoning_blocks_only_its_closed_zones() -> None:
-    def at(value: str) -> Finding:
+    def at(value: str, volume: float = 7001) -> Finding:
         answer = LayerAnswer(features=({"f_valoracion_final": value, "nombre": "Sector"},))
         place = facts(
-            body=body("ES020"), region="ES-CL", layers={"duero-groundwater-zoning": answer}
+            body=body("ES020"),
+            region="ES-CL",
+            layers={"duero-groundwater-zoning": answer},
+            volume_m3_year=volume,
         )
         return finding(run(place), "phd-33-zoning")
 
     assert at("Zona No Autorizada").outcome is Outcome.BLOCKS
+    # The zoning binds new concessions: a small-use well of 7,000 m³/year is outside it.
+    small = at("Zona No Autorizada", 7000)
+    assert (small.outcome, small.message) == (Outcome.NOT_APPLICABLE, "only_concessions")
+    assert small.values == {"limit": 7000.0}
     other = at("Zona con limitaciones específicas")
     assert (other.outcome, other.message) == (Outcome.CHECK, "zone_other")
     assert other.values == {"zone": "Sector", "value": "Zona con limitaciones específicas"}
+
+
+# ── Each basin plan's own rules ──────────────────────────────────────────────────────
+
+
+def at(district: str, region: str, rule: str, **changes: Any) -> Finding:
+    """The finding of one rule at a place of a district, with the planned well changed."""
+    place: dict[str, Any] = {"body": body(district, code=changes.pop("code", None))}
+    if "status" in changes:
+        place["body"] = body(district, status=changes.pop("status"), code=place["body"].code)
+    return finding(run(facts(region=region, **place, **changes)), rule)
+
+
+def outcome_at(district: str, region: str, rule: str, **changes: Any) -> Outcome | None:
+    """The rule's outcome at the place; None where the rule does not apply at all."""
+    code = changes.pop("code", None)
+    status = run(facts(body=body(district, code=code), region=region, **changes))
+    return next((f.outcome for f in status.findings if f.rule_id == rule), None)
+
+
+def applies(status: LegalStatus, rule_id: str) -> bool:
+    return any(f.rule_id == rule_id for f in status.findings)
+
+
+def minimum(result: Finding) -> float:
+    return float(result.values["minimum"])
+
+
+@pytest.mark.parametrize(
+    ("volume", "flow", "expected"),
+    [
+        (3649, 0.14, 20.0),
+        (3650, 0.14, 100.0),
+        (3649, 0.15, 50.0),
+        (3649, 0.99, 50.0),
+        (3649, 1.0, 100.0),
+        (3649, None, 100.0),
+    ],
+)
+def test_the_mino_sil_distance(volume: float, flow: float | None, expected: float) -> None:
+    result = at("ES010", "ES-GA", "phms-32-distance", volume_m3_year=volume, max_flow_l_s=flow)
+    assert minimum(result) == expected
+
+
+@pytest.mark.parametrize(
+    ("volume", "expected"),
+    [(999, 100.0), (1000, 250.0), (7000, 250.0), (25750, 325.0), (44500, 400.0), (90000, 400.0)],
+)
+def test_the_tajo_distance_grows_with_the_volume(volume: float, expected: float) -> None:
+    assert minimum(at("ES030", "ES-MD", "pht-22-distance", volume_m3_year=volume)) == expected
+
+
+@pytest.mark.parametrize(
+    ("code", "rule", "volume", "expected"),
+    [
+        ("ES030MSBT030-004", "pht-22-distance-torrelaguna", 82000, 325.0),
+        ("ES030MSBT030-010", "pht-22-distance-madrid", 32000, 325.0),
+        ("ES030MSBT030-010", "pht-22-distance-madrid", 57000, 400.0),
+        ("ES030MSBT030-018", "pht-22-distance-south", 22000, 325.0),
+    ],
+)
+def test_the_tajo_bodies_with_their_own_scale(
+    code: str, rule: str, volume: float, expected: float
+) -> None:
+    status = run(facts(body=body(code=code), region="ES-MD", volume_m3_year=volume))
+    assert minimum(finding(status, rule)) == expected
+    assert finding(status, "pht-22-distance").values == {"by": rule}
+    # Elsewhere in the basin the body's own scale does not apply.
+    assert not applies(run(facts(body=body("ES030"), region="ES-MD")), rule)
+
+
+@pytest.mark.parametrize(
+    ("code", "volume", "outcome"),
+    [
+        ("ES030MSBT030-011", 7001, Outcome.AUTHORISATION),
+        ("ES030MSBT030-011", 7000, Outcome.NOT_APPLICABLE),
+        ("ES030MSBT030-001", 7001, None),
+    ],
+)
+def test_the_tajo_bodies_at_risk_need_an_authorisation_for_a_concession(
+    code: str, volume: float, outcome: Outcome | None
+) -> None:
+    rule = "pht-35-at-risk-zones"
+    assert outcome_at("ES030", "ES-MD", rule, code=code, volume_m3_year=volume) is outcome
+
+
+@pytest.mark.parametrize(
+    ("code", "volume", "outcome", "message"),
+    [
+        ("ES040MSBT000030606", 7001, Outcome.BLOCKS, "no_new_concessions_here"),
+        ("ES040MSBT000030606", 7000, Outcome.NOT_APPLICABLE, "only_concessions"),
+    ],
+)
+def test_the_guadiana_bodies_closed_to_new_concessions(
+    code: str, volume: float, outcome: Outcome, message: str
+) -> None:
+    status = run(facts(body=body(code=code), region="ES-CM", volume_m3_year=volume))
+    result = finding(status, "phgn-31-1-no-concessions")
+    assert (result.outcome, result.message) == (outcome, message)
+    if outcome is Outcome.BLOCKS:
+        assert status.state is LegalState.PROBABLY_NOT_ALLOWED
+    other = "ES040MSBT000030601"
+    assert outcome_at("ES040", "ES-CM", "phgn-31-1-no-concessions", code=other) is None
+
+
+def test_the_segura_admits_no_new_volumes_above_the_small_use() -> None:
+    blocked = at("ES070", "ES-MC", "phs-45-3-no-new-volumes", volume_m3_year=7001)
+    assert (blocked.outcome, blocked.message) == (Outcome.BLOCKS, "no_new_concessions_here")
+    small = at("ES070", "ES-MC", "phs-45-3-no-new-volumes")
+    assert small.outcome is Outcome.NOT_APPLICABLE
+    risk = finding(run(facts(body=body("ES070", at_risk=True), region="ES-MC")), "phs-49-1-at-risk")
+    assert risk.outcome is Outcome.AUTHORISATION
+    assert minimum(at("ES070", "ES-MC", "phs-46-1-distance")) == 100.0
+
+
+def test_the_jucar_small_wells_and_poor_bodies() -> None:
+    small = at("ES080", "ES-VC", "phj-49-4-small-wells")
+    assert small.outcome is Outcome.AUTHORISATION
+    big = at("ES080", "ES-VC", "phj-49-4-small-wells", volume_m3_year=7001)
+    assert (big.outcome, big.message) == (Outcome.NOT_APPLICABLE, "above_small_use")
+    poor = at("ES080", "ES-VC", "phj-45-6-no-concessions", status=POOR, volume_m3_year=7001)
+    assert poor.outcome is Outcome.BLOCKS
+    good = at("ES080", "ES-VC", "phj-45-6-no-concessions", volume_m3_year=7001)
+    assert good.outcome is Outcome.CLEAR
+
+
+@pytest.mark.parametrize(
+    ("code", "volume", "rule", "expected"),
+    [
+        ("ES091MSBT067", 7000, "phe-45-4-distance", 200.0),
+        ("ES091MSBT067", 7001, "phe-45-4-distance", 400.0),
+        ("ES091MSBT001", 7000, "phe-25-2-distance", 100.0),
+    ],
+)
+def test_the_ebro_distances(code: str, volume: float, rule: str, expected: float) -> None:
+    status = run(facts(body=body(code=code), region="ES-AR", volume_m3_year=volume))
+    assert minimum(finding(status, rule)) == expected
+
+
+def test_the_ebro_closes_one_body_to_new_concessions() -> None:
+    closed = at(
+        "ES091", "ES-AR", "phe-45-2-no-concessions", code="ES091MSBT079", volume_m3_year=8000
+    )
+    assert closed.outcome is Outcome.BLOCKS
+    other = outcome_at("ES091", "ES-AR", "phe-45-2-no-concessions", volume_m3_year=8000)
+    assert other is None
+
+
+@pytest.mark.parametrize(
+    ("code", "outcome"),
+    [
+        # MITECO's layer splits some bodies: ES100MSBT18 covers ES100MSBT18_01.
+        ("ES100MSBT18_01", Outcome.AUTHORISATION),
+        ("ES100MSBT18", Outcome.AUTHORISATION),
+        ("ES100MSBT180", None),
+        ("ES100MSBT36", None),
+    ],
+)
+def test_the_catalan_bodies_that_need_an_authorisation(code: str, outcome: Outcome | None) -> None:
+    assert outcome_at("ES100", "ES-CT", "phcat-42-5-authorisation", code=code) is outcome
+
+
+@pytest.mark.parametrize(
+    ("district", "rule"),
+    [
+        ("ES017", "phco-34-3-poor-body"),
+        ("ES018", "phcoc-34-3-poor-body"),
+        ("ES100", "phcat-41-poor-body"),
+    ],
+)
+def test_a_poor_body_needs_an_authorisation(district: str, rule: str) -> None:
+    region = DISTRICT_REGION[district]
+    assert at(district, region, rule, status=POOR).outcome is Outcome.AUTHORISATION
+    assert at(district, region, rule).outcome is Outcome.CLEAR
+
+
+@pytest.mark.parametrize(
+    ("flow", "volume", "expected"),
+    [
+        (0.15, 7000, 20.0),
+        (0.16, 7000, 100.0),
+        (0.5, 7000, 100.0),
+        (1.0, 7000, 200.0),
+        (2.0, 7000, 350.0),
+        (5.0, 7000, 500.0),
+        (None, 7000, 200.0),
+    ],
+)
+def test_the_balearic_distance_grows_with_the_flow(
+    flow: float | None, volume: float, expected: float
+) -> None:
+    result = at("ES110", "ES-IB", "phib-113-7-distance", max_flow_l_s=flow, volume_m3_year=volume)
+    assert minimum(result) == expected
+
+
+def test_above_five_litres_a_second_the_balearic_distance_is_left_to_a_study() -> None:
+    result = at("ES110", "ES-IB", "phib-113-7-distance", max_flow_l_s=5.1, volume_m3_year=8000)
+    assert (result.outcome, result.message) == (Outcome.CHECK, "distance_by_authorisation")
+
+
+@pytest.mark.parametrize(
+    ("district", "small", "limit"),
+    [("ES120", "phgc-73-small-use", 1500), ("ES124", "phtf-small-use", 2000)],
+)
+def test_the_canary_islands_small_use_and_concessions(
+    district: str, small: str, limit: float
+) -> None:
+    concession = small.split("-")[0] + ("-76-concession" if district == "ES120" else "-concession")
+    status = run(facts(body=body(district), region="ES-CN", volume_m3_year=limit))
+    assert finding(status, small).outcome is Outcome.AUTHORISATION
+    assert finding(status, concession).outcome is Outcome.NOT_APPLICABLE
+    assert finding(status, "lac-73-title").outcome is Outcome.AUTHORISATION
+    above = run(facts(body=body(district), region="ES-CN", volume_m3_year=limit + 1))
+    assert finding(above, small).outcome is Outcome.NOT_APPLICABLE
+    assert finding(above, concession).outcome is Outcome.AUTHORISATION
+
+
+@pytest.mark.parametrize(("district", "prefix"), [("ES150", "phce"), ("ES160", "phml")])
+def test_ceuta_and_melilla_bind_only_concessions(district: str, prefix: str) -> None:
+    region = DISTRICT_REGION[district]
+    small = run(facts(body=body(district), region=region))
+    assert finding(small, f"{prefix}-21-1-supply-first").outcome is Outcome.NOT_APPLICABLE
+    assert finding(small, f"{prefix}-21-2-distance").outcome is Outcome.NOT_APPLICABLE
+    big = run(facts(body=body(district), region=region, volume_m3_year=7001))
+    assert finding(big, f"{prefix}-21-1-supply-first").outcome is Outcome.AUTHORISATION
+    assert minimum(finding(big, f"{prefix}-21-2-distance")) == 100.0
+
+
+@pytest.mark.parametrize("district", ["ES063", "ES064"])
+def test_the_other_andalusian_districts_follow_the_mediterranean_plan(district: str) -> None:
+    prefix = "phgb" if district == "ES063" else "phtop"
+    assert minimum(at(district, "ES-AN", f"{prefix}-53-5-distance", volume_m3_year=1500)) == 50.0
+    assert minimum(at(district, "ES-AN", f"{prefix}-53-5-distance", volume_m3_year=1501)) == 100.0
+    risk = run(facts(body=body(district, at_risk=True)))
+    assert finding(risk, f"{prefix}-53-1-authorisation").outcome is Outcome.AUTHORISATION
+
+
+def test_drilling_needs_the_mining_authority_everywhere() -> None:
+    for place in (facts(), facts(body=None), facts(body=body("ES014"), region="ES-GA")):
+        assert finding(run(place), "rgnbsm-108-mining").outcome is Outcome.AUTHORISATION
+
+
+# ── New rule fields: their checks ────────────────────────────────────────────────────
+
+
+def test_a_where_names_something_and_a_volume_range_is_not_empty() -> None:
+    raw = SETTINGS.model_dump()
+    with pytest.raises(ValidationError, match="names districts, bodies or both"):
+        Where.model_validate({})
+    rule = next(r for r in raw["rules"] if r["id"] == "phj-49-4-small-wells")
+    rule["applies_above_m3"] = 7000
+    with pytest.raises(ValidationError, match="volume range is empty"):
+        LegalSettings.model_validate(raw)
 
 
 # ── Every district ───────────────────────────────────────────────────────────────────
@@ -453,13 +729,13 @@ def test_a_place_in_every_district(district: str, region: str) -> None:
 
 
 def test_a_district_whose_plan_was_not_read_says_so_and_why() -> None:
-    status = run(facts(body=body("ES091"), region="ES-AR"))
+    status = run(facts(body=body("ES014"), region="ES-GA"))
     assert status.state is LegalState.RULES_NOT_LOADED
-    plan = next(n for n in status.not_loaded if n.scope is NotLoadedScope.BASIN_PLAN)
-    assert plan.area == "ES091"
-    assert "was not read" in plan.reason["en"]
-    assert status.reason is not None
-    assert "basin plan" in status.reason
+    (plan,) = status.not_loaded
+    assert plan.scope is NotLoadedScope.BASIN_PLAN
+    assert plan.area == "ES014"
+    assert plan.reason == SETTINGS.areas.districts["ES014"].plan.reason.model_dump()
+    assert status.reason == plan.reason["en"]
 
 
 def test_the_district_comes_from_the_body_code() -> None:

@@ -1,0 +1,46 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Cuencas Internas de Cataluña (area ES100): the 2022-2027 management plan, approved by Real
+# Decreto 690/2023 (BOE 21/07/2023); its normative determinations (chapter 15 of the plan,
+# annexed to Decret 91/2023) read in the Agència Catalana de l'Aigua's Spanish edition on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md). The plan names bodies MAS07…; MITECO's
+# layer writes them ES100MSBT07_01, which the listed code matches by its prefix. The plan
+# sets no distances between wells: the national ones (RDPH art. 87.2) apply.
+
+rules:
+  - id: phcat-42-5-authorisation
+    area: ES100
+    kind: authorisation
+    applies_up_to_m3: 7000
+    where:
+      bodies: [ES100MSBT07, ES100MSBT15, ES100MSBT18, ES100MSBT19, ES100MSBT20, ES100MSBT21,
+               ES100MSBT24, ES100MSBT25, ES100MSBT32, ES100MSBT33, ES100MSBT34, ES100MSBT35,
+               ES100MSBT37, ES100MSBT38, ES100MSBT39, ES100MSBT55, ES100MSBT66, ES100MSBT67]
+    title:
+      en: "In this body a small-use well (up to 7,000 m³/year) needs the Agència Catalana de l'Aigua's authorisation"
+      es: "En esta masa un pozo de uso privativo (hasta 7.000 m³/año) necesita autorización de la Agència Catalana de l'Aigua"
+    uncertain:
+      en: "The authorisation may set an exploitation regime and require a meter at each well."
+      es: "La autorización puede fijar un régimen de explotación y exigir un contador en cada pozo."
+    source:
+      name: "Pla de gestió del districte de conca fluvial de Catalunya 2022-2027 (Real Decreto 690/2023; normative part annexed to Decret 91/2023)"
+      url: "https://info.aca.gencat.cat/ca/aca/informacio/geco/plans-programes/PDG/ES/01-00_Plan_gestion_2022-27.pdf"
+      article: "art. 42.5 and annex 1.6"
+      published: 2023-07-21
+      checked: 2026-11-26
+
+  - id: phcat-41-poor-body
+    area: ES100
+    kind: body_authorisation
+    poor_quantitative: true
+    title:
+      en: "In a body in poor quantitative status a new right needs a detailed hydrogeological characterisation, and may be refused"
+      es: "En una masa en mal estado cuantitativo un derecho nuevo necesita una caracterización hidrogeológica de detalle, y puede denegarse"
+    uncertain:
+      en: "Poor chemical status by saline intrusion may also justify refusal (not checked here). Within 300 m of a groundwater abstraction for human consumption (over 10 m³/day or 50 people) a new well needs a study of no effect on it (art. 43), and no layer here maps those abstractions."
+      es: "El mal estado químico por intrusión salina también puede justificar la denegación (aquí no se comprueba). A menos de 300 m de una captación de agua subterránea para consumo humano (más de 10 m³/día o 50 personas) un pozo nuevo necesita un estudio de no afección (art. 43), y aquí ninguna capa cartografía esas captaciones."
+    source:
+      name: "Pla de gestió del districte de conca fluvial de Catalunya 2022-2027 (Real Decreto 690/2023; normative part annexed to Decret 91/2023)"
+      url: "https://info.aca.gencat.cat/ca/aca/informacio/geco/plans-programes/PDG/ES/01-00_Plan_gestion_2022-27.pdf"
+      article: "arts. 41.1–41.2"
+      published: 2023-07-21
+      checked: 2026-11-26

@@ -1,0 +1,40 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Júcar (area ES080): the 2022-2027 basin plan, Real Decreto 35/2023, normative provisions in
+# its Annex XI (BOE no. 35, 10/02/2023). Read at the BOE on 2026-11-26
+# (docs/knowledge/legal-groundwater.md). The plan sets no distances between wells of its own:
+# the national ones (RDPH art. 87.2) apply.
+
+rules:
+  - id: phj-45-6-no-concessions
+    area: ES080
+    kind: no_new_concessions
+    applies_above_m3: 7000
+    title:
+      en: "No concessions for new uses in a body in poor quantitative status"
+      es: "No se otorgan concesiones para usos nuevos en una masa en mal estado cuantitativo"
+    uncertain:
+      en: "The same holds in bodies in good status whose exploitation index with rights is 0.8 or more, in systems where rights exceed resources (neither is mapped here) and, for uses other than urban supply, in a 100 m strip next to a body not in good quantitative status (art. 49.2). Future urban growth without another resource and the plan's reserves are excepted."
+      es: "Lo mismo vale en masas en buen estado con índice de explotación con derechos de 0,8 o más, en sistemas con más derechos que recursos (ninguno de los dos está cartografiado aquí) y, para usos distintos del abastecimiento urbano, en una franja de 100 m junto a una masa que no esté en buen estado cuantitativo (art. 49.2). Se exceptúan los crecimientos urbanos sin otro recurso y las reservas del plan."
+    source:
+      name: "Plan Hidrológico del Júcar 2022-2027 (Real Decreto 35/2023), Annex XI"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 45.6"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phj-49-4-small-wells
+    area: ES080
+    kind: authorisation
+    applies_up_to_m3: 7000
+    title:
+      en: "Where recognised rights exceed the body's available resource, no new small-use well is authorised (except for isolated homes)"
+      es: "Donde los derechos reconocidos superan el recurso disponible de la masa no se autorizan pozos nuevos de uso privativo (salvo viviendas aisladas)"
+    uncertain:
+      en: "The plan does not list which bodies these are; the basin authority says it for each application. A small-use well may not supply urban land either (art. 49.5)."
+      es: "El plan no enumera qué masas son; lo dice el organismo de cuenca en cada solicitud. Tampoco puede abastecer suelo urbano un pozo de uso privativo (art. 49.5)."
+    source:
+      name: "Plan Hidrológico del Júcar 2022-2027 (Real Decreto 35/2023), Annex XI"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 49.4"
+      published: 2023-02-10
+      checked: 2026-11-26

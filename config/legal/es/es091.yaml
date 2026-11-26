@@ -1,0 +1,68 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Ebro (area ES091): the 2022-2027 basin plan of its Spanish part, Real Decreto 35/2023,
+# normative provisions in its Annex XII (BOE no. 35, 10/02/2023). Read at the BOE on
+# 2026-11-26 (docs/knowledge/legal-groundwater.md).
+
+rules:
+  - id: phe-25-2-distance
+    area: ES091
+    kind: well_distance
+    supersedes: [rdph-87-2-distance]
+    cases:
+      - {bodies: [any], distance_m: 100}
+    title:
+      en: "Minimum distance between wells: 100 m (500 m to a spring abstraction)"
+      es: "Distancia mínima entre pozos: 100 m (500 m a un aprovechamiento de manantial)"
+    uncertain:
+      en: "Unless technically justified, a new well keeps 500 m from an existing spring abstraction; the inventory does not say which points are springs in use, so 100 m is checked."
+      es: "Salvo justificación técnica, un pozo nuevo guarda 500 m a un aprovechamiento de manantial existente; el inventario no dice qué puntos son manantiales en uso, así que se comprueban 100 m."
+    source:
+      name: "Plan Hidrológico del Ebro 2022-2027 (Real Decreto 35/2023), Annex XII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 25.2.e"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phe-45-4-distance
+    area: ES091
+    kind: well_distance
+    supersedes: [rdph-87-2-distance, phe-25-2-distance]
+    where:
+      bodies: [ES091MSBT067, ES091MSBT076, ES091MSBT077, ES091MSBT079, ES091MSBT082,
+               ES091MSBT006, ES091MSBT009, ES091MSBT036, ES091MSBT048, ES091MSBT049,
+               ES091MSBT063, ES091MSBT064, ES091MSBT072, ES091MSBT074, ES091MSBT075,
+               ES091MSBT081, ES091MSBT083, ES091MSBT087, ES091MSBT089, ES091MSBT098]
+    cases:
+      - {bodies: [any], max_volume_m3: 7000, distance_m: 200}
+      - {bodies: [any], distance_m: 400}
+    title:
+      en: "In this body, 200 m between a small-use well and other abstractions, 400 m for a concession"
+      es: "En esta masa, 200 m entre un pozo de uso privativo y otras captaciones, 400 m para una concesión"
+    uncertain:
+      en: "Abstractions of the same holding are excepted. In Somontano del Moncayo it holds only in the zones of the Junta de Gobierno agreements of 2001, 2005 and 2006."
+      es: "Se exceptúan las captaciones de un mismo aprovechamiento. En Somontano del Moncayo solo vale en las zonas de los acuerdos de la Junta de Gobierno de 2001, 2005 y 2006."
+    source:
+      name: "Plan Hidrológico del Ebro 2022-2027 (Real Decreto 35/2023), Annex XII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 45.4 and appendix 12.7"
+      published: 2023-02-10
+      checked: 2026-11-26
+
+  - id: phe-45-2-no-concessions
+    area: ES091
+    kind: no_new_concessions
+    when: always
+    applies_above_m3: 7000
+    where: {bodies: [ES091MSBT079]}
+    title:
+      en: "No new concessions in the whole of Campo de Belchite"
+      es: "No se admiten concesiones nuevas en todo el Campo de Belchite"
+    uncertain:
+      en: "Elsewhere appendix 12.5.1 closes only parts of bodies (municipalities, 5 km circles, Junta agreements), and art. 45.2 also closes 700 or 1,000 m around significant springs and 400 m around public monitoring points; none of these is mapped here. Public supply without an alternative is excepted."
+      es: "En otros sitios el apéndice 12.5.1 solo cierra partes de masas (municipios, círculos de 5 km, acuerdos de la Junta), y el art. 45.2 cierra también 700 o 1.000 m alrededor de los drenajes significativos y 400 m alrededor de los puntos públicos de control; aquí no se cartografía ninguno. Se exceptúa el abastecimiento sin alternativa."
+    source:
+      name: "Plan Hidrológico del Ebro 2022-2027 (Real Decreto 35/2023), Annex XII"
+      url: "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-3511"
+      article: "art. 45.2 and appendix 12.5.1"
+      published: 2023-02-10
+      checked: 2026-11-26

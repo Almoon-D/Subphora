@@ -62,7 +62,12 @@ class LegalService:
             self._answer(bodies.at_risk_layer, lon, lat),
         )
         body = None if status.features is None else _body(self._legal, status.features, at_risk)
-        ids = layers_read(self._legal, district_of(self._legal, body), region)
+        ids = layers_read(
+            self._legal,
+            district_of(self._legal, body),
+            region,
+            None if body is None else body.code,
+        )
         answers = dict(
             zip(ids, await asyncio.gather(*(self._answer(i, lon, lat) for i in ids)), strict=True)
         )

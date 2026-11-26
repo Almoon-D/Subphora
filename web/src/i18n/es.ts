@@ -367,6 +367,7 @@ export const es = {
   "legal.message.body_not_marked": "La masa {body} no está en esa situación.",
   "legal.message.only_concessions": "Solo afecta a concesiones (más de {limit} m³/año).",
   "legal.message.no_new_concessions": "La masa {body} está en mal estado cuantitativo: no se admiten concesiones nuevas.",
+  "legal.message.no_new_concessions_here": "El plan no admite aquí derechos nuevos de agua subterránea.",
   "legal.message.body_not_poor": "La masa {body} no está en mal estado cuantitativo.",
   "legal.message.distance_by_authorisation": "La norma no fija distancia aquí: decide la autorización.",
   "legal.message.distance_not_measured": "Debe haber al menos {minimum} m hasta otros pozos y manantiales; aquí no se ha medido.",

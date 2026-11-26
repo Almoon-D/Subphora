@@ -97,6 +97,8 @@ export interface MapConfig {
   area_padding_px: number;
   /** The zoom a selected point is shown at. */
   point_zoom: number;
+  /** How long a drawn cross-section's line may be, in metres. */
+  section: { min_length_m: number; max_length_m: number };
   search: {
     /** The browser stops adding vertices to a drawn polygon here. */
     max_vertices: number;
@@ -750,4 +752,153 @@ export async function fetchParcelExplanation(
   const query = new URLSearchParams({ lon: lon.toFixed(7), lat: lat.toFixed(7) });
   const answer = await askParcel(() => fetchFn(`/api/parcel/${encodeURIComponent(id)}/explain?${query.toString()}`));
   return answer.ok ? { ok: true, explanation: answer.body as ParcelExplanation } : answer;
+}
+
+// ── The interpretive cross-section (POST /api/section) ─────────────────────────────────
+
+export const SECTION_FAILURES = [
+  "invalid_line",
+  "too_short",
+  "too_long",
+  "outside_territory",
+  "outside_coverage",
+  "upstream_error",
+  "upstream_timeout",
+  "network",
+  "unexpected",
+] as const;
+
+export type SectionFailure = (typeof SECTION_FAILURES)[number];
+
+export type SectionGap =
+  | "no_units"
+  | "no_bedding"
+  | "no_boreholes"
+  | "no_borehole_logs"
+  | "no_water_table"
+  | "ground_incomplete";
+
+export interface ProfilePoint {
+  distance_m: number;
+  ground_m: number | null;
+}
+
+export interface SurfaceUnit {
+  index: number;
+  from_m: number;
+  to_m: number;
+  label: string | null;
+}
+
+export interface BeddingMeasurement {
+  distance_m: number;
+  offset_m: number;
+  dip_deg: number;
+  direction_deg: number | null;
+  kind: string;
+}
+
+export type ContactState = "projected" | "not_projected" | "at_fault";
+
+export interface Contact {
+  distance_m: number;
+  ground_m: number | null;
+  before: number;
+  after: number;
+  state: ContactState;
+  apparent_dip_deg: number | null;
+  measurement: BeddingMeasurement | null;
+  measurement_m: number | null;
+}
+
+export interface FaultCrossing {
+  distance_m: number;
+  kind: string;
+}
+
+export interface Borehole {
+  distance_m: number;
+  offset_m: number;
+  kind: string;
+  depth_m: number;
+  ground_m: number | null;
+}
+
+export interface WaterTablePoint {
+  distance_m: number;
+  state: "estimated" | "unknown";
+  reason: DepthUnknown | null;
+  water_table: WaterTable | null;
+}
+
+export interface SectionCell {
+  top_m: number;
+  state: "interpreted" | "unknown";
+  unit: number | null;
+  depth_factor: number | null;
+  confidence: number | null;
+  label: ConfidenceLabel | null;
+}
+
+export interface SectionColumn {
+  distance_m: number;
+  ground_m: number | null;
+  evidence: "bedding" | "borehole" | null;
+  evidence_m: number | null;
+  evidence_factor: number;
+  fault_factor: number;
+  reach_m: number;
+  cells: SectionCell[];
+}
+
+export interface CrossSection {
+  label: "interpretation";
+  start: Position;
+  end: Position;
+  crs: string;
+  length_m: number;
+  azimuth_deg: number;
+  built_at: string;
+  column_m: number;
+  row_m: number;
+  depth_m: number;
+  profile: ProfilePoint[];
+  units: SurfaceUnit[];
+  contacts: Contact[];
+  faults: FaultCrossing[];
+  bedding: BeddingMeasurement[];
+  boreholes: Borehole[];
+  water_table: WaterTablePoint[];
+  columns: SectionColumn[];
+  sources: Record<string, InputSource>;
+  levels: LevelsSource[];
+  gaps: SectionGap[];
+}
+
+export type SectionResult = { ok: true; section: CrossSection } | { ok: false; failure: SectionFailure };
+
+/** The interpretive section under a straight line from `start` to `end`. Never throws. */
+export async function fetchSection(start: Position, end: Position, fetchFn: Fetch = fetch): Promise<SectionResult> {
+  let response: Response;
+  try {
+    response = await fetchFn("/api/section", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ start, end }),
+    });
+  } catch {
+    return { ok: false, failure: "network" };
+  }
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return { ok: false, failure: "unexpected" };
+  }
+  if (response.ok) {
+    return { ok: true, section: body as CrossSection };
+  }
+  const code = typeof body === "object" && body !== null && "code" in body ? body.code : null;
+  const known = typeof code === "string" && (SECTION_FAILURES as readonly string[]).includes(code);
+  return { ok: false, failure: known ? (code as SectionFailure) : "unexpected" };
 }

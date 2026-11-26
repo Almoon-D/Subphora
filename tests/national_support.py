@@ -14,8 +14,12 @@ httpx.MockTransport, answering any window with made-up but well-formed data.
 - IGN administrative units: a small square around a point in Madrid.
 - IGME MAGNA faults: a fault running north-south through the window's centre and a
   contact (not a fault) running east-west.
-- IGME MAGNA structural measurements: a bedding dip of 20° at the box's centre and a
-  cleavage (not bedding) beside it; none at all when ``bedding`` is false.
+- IGME MAGNA structural measurements: a bedding dip of 20° toward the east at the box's
+  centre and a cleavage (not bedding) beside it; none at all when ``bedding`` is false.
+- IGME MAGNA lithology: limestone west of 500 m before the box's centre, marl from there
+  to the centre (where the fault runs) and sandstone east of it; none when ``lithology``
+  is false.
+- The borehole of the water points (300 m east of the centre) went 120 m deep.
 """
 
 import io
@@ -129,12 +133,14 @@ class FakeSpain:
         fail: dict[str, int] | None = None,
         *,
         bedding: bool = True,
+        lithology: bool = True,
         timeout: frozenset[str] = frozenset(),
         wells: float | None = None,
         whole_body: bool = False,
     ) -> None:
         self.fail = fail or {}
         self.bedding = bedding
+        self.lithology = lithology
         self.wells = wells
         self.whole_body = whole_body
         # Hosts whose every request times out.
@@ -166,6 +172,8 @@ class FakeSpain:
             return self._faults(request)
         if host == "mapas.igme.es" and path.endswith("IGME_MAGNA_50/MapServer/5/query"):
             return self._bedding(request)
+        if host == "mapas.igme.es" and path.endswith("IGME_MAGNA_50/MapServer/11/query"):
+            return self._lithology(request)
         if host == "gis.miteco.gob.es":
             return self._bodies(request)
         if host == "www.ign.es":
@@ -204,7 +212,7 @@ class FakeSpain:
 
         points = [
             point(x, y, "Manantial"),
-            point(x + 300, y, "Sondeo"),
+            point(x + 300, y, "Sondeo", PROF_m=120.0, COTA_msnm=0.0),
             point(x - 3000, y, "Cauce superficial"),
         ]
         if self.wells:
@@ -245,6 +253,19 @@ class FakeSpain:
 
         return _collection(
             [measurement(0, "Estratificación", 20), measurement(30, "Primera esquistosidad", 80)]
+        )
+
+    def _lithology(self, request: httpx.Request) -> httpx.Response:
+        if not self.lithology:
+            return _collection([])
+        west, south, east, north = _box(request, "geometry")
+        x = (west + east) / 2
+        return _collection(
+            [
+                _feature(_square(west, south, x - 500, north), DLO="Calizas"),
+                _feature(_square(x - 500, south, x, north), DLO="Margas"),
+                _feature(_square(x, south, east, north), DLO="Areniscas"),
+            ]
         )
 
     def _bodies(self, request: httpx.Request) -> httpx.Response:

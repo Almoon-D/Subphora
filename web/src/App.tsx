@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The page: one search box (with an explicit choice when the text reads several ways), the
 // drawing tools, the selected area with its detailed map and this session's others, their
-// comparison, the layer panel, what a tap found, and the map.
+// comparison, the layer panel, what a tap found, the map, and the cross-section under a
+// drawn line.
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import {
@@ -17,6 +18,7 @@ import {
   fetchNational,
   fetchParcel,
   fetchParcelExplanation,
+  fetchSection,
   type Interpretation,
   type MapConfig,
   type NationalMap,
@@ -43,6 +45,7 @@ import {
   withParcelResult,
 } from "./parcel/parcel.ts";
 import { ParcelPanel } from "./parcel/ParcelPanel.tsx";
+import { SectionPanel, type SectionView } from "./section/SectionPanel.tsx";
 import {
   areaHeading,
   areaKey,
@@ -110,9 +113,24 @@ function AreaCard({ area }: { area: AreaOfInterest }) {
   );
 }
 
+function draftHint(draft: Draft, max: number, limits: MapConfig["section"]): string {
+  switch (draft.mode) {
+    case "point":
+      return t("draw.pointHint");
+    case "polygon":
+      return t("draw.polygonHint", { count: draft.vertices.length, max });
+    case "line":
+      return t("draw.lineHint", {
+        min: `${formatNumber(limits.min_length_m)} m`,
+        max: `${formatNumber(limits.max_length_m)} m`,
+      });
+  }
+}
+
 function DrawTools({
   draft,
   max,
+  limits,
   busy,
   onStart,
   onUndo,
@@ -121,6 +139,7 @@ function DrawTools({
 }: {
   draft: Draft | null;
   max: number;
+  limits: MapConfig["section"];
   busy: boolean;
   onStart: (mode: Draft["mode"]) => void;
   onUndo: () => void;
@@ -151,15 +170,22 @@ function DrawTools({
         >
           {t("draw.polygon")}
         </button>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => {
+            onStart("line");
+          }}
+        >
+          {t("draw.line")}
+        </button>
       </div>
     );
   }
   const count = draft.vertices.length;
   return (
-    <div className="drawing" role="group" aria-label={t(draft.mode === "point" ? "draw.point" : "draw.polygon")}>
-      <p className="note">
-        {draft.mode === "point" ? t("draw.pointHint") : t("draw.polygonHint", { count, max })}
-      </p>
+    <div className="drawing" role="group" aria-label={t(`draw.${draft.mode}`)}>
+      <p className="note">{draftHint(draft, max, limits)}</p>
       {draft.mode === "polygon" && count >= max && <p className="note">{t("draw.full")}</p>}
       <div className="draw-row">
         {draft.mode === "polygon" && (
@@ -225,6 +251,10 @@ export function App() {
   // Each area's detailed map, by area key; and the layer of it drawn (undefined: the default).
   const [parcels, setParcels] = useState<Record<string, ParcelView>>({});
   const [parcelLayer, setParcelLayer] = useState<string | null | undefined>(undefined);
+  // The cross-section under the last drawn line, and that line.
+  const [section, setSection] = useState<SectionView | null>(null);
+  const [sectionLine, setSectionLine] = useState<[Position, Position] | null>(null);
+  const sectionCount = useRef(0);
   // Only the answers to the latest tap, and to the latest search, are shown.
   const tapCount = useRef(0);
   const searchCount = useRef(0);
@@ -358,8 +388,28 @@ export function App() {
     settle(result, count);
   }
 
+  async function onSection(start: Position, end: Position) {
+    const count = ++sectionCount.current;
+    setDraft(null);
+    setSectionLine([start, end]);
+    setSection({ state: "asking" });
+    const result = await fetchSection(start, end);
+    if (count === sectionCount.current) {
+      setSection(result.ok ? { state: "done", section: result.section } : { state: "failed", failure: result.failure });
+    }
+  }
+
   function onDraw(lon: number, lat: number) {
     if (!draft || sending) {
+      return;
+    }
+    if (draft.mode === "line") {
+      const [start] = draft.vertices;
+      if (start) {
+        void onSection(start, [lon, lat]);
+      } else {
+        setDraft({ ...draft, vertices: [[lon, lat]] });
+      }
       return;
     }
     if (draft.mode === "point") {
@@ -417,6 +467,7 @@ export function App() {
           <DrawTools
             draft={draft}
             max={config.search.max_vertices}
+            limits={config.section}
             busy={sending}
             onStart={(mode) => {
               setSearch({ state: "idle" });
@@ -511,6 +562,7 @@ export function App() {
             layers={layers}
             tapped={tapped}
             draft={draft}
+            section={sectionLine}
             onZoom={setZoom}
             onTap={(lon, lat, tapZoom) => {
               void onTap(lon, lat, tapZoom);
@@ -519,6 +571,17 @@ export function App() {
           />
         ) : (
           !configFailed && <p>{t("app.loading")}</p>
+        )}
+        {config && section && (
+          <SectionPanel
+            view={section}
+            limits={config.section}
+            onClose={() => {
+              sectionCount.current += 1;
+              setSection(null);
+              setSectionLine(null);
+            }}
+          />
         )}
       </main>
     </div>

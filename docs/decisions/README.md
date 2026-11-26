@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0033](0033-interpretive-cross-section.md) | The cross-section: a straight line, MAGNA units and dips, unknown below the evidence | accepted |
 | [0032](0032-basin-piezometry-sheets.md) | Basin piezometry spreadsheets join the national database by code | accepted |
 | [0031](0031-depth-and-drilling-cost.md) | Depth to water from the national piezometry database; cost as a Decimal range | accepted |
 | [0030](0030-validation-against-wells.md) | Validation against public wells: presence-background AUC per body, no probability yet | accepted |

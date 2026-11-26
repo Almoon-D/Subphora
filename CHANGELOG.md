@@ -7,6 +7,19 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.11.0] - 2026-11-26
+
+- "Dibujar un corte": tap the start and end of a line on the map and a geological
+  cross-section of the ground under it opens below the map, always labelled
+  "interpretation", with its vertical exaggeration and a legend.
+- The section shows the ground profile (5 m terrain), the MAGNA 1:50,000 units the line
+  crosses with their contacts carried down along the nearest measured dip, the faults, the
+  public boreholes nearby with their depth, and the water table where it can be estimated.
+- Every cell has a confidence that falls with depth and with distance to a measured dip or
+  a borehole; below what the evidence reaches it is drawn hatched as "unknown".
+- Tapping any part of the section explains it: the unit and why, the contact and its dip,
+  the fault, the borehole or the water table and where each comes from.
+
 ## [0.10.0] - 2026-11-26
 
 - `subphora piezometry import` also reads the Júcar and Guadiana basin authorities' level

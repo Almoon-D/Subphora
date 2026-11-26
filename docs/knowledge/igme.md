@@ -57,7 +57,8 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
 
 - MAGNA REST layer 5 "Medidas estructurales MAGNA50" (polylines) is **queryable**: fields
   `HOJA`, `ID`, `NOMBRE` (the measurement type: "Estratificación", "Estratificación
-  invertida", "Esquistosidad…", "Diaclasado"…), `DIRECCION` (strike direction, degrees),
+  invertida", "Esquistosidad…", "Diaclasado"…), `DIRECCION` (dip direction, degrees: the
+  WMS feature info names it "Dirección de buzamiento", `tests/fixtures/layers/igme_magna_dip.json`),
   `BUZAMIENTO` (dip, degrees). 251,654 measurements; the distinct-sheet query stops at its
   1,000-row limit, so at least 1,000 of the 1,114 sheets carry them. Example, sheet 1023:
   "Estratificación", direction 49°, dip 30°.
@@ -87,6 +88,10 @@ Catalogue ids: `igme-magna-wms`, `igme-geode-wms`, `igme-permeability-wms`,
   operation is not supported by this service"). `(GET /IGME_Geode_50/MapServer/3/query, 2026-11-24)`
 - The 1:200,000 geological and lithostratigraphic maps have "Medidas estructurales" and
   "Estructuras" layers too. `(GET /MapServer?f=json, 2026-11-24)`
+- The cross-section (session 08) reads `DIRECCION` as the azimuth, clockwise from north,
+  toward which the bed dips, and layer 11's `DLO` as each unit's label. Neither was checked
+  against a live answer from the cloud (IGME answered 403): `VERIFY-LIVE(magna-section)`.
+  `(feature info alias, 2026-11-24; read 2026-11-26)`
 - Conclusion for sessions 03, 05, 08: dip is digital for (almost) all MAGNA sheets through
   the REST query; it is a measurement at a point, so a dip layer is an interpolation and
   must carry its own confidence.

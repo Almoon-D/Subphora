@@ -57,9 +57,10 @@ const PARCEL = "parcel";
 const DRAFT = "draft";
 const DRAFT_COLOUR = "#ff3b30";
 
-/** What is being drawn: a point (the next click) or a polygon's vertices so far. */
+/** What is being drawn: a point (the next click), a polygon's vertices so far, or a
+ * cross-section's line (its start, then its end). */
 export interface Draft {
-  mode: "point" | "polygon";
+  mode: "point" | "polygon" | "line";
   vertices: Position[];
 }
 
@@ -80,6 +81,8 @@ interface Props {
   tapped: Position | null;
   /** While drawing, a click on the map belongs to the drawing, not to the tap. */
   draft: Draft | null;
+  /** The line of the cross-section shown, drawn while no drawing is under way. */
+  section: readonly Position[] | null;
   onZoom: (zoom: number) => void;
   onTap: (lon: number, lat: number, zoom: number) => void;
   onDraw: (lon: number, lat: number) => void;
@@ -100,7 +103,7 @@ function draftFeatures(draft: Draft | null): FeatureCollection {
   }));
   const first = vertices[0];
   if (vertices.length > 1 && first) {
-    const line = vertices.length > 2 ? [...vertices, first] : vertices;
+    const line = draft.mode === "polygon" && vertices.length > 2 ? [...vertices, first] : vertices;
     features.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: line } });
   }
   return { type: "FeatureCollection", features };
@@ -405,7 +408,19 @@ function initialStyle(config: MapConfig, national: NationalMap | null, layers: M
   return { version: 8, sources, layers: styleLayers };
 }
 
-export function MapView({ config, national, area, parcel, layers, tapped, draft, onZoom, onTap, onDraw }: Props) {
+export function MapView({
+  config,
+  national,
+  area,
+  parcel,
+  layers,
+  tapped,
+  draft,
+  section,
+  onZoom,
+  onTap,
+  onDraw,
+}: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
@@ -534,14 +549,15 @@ export function MapView({ config, national, area, parcel, layers, tapped, draft,
     if (!map || !loaded) {
       return;
     }
-    void map.getSource<GeoJSONSource>(DRAFT)?.setData(draftFeatures(draft));
+    const shown = draft ?? (section ? { mode: "line" as const, vertices: [...section] } : null);
+    void map.getSource<GeoJSONSource>(DRAFT)?.setData(draftFeatures(shown));
     map.getCanvas().style.cursor = drawing ? "crosshair" : "";
     if (drawing) {
       map.doubleClickZoom.disable();
     } else {
       map.doubleClickZoom.enable();
     }
-  }, [draft, drawing, loaded]);
+  }, [draft, section, drawing, loaded]);
 
   useEffect(() => {
     const map = mapRef.current;

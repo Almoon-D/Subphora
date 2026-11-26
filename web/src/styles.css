@@ -147,6 +147,98 @@ button.link[aria-current="true"] {
   font-size: 0.85rem;
 }
 
+.section-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  max-height: 60%;
+  overflow-y: auto;
+  padding: 0 1rem 1rem;
+  background: var(--paper);
+  border-top: 1px solid #d0d6dc;
+  box-shadow: 0 -2px 8px rgb(0 0 0 / 15%);
+}
+
+.section-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  background: var(--paper);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.section-badge {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--error);
+  border-radius: 0.25rem;
+  color: var(--error);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.section-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: crosshair;
+}
+
+.section-explain {
+  min-height: 3rem;
+  padding: 0.5rem;
+  background: #f4f6f8;
+}
+
+.section-explain p {
+  margin: 0.25rem 0;
+}
+
+.section-parts {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+
+.section-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.section-legend li {
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.1rem;
+  border: 1px solid #0003;
+}
+
+.swatch.unknown {
+  background: repeating-linear-gradient(45deg, #eee 0 3px, #9a9a9a 3px 5px);
+}
+
 @media (width <= 700px) {
   .app {
     flex-direction: column;

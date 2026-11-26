@@ -7,6 +7,13 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.10.0] - 2026-11-26
+
+- `subphora piezometry import` also reads the Júcar and Guadiana basin authorities' level
+  spreadsheets when they are in `data/piezometry/basins/`, bringing the levels in those
+  basins up to 2026 and adding 140 piezometers only the Júcar file holds.
+- Each depth on a candidate spot lists the sources of the levels it used, with their dates.
+
 ## [0.9.0] - 2026-11-26
 
 - The model is checked against public wells: every national build measures, per

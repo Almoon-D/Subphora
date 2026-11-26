@@ -70,7 +70,11 @@ entra en la confianza y tiene su propia capa.
 **Profundidad y coste.** Descarga a mano la base de datos de piezometría del MITECO
 (`basedatospiezometria.zip`, el formulario es para personas) y déjala en
 `data/piezometry/`. Instala mdbtools (`brew install mdbtools` en macOS,
-`apt install mdbtools` en Linux) y ejecuta `uv run subphora piezometry import`. Desde
+`apt install mdbtools` en Linux) y ejecuta `uv run subphora piezometry import`. Si además
+dejas en `data/piezometry/basins/` las hojas del Júcar
+(`F71_Puntos_de_control_piezometrico.zip`) y del Guadiana
+(`Red Oficial Guadiana OCTUBRE 2026.xlsx`; si el nombre cambia, ajústalo en
+`config/owner.yaml`), la importación añade sus niveles, que llegan hasta 2026. Desde
 entonces cada punto candidato del mapa detallado muestra la profundidad estimada del agua
 con su margen (o "desconocida" y por qué) y un rango de coste de perforación. Los precios
 están en `config/defaults/drilling.yaml`; pon el presupuesto de tu pocero en

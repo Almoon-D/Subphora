@@ -36,15 +36,12 @@
 - VERIFY-LIVE(chg-ide): every path on `idechg.chguadalquivir.es` redirected to an error page
   from the cloud session; find the CHG's OGC endpoints (MITECO's national services cover
   the bodies meanwhile). Queued by 01; unblocked by a browser look at the CHG geoportal.
-- VERIFY-LIVE(piezometric-levels): the basin spreadsheets (Guadiana, Ebro, Júcar): open them
-  and record their columns and dates (`docs/knowledge/water-authorities.md`), then import
-  them beside the national database (read in 07). Queued by 01; their hosts answered 403 from
-  the cloud in 07; the owner downloads them, or a session from a machine in Spain.
 - VERIFY-LIVE(dry-wells): a public record of dry or failed boreholes (IGME BDAguas, basin
   registers). Until one exists, validation is presence-background and no domain is
   calibrated into a probability (decision 0030). Queued by 07; IGME or the owner's wells (14).
 - VERIFY-LIVE(piezometer-body-codes): that `MAS_CONTROL` in the national piezometry database
-  uses the same codes as MITECO's groundwater-bodies layer, on a real build with levels.
+  (and CH Júcar's 2022-plan codes) match MITECO's groundwater-bodies layer, on a real build
+  with levels; the files disagree with each other in places (`water-authorities.md`).
   Queued by 07; the owner's next `national build` and detailed map show it.
 - VERIFY-LIVE(drilling-prices): the €/m and fixed costs in `config/defaults/drilling.yaml`
   come from three consumer price pages (2023-2026), not quotes; a local driller's quote
@@ -98,6 +95,9 @@
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
 
+- CH Ebro's per-piezometer sheets end in 2021 and add 30 piezometers; worth importing only
+  if the CHE publishes newer series. Other basins (Segura, Tajo, Miño-Sil) still publish no
+  reachable series. (07b)
 - Probability tiles: no domain is calibrated today (no dry wells); when one is, the national
   map can draw a probability layer beside the index for it. (07)
 - The `piezometric_depth` criterion of the national model still has no grid: the imported
@@ -189,6 +189,17 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 07b — Basin piezometry spreadsheets (2026-11-26, version 0.10.0)
+
+- Landed: `subphora piezometry import` also reads CH Júcar's F71 zip and CH Guadiana's
+  monthly sheet from `data/piezometry/basins/` (decision 0032): their levels join the
+  national piezometers by code, piezometers only they hold are added, body codes are
+  normalised, and each piezometer and depth names its sources (openpyxl added).
+- Live: the owner's files imported: 4,486 piezometers (142 new), levels to 2026-11;
+  basin and national levels agree within decimetres (`water-authorities.md`).
+- Deferred: CH Ebro (series end 2021). VERIFY-LIVE(piezometric-levels) closed for the two
+  basins; piezometer-body-codes widened.
 
 ### 07 — Validation, depth to water and drilling cost (2026-11-26, version 0.9.0)
 

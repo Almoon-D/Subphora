@@ -71,6 +71,28 @@ Hosts catalogued from this file: `geoguadiana.chguadiana.es`, `www.chguadiana.es
   misreads it (shifted text columns, empty levels); `mdb-export` (mdbtools) reads it
   correctly. With the defaults, 4,342 piezometers keep a recent level; 316 are left out
   (removed long ago, too few measurements, or no body). The download states no licence.
+- **The basin files, opened** `(owner hand downloads, 2026-11-26)`. CH Júcar
+  `F71_Puntos_de_control_piezometrico.zip`: `F71_M10_Todas.xlsx` (1,526 control points;
+  `Cód. Punto` in the national inventory format, `UTM ETRS89 X/Y` in zone 30 even east of
+  0°, the 2022 plan's bodies `Cód. Masa PHJ22 Hidrog.` such as `080-114` or sub-bodies
+  `080-132B`), and `F71_D7_Medida en campo_1/_2.xlsx` (418,179 field measurements
+  1955-07-11 to 2026-11-24, columns `Med./Niv. Valid. Afectada/Dinámica/Estática/Otras`;
+  343,137 static levels in m a.s.l.). CH Guadiana `Red Oficial Guadiana OCTUBRE 2026.xlsx`:
+  sheet `Red Oficial Guadiana` (row 2 the header; one row per piezometer, one column per
+  month 2000-01 to 2026-10 holding the depth below ground in m; text cells are notes), sheet
+  `DATOS RED` (522 points: ED50 and ETRS89 UTM, `Z (MDT 5 M)`, the body by name only, often
+  spelt unlike the national database: "MANCHA OCCIDENTAL II (AC. SUP)", "6-Mancha Occidental
+  II"). Against the national database, same code and month: Júcar levels differ by a median
+  of 0.00 m (90 % within 1.1 m), Guadiana's ground-minus-depth by −0.11 m (90 % within
+  0.44 m); coordinates agree (median 0 m). Imported with the defaults: 448 piezometers use
+  Júcar levels (140 only it holds) and 424 Guadiana's (2 only it holds). CH Ebro's 329
+  per-piezometer `.xls` files end in April 2021 (4 are unreadable), and 297 of its 327
+  listed piezometers are in the national database. None states a licence.
+- **Body codes differ between files**: the national database writes some Júcar bodies with
+  "." (`ES080MSBT080.115`) where others have "-" (normalised on import, `body_separator`),
+  and 38 of the 353 Júcar points it shares with CH Júcar's file sit in another body there
+  (the 2022 plan split some bodies). The bodies layer's codes decide which piezometers a
+  spot uses: VERIFY-LIVE(piezometer-body-codes).
 - MITECO's page "Información y consulta de niveles piezométricos" links the viewer
   `https://sig.mapama.gob.es/redes-seguimiento/` and every basin's piezometry page (the links
   used in the table above). About 2,500 piezometers in the inter-community districts, mostly

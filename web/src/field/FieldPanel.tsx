@@ -195,9 +195,11 @@ function useVoice(onRecorded: (bytes: ArrayBuffer, type: string) => void, onFail
 }
 
 function Outbox({ outbox, onExport }: { outbox: OutboxView; onExport: () => void }) {
-  const { unsynced, refused, syncing, last } = outbox;
+  const { counted, unsynced, refused, syncing, last } = outbox;
   let state: string;
-  if (syncing) {
+  if (!counted) {
+    state = t("field.counting");
+  } else if (syncing) {
     state = t("field.syncing");
   } else if (unsynced === 0) {
     state = t("field.allSynced");
@@ -209,7 +211,7 @@ function Outbox({ outbox, onExport }: { outbox: OutboxView; onExport: () => void
     state = t("field.waitingToSync");
   }
   return (
-    <section className="field-block outbox" aria-labelledby="field-outbox" data-unsynced={unsynced} data-refused={refused}>
+    <section className="field-block outbox" aria-labelledby="field-outbox" data-unsynced={counted ? unsynced : undefined} data-refused={counted ? refused : undefined}>
       <h2 id="field-outbox">{t("field.unsynced", { count: unsynced })}</h2>
       <p aria-live="polite">{state}</p>
       {refused > 0 && <p className="error">{t("field.refused", { count: refused })}</p>}

@@ -509,6 +509,7 @@ export const es = {
   "field.unsynced": "Sin enviar al servidor: {count}",
   "field.refused": "El servidor ha rechazado {count}: siguen en el dispositivo; expórtalos para conservarlos.",
   "field.syncing": "Enviando…",
+  "field.counting": "Contando lo guardado en el dispositivo…",
   "field.allSynced": "Todo está en el servidor.",
   "field.offline": "Sin conexión: se enviará cuando vuelva la cobertura.",
   "field.serverError": "El servidor no responde bien; se volverá a intentar.",

@@ -86,6 +86,8 @@ export function useFieldDb(): Store {
 }
 
 export interface OutboxView {
+  /** False until the device's store has been counted: the counts are not yet known. */
+  counted: boolean;
   unsynced: number;
   refused: number;
   syncing: boolean;
@@ -102,7 +104,7 @@ export interface OutboxView {
 export function useOutbox(db: FieldDb | null, config: FieldConfig | null): OutboxView {
   const batchSize = config?.sync_batch_size ?? 0;
   const retrySeconds = config?.sync_retry_s ?? 0;
-  const [counts, setCounts] = useState({ unsynced: 0, refused: 0 });
+  const [counts, setCounts] = useState<{ unsynced: number; refused: number } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [last, setLast] = useState<SyncState | null>(null);
   const running = useRef(false);
@@ -165,7 +167,7 @@ export function useOutbox(db: FieldDb | null, config: FieldConfig | null): Outbo
     };
   }, [db, sync, refresh]);
 
-  const waiting = counts.unsynced - counts.refused > 0;
+  const waiting = counts !== null && counts.unsynced - counts.refused > 0;
   useEffect(() => {
     if (!waiting || retrySeconds <= 0) {
       return;
@@ -176,5 +178,5 @@ export function useOutbox(db: FieldDb | null, config: FieldConfig | null): Outbo
     };
   }, [waiting, sync, retrySeconds]);
 
-  return { ...counts, syncing, last, refresh, sync };
+  return { counted: counts !== null, ...(counts ?? { unsynced: 0, refused: 0 }), syncing, last, refresh, sync };
 }

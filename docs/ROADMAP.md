@@ -17,8 +17,8 @@
 | 08 | `docs/sessions/done/08-cross-section.md` | Opus 5.5, high | done |
 | 09 | `docs/sessions/done/09-legal-filter.md` | Opus 5.5, high | done |
 | 09a | `docs/sessions/done/09a-legal-all-districts.md` | Opus 5.5, high | done |
-| 10 | `docs/sessions/10-field-mode.md` | Opus 5.5, high | next |
-| 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | planned |
+| 10 | `docs/sessions/done/10-field-mode.md` | Opus 5.5, high | done |
+| 11 | `docs/sessions/11-offline-packs.md` | Opus 5.5, high | next |
 | 12 | `docs/sessions/12-report.md` | Opus 5.5, medium | planned |
 | 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | planned — version 1 |
 | 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | planned |
@@ -29,6 +29,11 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(field-phone): on a phone (after session 13 serves HTTPS), check the
+  Geolocation API's accuracy and heading while walking, the camera through the photo input,
+  MediaRecorder's voice memo on Android Chrome and iPhone Safari (its type must be in
+  `field.yaml` `media.types`), and a sync after a real loss of coverage. Queued by 10.
 
 - VERIFY-LIVE(magna-section): draw a section in `make dev` on the owner's test area and check
   that MAGNA layer 11 answers `DLO` per unit and that a contact's projected dip matches the
@@ -100,6 +105,14 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- Field mode survives a reload only while the page can load: reloading with no coverage at
+  all needs the app shell cached by the service worker, which session 11 creates. (10)
+- Editing a field record (a new version naming the one it replaces, §4.7) has no screen
+  yet; records are only added. A record the server refuses stays on the device, counted
+  and exportable, with no "retry refused" button. (10)
+- An export file is not read back by the server yet: `subphora field import` would close
+  the loop for data that never synced. (10)
 
 - The section's answer is about 170 KB per kilometre of line (every cell spelled out); a
   compact encoding would help phones on mobile data. (08)
@@ -207,6 +220,20 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 10 — Field mode (2026-11-26, version 0.14.0)
+
+- Landed: "Modo campo" (decision 0036): live position with accuracy circle and heading,
+  distance and bearing to a chosen candidate by GeographicLib, "at the spot" by
+  `field.at_spot_m`; notes, photos, voice memos and track points written to IndexedDB in one
+  transaction before the page confirms; an outbox (batches, then files) to
+  `POST /api/field/observations` and `PUT …/media`, stored in SQLite and files under
+  `data/field/`; unsynced count, export to JSON, `subphora field summary`.
+- Tests: the upsert's duplicates, conflicts, refusals and failing store; Playwright with
+  emulated geolocation offline, a reload, a sync cut by a reload, a retried 503.
+- Live: walked in `make dev` against the real API (browser offline, then online: synced).
+- Deferred: reload with no coverage (service worker, 11), editing records, import of exports.
+- VERIFY-LIVE: field-phone (new).
 
 ### 09a — Every district's plan and every regional water law (2026-11-26, version 0.13.0)
 

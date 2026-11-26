@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0036](0036-field-records-and-outbox.md) | Field records: append-only on the device, an idempotent outbox, SQLite on the server | accepted |
 | [0035](0035-legal-rules-per-body-and-volume.md) | Rules narrowed to listed bodies and volume ranges; drilling needs the mining authority | accepted |
 | [0034](0034-legal-rules-as-data.md) | Legal rules as data, evaluated from the official layers at each spot | accepted |
 | [0033](0033-interpretive-cross-section.md) | The cross-section: a straight line, MAGNA units and dips, unknown below the evidence | accepted |

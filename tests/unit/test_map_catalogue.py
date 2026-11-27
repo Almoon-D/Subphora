@@ -51,7 +51,7 @@ def test_every_layer_comes_from_the_catalogue() -> None:
     )
     assert "BBOX" not in cadastre.params
     assert cadastre.min_zoom > config.initial_view.zoom
-    assert config.overlay_groups == ("water", "geology", "soil")
+    assert config.overlay_groups == ("water", "geology", "soil", "climate")
     assert {o.group for o in config.overlays} == set(config.overlay_groups)
     assert all(o.attribution for o in config.overlays)
 

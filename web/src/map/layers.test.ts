@@ -123,7 +123,7 @@ describe("reachesZoom", () => {
 describe("overlaysByGroup", () => {
   it("keeps the groups' and the layers' order", () => {
     const groups = overlaysByGroup(MAP);
-    expect(groups.map(([group]) => group)).toEqual(["water", "geology", "soil"]);
+    expect(groups.map(([group]) => group)).toEqual(["water", "geology", "soil", "climate"]);
     expect(groups[2]?.[1].map((o) => o.id)).toEqual(["soil-clay"]);
   });
 });

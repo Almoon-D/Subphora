@@ -83,6 +83,50 @@ class Calibration(DomainModel):
         return self
 
 
+class TrialOutcome(StrEnum):
+    """What the validation said about a criterion that enters only where it helps."""
+
+    # The gain's interval lies above the configured minimum: the criterion enters here.
+    IMPROVES = "improves"
+    # Measured both ways, and the gain's interval reaches the minimum: it stays out.
+    NO_GAIN = "no_gain"
+    # Too few labelled wells to measure either way: it stays out.
+    NOT_MEASURED = "not_measured"
+
+
+class CriterionTrial(DomainModel):
+    """A domain's validation with and without one criterion (the same wells, the same
+    background cells), and the paired bootstrap interval of the AUC's gain."""
+
+    criterion: str = Field(min_length=1)
+    outcome: TrialOutcome
+    auc_without: AucInterval | None
+    auc_with: AucInterval | None
+    # The gain (AUC with minus without) and its interval; None when not measured.
+    gain: float | None = Field(default=None, ge=-1, le=1)
+    gain_low: float | None = Field(default=None, ge=-1, le=1)
+    gain_high: float | None = Field(default=None, ge=-1, le=1)
+
+    @property
+    def admitted(self) -> bool:
+        return self.outcome is TrialOutcome.IMPROVES
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        measured = self.outcome is not TrialOutcome.NOT_MEASURED
+        numbers = (self.auc_without, self.auc_with, self.gain, self.gain_low, self.gain_high)
+        if any(n is None for n in numbers) == measured:
+            raise ValueError("a trial has both AUCs and its gain exactly when measured")
+        if (
+            self.gain is not None
+            and self.gain_low is not None
+            and self.gain_high is not None
+            and not self.gain_low <= self.gain <= self.gain_high
+        ):
+            raise ValueError("a gain lies inside its interval")
+        return self
+
+
 class DomainValidation(DomainModel):
     domain: str = Field(min_length=1)
     label: str = Field(min_length=1)
@@ -100,6 +144,14 @@ class DomainValidation(DomainModel):
     # Where the labels come from, and when they were read; None when nothing was measured.
     labels_source: str = Field(min_length=1)
     validated_at: AwareDatetime | None
+    # The criteria that enter only where validation shows they help: how each was tried
+    # here. The AUC above is that of the model with the criteria admitted.
+    trials: tuple[CriterionTrial, ...] = ()
+
+    @property
+    def admitted(self) -> frozenset[str]:
+        """The criteria tried here that entered the model."""
+        return frozenset(t.criterion for t in self.trials if t.admitted)
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -117,6 +169,9 @@ class DomainValidation(DomainModel):
             raise ValueError("a design is stated exactly when the domain was validated")
         if (self.calibration is None) == (self.no_calibration is None):
             raise ValueError("a domain is calibrated or says why not")
+        names = [t.criterion for t in self.trials]
+        if len(set(names)) != len(names):
+            raise ValueError("a criterion is tried once per domain")
         if self.calibration is not None and (
             state is not ValidationState.VALIDATED
             or self.design is not LabelDesign.PRESENCE_ABSENCE

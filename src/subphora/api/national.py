@@ -65,7 +65,12 @@ def legend(layer: TileLayer) -> tuple[LegendClass, ...]:
 
 def national_map(settings: Settings, published: MapManifest | None) -> NationalMap:
     tiles = settings.national.tiles
-    services = [d.service for d in settings.national.datasets.all().values()]
+    datasets = settings.national.datasets
+    services = [
+        *(d.service for d in datasets.all().values()),
+        datasets.vegetation.irrigation.service,
+        settings.national.context.ground_motion.service,
+    ]
     attributions = dict.fromkeys(settings.sources.service(s).attribution for s in services)
     return NationalMap(
         built=published is not None,

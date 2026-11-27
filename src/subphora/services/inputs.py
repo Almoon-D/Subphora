@@ -21,7 +21,7 @@ from subphora.domain.layers import LayerDetail
 from subphora.domain.potential import InputSource
 from subphora.geo.grid import Bounds, transform_bounds
 from subphora.model.quality import ground_resolution_m
-from subphora.services.fetching import CachedFetcher, Fetched, UpstreamFailure
+from subphora.services.fetching import CachedFetcher, Fetched, UpstreamFailure, provenance
 from subphora.sources import CatalogueClient
 from subphora.sources.boundaries import BoundaryParseError
 from subphora.sources.client import Params
@@ -208,6 +208,29 @@ class InputFetcher:
             *(self.get(service, service.base_url, params, check_tiff) for params in requests)
         )
         return [fetched.content for _, fetched in answers], [fetched for _, fetched in answers]
+
+    async def fetch_or_empty(
+        self, service: Service, url: str, empty_statuses: Sequence[int]
+    ) -> Fetched:
+        """A GET whose ``empty_statuses`` mean "nothing here" (an empty body), through the
+        cache; ``keep`` caches it once the caller has parsed it. Raises InputFailure."""
+        try:
+            return await self._fetcher.fetch(service, url, {}, empty_statuses)
+        except UpstreamFailure as exc:
+            raise InputFailure(exc.detail, timeout=exc.timeout) from exc
+
+    async def keep(self, service: Service, fetched: Fetched) -> None:
+        await self._fetcher.store(service, fetched)
+
+    async def recall(self, service: Service, key: str) -> Fetched | None:
+        """Something derived from a service's data and kept under ``key``, if fresh."""
+        return await self._fetcher.recall(service, key)
+
+    async def remember(self, service: Service, key: str, content: bytes) -> Fetched:
+        """Keep something just derived from a service's data, dated now."""
+        source = provenance(service, self._clock())
+        await self._fetcher.remember(service, key, content, source)
+        return Fetched(content, source, key, False)
 
     def source(
         self, service_id: str, detail: LayerDetail, fetched: Sequence[Fetched]

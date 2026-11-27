@@ -250,6 +250,7 @@ class Settings(Section):
             "soil": "wcs",
             "groundwater_bodies": "wfs",
             "water_points": "rest",
+            "vegetation": "rest",
         }
         for name, dataset in datasets.all().items():
             key = f"national.datasets.{name}"
@@ -274,6 +275,16 @@ class Settings(Section):
             raise ValueError(
                 f"national.datasets.groundwater_bodies: {service.id} lacks {bodies.srs}"
             )
+        vegetation = datasets.vegetation
+        self._catalogued("national.datasets.vegetation", vegetation.pixels_service, "download")
+        self._catalogued(
+            "national.datasets.vegetation.irrigation", vegetation.irrigation.service, "rest"
+        )
+        self._catalogued(
+            "national.context.ground_motion",
+            self.national.context.ground_motion.service,
+            "download",
+        )
         return self
 
     @model_validator(mode="after")

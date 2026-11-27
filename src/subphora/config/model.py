@@ -50,6 +50,10 @@ class Criterion(Section):
     id: str = Field(pattern=_ID)
     weight: PositiveFloat = Field(le=1)
     weight_source: str = Field(min_length=1)
+    # "always": part of the model everywhere. "validated": enters a hydrogeological domain
+    # only where the validation with it beats the validation without it (validation.yaml
+    # trials); its weight is added to the others there and is not part of their sum of 1.
+    admission: Literal["always", "validated"] = "always"
     # None: no nationwide input yet; the criterion is missing everywhere.
     variable: Variable | None
     lookup: Lookup | None = None
@@ -58,6 +62,8 @@ class Criterion(Section):
     def _lookup_matches(self) -> Self:
         if (self.variable is None) != (self.lookup is None):
             raise ValueError(f"{self.id}: a criterion has a lookup exactly when it has a variable")
+        if self.gated and self.variable is None:
+            raise ValueError(f"{self.id}: a criterion admitted by validation needs an input")
         if self.variable is None or self.lookup is None:
             return self
         if self.variable in RESULTS:
@@ -66,6 +72,11 @@ class Criterion(Section):
         if self.lookup.kind != expected:
             raise ValueError(f"{self.id}: {self.variable} needs a {expected} lookup")
         return self
+
+    @property
+    def gated(self) -> bool:
+        """Whether the criterion enters only where validation admits it."""
+        return self.admission == "validated"
 
 
 class Ageing(Section):
@@ -125,9 +136,14 @@ class ModelSettings(Section):
         variables = [c.variable for c in self.criteria if c.variable is not None]
         if len(set(variables)) != len(variables):
             raise ValueError("two criteria read the same variable")
-        if abs(sum(c.weight for c in self.criteria) - 1) > _WEIGHT_SUM_TOLERANCE:
-            raise ValueError("criteria weights must add up to 1")
+        if abs(sum(c.weight for c in self.criteria if not c.gated) - 1) > _WEIGHT_SUM_TOLERANCE:
+            raise ValueError("the weights of the criteria always admitted must add up to 1")
         return self
+
+    @property
+    def gated(self) -> list[Criterion]:
+        """The criteria that enter only where validation admits them."""
+        return [c for c in self.criteria if c.gated]
 
     def criterion(self, criterion_id: str) -> Criterion:
         for criterion in self.criteria:

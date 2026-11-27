@@ -15,9 +15,11 @@ from subphora.config.validation import ValidationSettings
 from subphora.domain.potential import ComponentId, PotentialEstimate, Variable
 from subphora.domain.validation import (
     NO_BODY,
+    CriterionTrial,
     DomainValidation,
     LabelDesign,
     NoCalibration,
+    TrialOutcome,
     ValidationState,
 )
 from subphora.geo.grid import GridWindow
@@ -30,10 +32,11 @@ from subphora.model import (
     skill_of,
     validate_domain,
 )
-from subphora.model.validation import fit_logistic, weighted_auc
+from subphora.model.validation import auc_gain, fit_logistic, weighted_auc
 from subphora.services.validation import (
     NO_NATIONAL_MAP,
     Wells,
+    admitted_grids,
     domain_validations,
     labelled_wells,
     skill_grid,
@@ -291,6 +294,120 @@ def test_a_region_validates_each_body_and_the_outside_and_draws_skill_where_meas
         WHEN,
     )
     assert repeat == results
+
+
+def test_the_vegetation_enters_only_the_domains_where_it_improves_the_validation() -> None:
+    window = GridWindow(crs="EPSG:25830", cell_m=1000, west=0, north=100_000, width=100, height=100)
+    columns = np.tile(np.arange(100), (100, 1)).astype(np.float32)
+    body = np.where(columns < 50, 0.0, 1.0).astype(np.float32)
+    # The slope says nothing anywhere. In the west the wells sit in a strip that stays
+    # green in late summer; in the east the vegetation is the same everywhere.
+    vegetation = np.where(columns < 50, np.where(columns >= 40, 0.25, -0.1), 0.0)
+    grids = {
+        Variable.SLOPE_DEG: np.full((100, 100), 10.0, dtype=np.float32),
+        Variable.WATER_POINT_DISTANCE_M: np.full((100, 100), 100.0, dtype=np.float32),
+        Variable.GROUNDWATER_BODY: body,
+        Variable.VEGETATION_ANOMALY: vegetation.astype(np.float32),
+    }
+    categories = {
+        Variable.GROUNDWATER_BODY: [Category("ES0", "West (ES0)"), Category("ES1", "East (ES1)")]
+    }
+    generator = rng(3)
+    west = list(
+        zip(
+            generator.uniform(40_000, 50_000, 80).tolist(),
+            generator.uniform(0, 100_000, 80).tolist(),
+            strict=True,
+        )
+    )
+    east = list(
+        zip(
+            generator.uniform(50_000, 100_000, 80).tolist(),
+            generator.uniform(0, 100_000, 80).tolist(),
+            strict=True,
+        )
+    )
+    quality = {name: Quality(1.0, 1.0) for name in ("slope", "water_points", "vegetation")}
+    results, skill = validate_region(
+        "box",
+        window,
+        grids,
+        categories,
+        MODEL,
+        quality,
+        Wells(productive=west + east, dry=[]),
+        VALIDATION,
+        WHEN,
+    )
+    by_domain = {r.domain: r for r in results}
+    (west_trial,) = by_domain["ES0"].trials
+    (east_trial,) = by_domain["ES1"].trials
+    (outside_trial,) = by_domain[NO_BODY].trials
+    assert west_trial.outcome is TrialOutcome.IMPROVES
+    assert west_trial.gain_low is not None
+    assert west_trial.gain_low > 0
+    assert east_trial.outcome is TrialOutcome.NO_GAIN
+    assert east_trial.gain == 0
+    assert outside_trial.outcome is TrialOutcome.NOT_MEASURED
+    assert by_domain["ES0"].admitted == {"vegetation"}
+    assert by_domain["ES1"].admitted == frozenset()
+    # The validation reported in the west is that of the model with the vegetation.
+    assert by_domain["ES0"].state is ValidationState.VALIDATED
+    final, tried = by_domain["ES0"].auc, west_trial.auc_with
+    assert final is not None
+    assert tried is not None
+    assert final.value == pytest.approx(tried.value)
+    assert by_domain["ES1"].auc == east_trial.auc_without
+    assert np.all(skill[:, :50] > 0)
+    admitted = admitted_grids(body, categories[Variable.GROUNDWATER_BODY], by_domain, MODEL)
+    assert np.array_equal(admitted["vegetation"], columns < 50)
+    # A model without the vegetation input tries nothing.
+    del grids[Variable.VEGETATION_ANOMALY]
+    plain, _ = validate_region(
+        "box",
+        window,
+        grids,
+        categories,
+        MODEL,
+        quality,
+        Wells(productive=west + east, dry=[]),
+        VALIDATION,
+        WHEN,
+    )
+    assert all(r.trials == () for r in plain)
+
+
+def test_the_paired_gain_scores_the_same_points_and_a_trial_states_it_consistently() -> None:
+    generator = rng(5)
+    productive = labelled(generator.normal(0.6, 0.1, 100))
+    negative = labelled(generator.normal(0.5, 0.1, 500))
+    gain, low, high = auc_gain((productive, negative), (productive, negative), VALIDATION, rng())
+    assert gain == low == high == 0
+    with pytest.raises(ValueError, match="same points"):
+        auc_gain((productive, negative), (productive, productive), VALIDATION, rng())
+    auc = _validated().auc
+    assert auc is not None
+    with pytest.raises(ValidationError, match="exactly when measured"):
+        CriterionTrial(
+            criterion="vegetation", outcome=TrialOutcome.NO_GAIN, auc_without=auc, auc_with=None
+        )
+    with pytest.raises(ValidationError, match="inside its interval"):
+        CriterionTrial(
+            criterion="vegetation",
+            outcome=TrialOutcome.NO_GAIN,
+            auc_without=auc,
+            auc_with=auc,
+            gain=0.2,
+            gain_low=-0.1,
+            gain_high=0.1,
+        )
+    unmeasured = CriterionTrial(
+        criterion="vegetation", outcome=TrialOutcome.NOT_MEASURED, auc_without=None, auc_with=None
+    )
+    body = _validated().model_dump()
+    twice = [unmeasured.model_dump()] * 2
+    with pytest.raises(ValidationError, match="tried once"):
+        DomainValidation.model_validate({**body, "trials": twice})
 
 
 def test_a_domain_no_national_map_holds_is_not_validated_and_says_why() -> None:

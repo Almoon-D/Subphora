@@ -78,6 +78,17 @@ export function ValidationNote({ validation }: { validation: DomainValidation })
           {validation.calibration && t("validation.calibrated")}
         </p>
       )}
+      {validation.trials.map((trial) => (
+        <p className="note" key={trial.criterion} data-trial={trial.criterion} data-outcome={trial.outcome}>
+          {t(`validation.trial.${trial.outcome}`, {
+            title: lookup(`criterion.${trial.criterion}`, trial.criterion),
+            without: trial.auc_without ? score(trial.auc_without.value) : "",
+            with: trial.auc_with ? score(trial.auc_with.value) : "",
+            low: trial.gain_low === null ? "" : score(trial.gain_low),
+            high: trial.gain_high === null ? "" : score(trial.gain_high),
+          })}
+        </p>
+      ))}
     </div>
   );
 }

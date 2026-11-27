@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.19.0] - 2026-11-27
+
+- A new map layer, "Vegetación verde a final de verano": where the land stays greener
+  than the dry land around it in late summer (Sentinel-2, five summers), a sign of shallow
+  water; irrigated land (SIGPAC) is masked out, never guessed.
+- The vegetation counts in the index only in the areas where checking against known wells
+  shows it makes the map better; elsewhere it stays out, and a tap says why.
+- Each area's validation now says whether the vegetation was tried there, and with what
+  result (the score with and without it).
+- New context layers in a "Lluvia y recarga" group: mean annual rainfall and aquifer recharge
+  (MITECO, 1940-2006, 1 km).
+- Ground motion (EGMS, mm per year) appears as a layer once you copy its downloaded files
+  into `data/egms`; it never enters the index.
+
 ## [0.18.0] - 2026-11-27
 
 - Your wells: a "Tus pozos" panel to log each well where you tapped the map, with its

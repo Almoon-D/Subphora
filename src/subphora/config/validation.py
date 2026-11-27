@@ -45,6 +45,14 @@ class CalibrationSettings(Section):
     folds: int = Field(ge=2)
 
 
+class TrialSettings(Section):
+    """How a criterion admitted by validation is tried (model.yaml ``admission``)."""
+
+    # It enters a domain only where the lower bound of the gain's interval (AUC with it
+    # minus AUC without it) is above this.
+    min_gain_low: float = Field(ge=0, lt=1)
+
+
 class ValidationSettings(Section):
     labels: LabelSettings
     block_m: PositiveFloat
@@ -53,6 +61,7 @@ class ValidationSettings(Section):
     bootstrap: BootstrapSettings
     minimum: MinimumLabels
     calibration: CalibrationSettings
+    trials: TrialSettings
 
     @model_validator(mode="after")
     def _calibration_above_minimum(self) -> Self:

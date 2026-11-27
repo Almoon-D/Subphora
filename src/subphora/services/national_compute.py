@@ -6,6 +6,7 @@ Each job carries everything it needs (settings, downloaded bytes, paths) and ret
 small result, so it pickles to a worker and back. Nothing here touches the network.
 """
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -41,9 +42,10 @@ from subphora.geo.raster import (
 from subphora.geo.render import colour_png, warp_onto_tile
 from subphora.geo.terrain import derive
 from subphora.geo.tiles import tile_bounds
+from subphora.geo.vegetation import anomaly
 from subphora.model.evaluate import ABSENT, Category, InputGrids, Quality, evaluate
 from subphora.model.quality import dataset_quality
-from subphora.services.validation import labelled_wells, validate_region
+from subphora.services.validation import admitted_grids, labelled_wells, validate_region
 from subphora.store.national import Category as StoredCategory
 from subphora.store.national import (
     CriterionQuality,
@@ -69,6 +71,12 @@ class RegionInputs:
     soil: list[bytes]
     groundwater_bodies: list[dict[str, Any]]
     water_points: list[dict[str, Any]]
+    # One late-summer NDVI composite per Sentinel-2 tile (GeoTIFF), and the share of each
+    # cell of the window in irrigated enclosures.
+    vegetation: list[bytes]
+    irrigated_share: FloatGrid
+    # The EGMS vertical-velocity GeoTIFFs over the window that the owner imported.
+    ground_motion: list[bytes]
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,9 +262,12 @@ def _quality(job: RegionJob) -> dict[str, Quality]:
         # No nationwide input for it (the faults and dips of the parcel scale, or none).
         if criterion.variable not in VARIABLE_DATASET:
             continue
-        dataset = job.national.datasets.all()[VARIABLE_DATASET[criterion.variable]]
+        name = VARIABLE_DATASET[criterion.variable]
+        dataset = job.national.datasets.all()[name]
         result[criterion.id] = dataset_quality(
-            dataset.detail,
+            # The source's detail: the configured one, with the edition a build sets (the
+            # last summer of the vegetation composite).
+            job.sources[name].detail,
             job.window.cell_m,
             job.metres_per_scale_unit,
             job.built_at.year,
@@ -264,6 +275,31 @@ def _quality(job: RegionJob) -> dict[str, Quality]:
             settings.unknown_value,
         )
     return result
+
+
+def vegetation_grid(job: RegionJob) -> FloatGrid:
+    """The late-summer vegetation anomaly on the window (``geo.vegetation``)."""
+    dataset = job.national.datasets.vegetation
+    composite = warped(job.window, job.inputs.vegetation, math.nan, Resampling.average)
+    irrigated = np.asarray(job.inputs.irrigated_share) >= dataset.irrigation.masked_share
+    return anomaly(composite, irrigated, job.window.cell_m, dataset.neighbourhood_m)
+
+
+def ground_motion_grid(window: GridWindow, tiffs: Sequence[bytes]) -> FloatGrid:
+    """The imported EGMS vertical velocities on the window (mm per year); NaN elsewhere."""
+    grid = empty(window)
+    for content in tiffs:
+        raster = read_geotiff(content)
+        warp_into(
+            grid,
+            window,
+            raster.data,
+            raster.transform,
+            raster.crs,
+            raster.nodata,
+            Resampling.average,
+        )
+    return grid
 
 
 def compute_region(job: RegionJob) -> RegionResult:
@@ -300,7 +336,10 @@ def compute_region(job: RegionJob) -> RegionResult:
         Variable.GROUNDWATER_STATUS: groundwater,
         Variable.WATER_POINT_DISTANCE_M: _water_points(job),
         Variable.GROUNDWATER_BODY: body,
+        Variable.VEGETATION_ANOMALY: vegetation_grid(job),
     }
+    if job.inputs.ground_motion:
+        grids[Variable.GROUND_MOTION_MM_YR] = ground_motion_grid(window, job.inputs.ground_motion)
     mask = _region_mask(job)
     grids = {v: np.where(mask, g, np.nan).astype(np.float32) for v, g in grids.items()}
     categories = {
@@ -326,6 +365,12 @@ def compute_region(job: RegionJob) -> RegionResult:
         quality,
         grids[Variable.WATER_POINT_DISTANCE_M],
         skill,
+        admitted_grids(
+            grids[Variable.GROUNDWATER_BODY],
+            body_categories,
+            {v.domain: v for v in validations},
+            job.model,
+        ),
     )
     grids[Variable.INDEX] = evaluation.index.astype(np.float32)
     grids[Variable.CONFIDENCE] = evaluation.confidence.astype(np.float32)
@@ -390,7 +435,8 @@ def render_tiles(job: TileJob) -> list[tuple[int, int, int, bytes]]:
         box = tile_bounds(z, x, y)
         lon_lat = transform_bounds(box, _WEB_MERCATOR, _LON_LAT)
         for manifest in job.manifests:
-            if not _overlaps(manifest.bbox, lon_lat):
+            # A context band exists only where its data was imported (EGMS).
+            if job.variable not in manifest.bands or not _overlaps(manifest.bbox, lon_lat):
                 continue
             bounds = transform_bounds(box, _WEB_MERCATOR, manifest.crs)
             cell = (bounds[2] - bounds[0]) / job.tile_size

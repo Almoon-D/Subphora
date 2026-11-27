@@ -12,6 +12,10 @@ calibration where allowed (MASTER_PLAN §4.3, decision 0030).
   curves of the block bootstrap.
 - A domain without enough labels is "not enough labels"; one whose interval reaches 0.5
   is "no better than chance here". Nothing is ever filled in.
+- A criterion that enters only where it helps is tried per domain: the same wells and
+  background cells are scored with and without it, and the gain in AUC gets a paired
+  interval from the same block resamples. It enters only where that interval's lower
+  bound is above the configured minimum.
 """
 
 import math
@@ -28,10 +32,12 @@ from subphora.domain.validation import (
     MEASURED,
     AucInterval,
     Calibration,
+    CriterionTrial,
     DomainValidation,
     LabelDesign,
     NoCalibration,
     Probability,
+    TrialOutcome,
     ValidationState,
 )
 
@@ -125,6 +131,62 @@ def auc_interval(
     )
     return AucInterval(
         value=value, low=min(low, value), high=max(high, value), level=settings.bootstrap.level
+    )
+
+
+def auc_gain(
+    without: tuple[Labelled, Labelled],
+    with_: tuple[Labelled, Labelled],
+    settings: ValidationSettings,
+    rng: np.random.Generator,
+) -> tuple[float, float, float]:
+    """The AUC with a criterion minus the AUC without it, over the same positive and
+    negative points (each pair's points in the same order and blocks), and the interval of
+    a paired percentile bootstrap: each resample of blocks weighs both scorings alike."""
+    positive_a, negative_a = without
+    positive_b, negative_b = with_
+    if positive_a.count != positive_b.count or negative_a.count != negative_b.count:
+        raise ValueError("a paired gain scores the same points twice")
+    gain = weighted_auc(positive_b.scores, negative_b.scores) - weighted_auc(
+        positive_a.scores, negative_a.scores
+    )
+    blocks = np.unique(np.concatenate((positive_a.blocks, negative_a.blocks)))
+    estimates = []
+    for _ in range(settings.bootstrap.samples):
+        wp, wn = _block_weights(rng, blocks, positive_a, negative_a)
+        a = weighted_auc(positive_a.scores, negative_a.scores, wp, wn)
+        b = weighted_auc(positive_b.scores, negative_b.scores, wp, wn)
+        if not (math.isnan(a) or math.isnan(b)):
+            estimates.append(b - a)
+    tail = (1 - settings.bootstrap.level) / 2
+    low, high = (
+        (float(q) for q in np.quantile(estimates, [tail, 1 - tail])) if estimates else (gain, gain)
+    )
+    return gain, min(low, gain), max(high, gain)
+
+
+def trial(
+    criterion: str,
+    without: DomainValidation,
+    with_: DomainValidation,
+    gain: tuple[float, float, float] | None,
+    min_gain_low: float,
+) -> CriterionTrial:
+    """How a criterion fared in a domain: it enters only where both validations were
+    measured and the gain's interval lies above ``min_gain_low``."""
+    if without.auc is None or with_.auc is None or gain is None:
+        return CriterionTrial(
+            criterion=criterion, outcome=TrialOutcome.NOT_MEASURED, auc_without=None, auc_with=None
+        )
+    value, low, high = gain
+    return CriterionTrial(
+        criterion=criterion,
+        outcome=TrialOutcome.IMPROVES if low > min_gain_low else TrialOutcome.NO_GAIN,
+        auc_without=without.auc,
+        auc_with=with_.auc,
+        gain=value,
+        gain_low=low,
+        gain_high=high,
     )
 
 

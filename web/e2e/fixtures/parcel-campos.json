@@ -262,7 +262,8 @@
             "no_calibration": "not_validated",
             "excluded_criteria": [],
             "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-            "validated_at": null
+            "validated_at": null,
+            "trials": []
           }
         ]
       },
@@ -581,7 +582,8 @@
               "no_calibration": "not_validated",
               "excluded_criteria": [],
               "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-              "validated_at": null
+              "validated_at": null,
+              "trials": []
             },
             "probability": null
           },
@@ -1087,7 +1089,8 @@
               "no_calibration": "not_validated",
               "excluded_criteria": [],
               "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-              "validated_at": null
+              "validated_at": null,
+              "trials": []
             },
             "probability": null
           },
@@ -1593,7 +1596,8 @@
               "no_calibration": "not_validated",
               "excluded_criteria": [],
               "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-              "validated_at": null
+              "validated_at": null,
+              "trials": []
             },
             "probability": null
           },
@@ -2099,7 +2103,8 @@
               "no_calibration": "not_validated",
               "excluded_criteria": [],
               "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-              "validated_at": null
+              "validated_at": null,
+              "trials": []
             },
             "probability": null
           },
@@ -2605,7 +2610,8 @@
               "no_calibration": "not_validated",
               "excluded_criteria": [],
               "labels_source": "No national map holds this domain: run `subphora national build` for it.",
-              "validated_at": null
+              "validated_at": null,
+              "trials": []
             },
             "probability": null
           },

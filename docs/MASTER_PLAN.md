@@ -207,7 +207,8 @@ without network.
 lithology and permeability, structure (faults, lineament density, and the dip of permeable
 layers where it is recorded), terrain (slope, topographic wetness index, drainage proximity),
 soil infiltration capacity, groundwater-body status, distance to and yield of known
-water points, piezometric depth, and later the late-summer vegetation anomaly (15).
+water points, piezometric depth, and the late-summer vegetation anomaly, which enters
+only the domains where validation shows it adds skill (decision 0041).
 
 **Score.** A weighted linear combination over the inputs available at that cell, with the
 weights renormalised over what is present. Until it is calibrated (session 07) the score is a

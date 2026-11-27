@@ -477,7 +477,9 @@ export interface Contribution {
 export interface MissingInput {
   criterion: string;
   weight: number;
-  reason: "no_dataset" | "no_data";
+  /** not_admitted: a criterion that enters only where validation shows it helps, and did
+   * not help in this domain; it does not lower the confidence. */
+  reason: "no_dataset" | "no_data" | "not_admitted";
 }
 
 export type ConfidenceLabel = "low" | "medium" | "high";
@@ -514,6 +516,19 @@ export interface DomainValidation {
   excluded_criteria: string[];
   labels_source: string;
   validated_at: string | null;
+  /** The criteria that enter only where they improve the validation: how each fared here. */
+  trials: CriterionTrial[];
+}
+
+/** A domain's validation with and without one criterion, and the gain's interval. */
+export interface CriterionTrial {
+  criterion: string;
+  outcome: "improves" | "no_gain" | "not_measured";
+  auc_without: AucInterval | null;
+  auc_with: AucInterval | null;
+  gain: number | null;
+  gain_low: number | null;
+  gain_high: number | null;
 }
 
 /** The calibrated probability of a productive well, only where the domain is calibrated. */

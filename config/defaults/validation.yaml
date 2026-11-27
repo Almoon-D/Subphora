@@ -49,3 +49,11 @@ minimum:
 calibration:
   min_per_class: 100
   folds: 5
+
+# A criterion that enters only where it helps (model.yaml `admission: validated`) is tried
+# in each domain: the same wells and background cells scored with and without it, and the
+# gain in AUC given a paired block-bootstrap interval. It enters a domain only where that
+# interval's lower bound is above min_gain_low: 0 means "better than without it, with 95 %
+# confidence"; anywhere the domain has too few wells to measure, it stays out.
+trials:
+  min_gain_low: 0.0

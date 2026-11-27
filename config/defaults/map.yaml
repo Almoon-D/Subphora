@@ -72,7 +72,7 @@ cadastre:
 # shown, by the names the service gives them. Anything else (geometry, internal ids,
 # misleading fields, or a field a service adds later) never reaches the browser.
 overlays:
-  groups: [water, geology, soil]
+  groups: [water, geology, soil, climate]
   tile_size: 256
   # The deepest zoom requested; MapLibre enlarges the last level beyond it.
   max_zoom: 18
@@ -286,3 +286,30 @@ overlays:
       legend: {kind: wms}
       # Its GetFeatureInfo answers no value (docs/knowledge/soil.md): no tap.
       info: null
+    # The natural-regime water resources model (SIMPA, CEDEX) on a 1 km grid, mean
+    # 1940/41-2005/06 (docs/knowledge/miteco-basins.md): context, not model inputs.
+    - id: recharge
+      group: climate
+      detail: {cell_m: 1000, edition: 2006}
+      service: miteco-recharge
+      layer: rechid_recarga
+      opacity: 0.6
+      min_zoom: 5
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        # The pixel's value, in mm a year.
+        fields: ["GRAY_INDEX"]
+    - id: rainfall
+      group: climate
+      detail: {cell_m: 1000, edition: 2006}
+      service: miteco-rainfall
+      layer: rechid_precipitacion
+      opacity: 0.6
+      min_zoom: 5
+      legend: {kind: wms}
+      info:
+        info_format: application/json
+        parser: geojson
+        fields: ["GRAY_INDEX"]

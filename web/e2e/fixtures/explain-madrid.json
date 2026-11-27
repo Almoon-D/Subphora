@@ -248,6 +248,11 @@
         "reason": "no_dataset"
       },
       {
+        "criterion": "vegetation",
+        "weight": 0.08,
+        "reason": "not_admitted"
+      },
+      {
         "criterion": "piezometric_depth",
         "weight": 0.1,
         "reason": "no_dataset"
@@ -274,7 +279,28 @@
         "water_points"
       ],
       "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-      "validated_at": "2026-11-26T14:33:30.208802Z"
+      "validated_at": "2026-11-26T14:33:30.208802Z",
+      "trials": [
+        {
+          "criterion": "vegetation",
+          "outcome": "no_gain",
+          "auc_without": {
+            "value": 0.993,
+            "low": 0.9897900960956769,
+            "high": 0.99653271368252,
+            "level": 0.95
+          },
+          "auc_with": {
+            "value": 0.994,
+            "low": 0.9905,
+            "high": 0.9971,
+            "level": 0.95
+          },
+          "gain": 0.001,
+          "gain_low": -0.002,
+          "gain_high": 0.004
+        }
+      ]
     },
     "probability": null
   }

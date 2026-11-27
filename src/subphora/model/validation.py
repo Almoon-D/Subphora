@@ -219,10 +219,16 @@ def validate_domain(
     settings: ValidationSettings,
     validated_at: datetime,
     rng: np.random.Generator,
+    *,
+    dry_labels: bool | None = None,
+    labels_source: str | None = None,
+    excluded_criteria: tuple[str, ...] | None = None,
 ) -> DomainValidation:
     """One domain's validation from its scored labels (``dry`` is used only when the
-    settings name dry kinds; ``background`` otherwise)."""
-    with_dry = bool(settings.labels.dry_kinds)
+    settings name dry kinds, or ``dry_labels`` says the labels hold dry wells;
+    ``background`` otherwise). Labels other than the public wells name their own source
+    and the criteria left out of the index they grade."""
+    with_dry = bool(settings.labels.dry_kinds) if dry_labels is None else dry_labels
     design = LabelDesign.PRESENCE_ABSENCE if with_dry else LabelDesign.PRESENCE_BACKGROUND
     negative = dry if with_dry else background
     minimum = settings.minimum
@@ -261,8 +267,12 @@ def validate_domain(
         auc=auc,
         calibration=calibration,
         no_calibration=reason,
-        excluded_criteria=tuple(settings.labels.excluded_criteria),
-        labels_source=settings.labels.source,
+        excluded_criteria=(
+            tuple(settings.labels.excluded_criteria)
+            if excluded_criteria is None
+            else excluded_criteria
+        ),
+        labels_source=settings.labels.source if labels_source is None else labels_source,
         validated_at=validated_at,
     )
 
@@ -275,6 +285,11 @@ def skill_of(validation: DomainValidation, settings: ConfidenceSettings) -> floa
         return None
     span = settings.skill_full_at_auc - 0.5
     return float(min(1.0, max(0.0, (validation.auc.low - 0.5) / span)))
+
+
+def probabilities(calibration: Calibration, scores: Floats) -> Floats:
+    """The calibrated probability at each score (NaN stays NaN)."""
+    return _sigmoid(calibration.intercept + calibration.slope * np.asarray(scores, np.float64))
 
 
 def probability_of(validation: DomainValidation, score: float) -> Probability | None:

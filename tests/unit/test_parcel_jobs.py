@@ -133,8 +133,10 @@ async def test_a_point_gets_its_map_candidates_and_layers(
         sum(c["mean_contribution"] for c in summary["contributions"]), abs=1e-4
     )
     assert summary["scored_cells"] == summary["cells"] > 0
-    # Layers: one image per layer, with the national legend.
-    assert [layer["id"] for layer in body["layers"]] == settings.parcel.layers
+    # Layers: one image per layer, with the national legend; last, the index updated with
+    # the owner's wells (tests/unit/test_wells.py).
+    ids = [layer["id"] for layer in body["layers"]]
+    assert ids == [*settings.parcel.layers, settings.wells.update.layer_id]
     assert body["layers"][0]["image"] == f"/api/parcel/{area_id}/layers/potential-index"
     assert body["layers"][0]["legend"][0] == {"min": None, "max": 0.2, "colour": "#ffffcc"}
     assert image.status_code == 200

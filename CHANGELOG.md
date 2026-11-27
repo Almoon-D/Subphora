@@ -7,6 +7,22 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.18.0] - 2026-11-27
+
+- Your wells: a "Tus pozos" panel to log each well where you tapped the map, with its
+  depth, flow, drilling date and outcome (productive, dry or not known yet), and its water
+  levels over time; correct or delete any of them.
+- Existing records come in from a CSV file (a Spanish Excel export works as it is), from the
+  panel or with `subphora wells import`; importing the same file again changes nothing.
+- The detailed map gains a layer "Índice actualizado con tus pozos": a productive well
+  raises the map around it, a dry one lowers it, and nothing changes beyond 600 m. The
+  original index stays as it was, so the two can be compared; a tap shows both values and
+  the wells that made the difference.
+- "¿Acierta el mapa con tus pozos?" grades the map against your productive and dry wells,
+  separately from the public IGME wells (it needs many wells to say anything).
+- Your wells are private: kept only on your server and in its nightly backup, never in the
+  logs or the PDF, and in an export pack only if you tick the box.
+
 ## [0.17.0] - 2026-11-27
 
 - Version 1 on the phone: `deploy/` runs Subphora on a home computer with Docker Compose,

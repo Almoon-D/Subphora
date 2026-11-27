@@ -21,14 +21,20 @@
 | 11 | `docs/sessions/done/11-offline-packs.md` | Opus 5.5, high | done |
 | 12 | `docs/sessions/done/12-report.md` | Opus 5.5, medium | done |
 | 13 | `docs/sessions/done/13-deployment.md` | Opus 5.5, high | done — version 1 |
-| 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | next |
-| 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | planned |
+| 14 | `docs/sessions/done/14-well-registry-learning.md` | Opus 5.5, high | done |
+| 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | next |
 | 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
 
 ## Live verification queue
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(owner-wells): on the mini PC, the owner logs real wells (or imports the
+  spreadsheet of their records: its columns, delimiter and date format are not known) and
+  checks that "Índice actualizado con tus pozos" moves the map around them by a believable
+  amount; `half_weight_m` and `range_m` in `wells.yaml` are starting judgements the owner's
+  validation can later measure. Queued by 14.
 
 - VERIFY-LIVE(home-deploy): the owner follows `deploy/GUIA.md` on the mini PC: Let's Encrypt
   certificate for the DuckDNS name (ports 80/443 forwarded, no CGNAT), sign-in from a phone
@@ -60,7 +66,8 @@
   the bodies meanwhile). Queued by 01; unblocked by a browser look at the CHG geoportal.
 - VERIFY-LIVE(dry-wells): a public record of dry or failed boreholes (IGME BDAguas, basin
   registers). Until one exists, validation is presence-background and no domain is
-  calibrated into a probability (decision 0030). Queued by 07; IGME or the owner's wells (14).
+  calibrated into a probability (decision 0030). Queued by 07; IGME. The owner's dry wells
+  now grade the index apart (decision 0040), but are far too few to calibrate it.
 - VERIFY-LIVE(piezometer-body-codes): that `MAS_CONTROL` in the national piezometry database
   (and CH Júcar's 2022-plan codes) match MITECO's groundwater-bodies layer, on a real build
   with levels; the files disagree with each other in places (`water-authorities.md`).
@@ -116,6 +123,16 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- The well registry needs a connection: a reading typed in the field with no coverage is
+  refused (the form keeps it; a field note goes through the outbox). Wells could join the
+  outbox as a record kind. (14)
+- Only the detailed map has the layer updated with the owner's wells; the national map's
+  tiles and taps do not. A well weighs across a groundwater body's edge as within it. (14)
+- The owner's water levels are not yet used for depth to water; they could join the
+  piezometric levels as private ones, inside their body. (14)
+- `scripts/e2e_fixtures.py` now signs in; a full regeneration also changes the legal answers
+  (09a loaded the rules), so the browser tests of the legal panel need updating with it. (14)
 
 - The report's maps have no base map (no network while printing); a PNOA image under them
   would need its terms read for reproduction in a document. The report is Spanish only. (12)
@@ -237,6 +254,20 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 14 — Well registry and learning from the field (2026-11-27, version 0.18.0)
+
+- Landed (decision 0040): the private registry (`store/wells.py`, `data/wells/`) with
+  readings, the CSV import (Spanish spreadsheets: `;`, decimal commas, UTM with its EPSG),
+  `/api/wells…`, `subphora wells import|summary|validate`; the Beta update with a halving
+  weight and a range (`model/learning.py`, `wells.yaml`); the detailed map's layer
+  "Índice actualizado con tus pozos", drawn when asked, and the update at a tap with the
+  wells that moved it; the index graded against the owner's wells per body, apart from
+  IGME's; the wells in an export pack only when ticked; the web panel "Tus pozos".
+- Tested: one productive and one dry synthetic well move the nearby cells and nothing
+  beyond the range; nothing of the registry in logs, the PDF or an unticked pack.
+- Deferred: offline well entries, the national map's update, the owner's levels for depth.
+- VERIFY-LIVE: owner-wells (new).
 
 ### 13 — Deployment: version 1 on the phone (2026-11-27, version 0.17.0)
 

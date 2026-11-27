@@ -319,5 +319,24 @@
       "validated_at": "2026-11-26T14:33:30.588772Z"
     },
     "probability": null
+  },
+  "updated": {
+    "kind": "index",
+    "prior": 0.7594444444444445,
+    "value": 0.8300159593279862,
+    "low": 0.41372661928616483,
+    "high": 0.9992698879424224,
+    "level": 0.9,
+    "prior_strength": 2.0,
+    "half_weight_m": 150.0,
+    "range_m": 600.0,
+    "evidence": [
+      {
+        "well_id": "5d3c2b1a-0f9e-4d8c-8b7a-6f5e4d3c2b1a",
+        "outcome": "productive",
+        "distance_m": 40.23621268040278,
+        "weight": 0.8303310664288827
+      }
+    ]
   }
 }

@@ -203,6 +203,48 @@ def _observations(records: Sequence[FieldRecord]) -> bytes:
     return _csv(header, rows)
 
 
+def _wells(data: ReportData) -> bytes:
+    header = (
+        "id",
+        "name",
+        "longitude",
+        "latitude",
+        "depth_m",
+        "flow_l_s",
+        "outcome",
+        "drilled_on",
+        "note",
+        "readings",
+    )
+    rows = [
+        (
+            w.id,
+            w.name,
+            w.longitude,
+            w.latitude,
+            w.depth_m,
+            w.flow_l_s,
+            w.outcome.value,
+            None if w.drilled_on is None else w.drilled_on.isoformat(),
+            w.note,
+            len(r.readings),
+        )
+        for r in data.wells
+        for w in (r.well,)
+    ]
+    return _csv(header, rows)
+
+
+def _well_readings(data: ReportData) -> bytes:
+    header = ("id", "well_id", "measured_at", "depth_to_water_m")
+    rows = [
+        (reading.id, reading.well_id, reading.measured_at.isoformat(), reading.depth_to_water_m)
+        for record in data.wells
+        for reading in record.readings
+    ]
+    return _csv(header, rows)
+
+
 def _readme(data: ReportData, files: Sequence[str], layers: PackFiles, c: Catalogue) -> bytes:
     a = data.analysis
     crs = c.lookup(f"crs.{a.crs}", a.crs)
@@ -238,6 +280,9 @@ def build_pack(
         "sources.csv": _sources(data),
         "observations.csv": _observations(data.records),
     }
+    if data.wells:
+        tables["wells.csv"] = _wells(data)
+        tables["well_readings.csv"] = _well_readings(data)
     names = ["report.pdf", *(n for n, _ in layers.files), *tables]
     manifest = {
         "area_id": a.id,

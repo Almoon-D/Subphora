@@ -78,6 +78,19 @@ paquetes de más de 250 MB. Si la descarga se corta, *Reanudar* sigue donde qued
 cobertura, la página abre igualmente (aunque la recargues) y muestra la zona del paquete;
 *Abrir* la vuelve a seleccionar y *Borrar* libera el espacio. Para probarlo: descarga un
 paquete, pon el navegador *Sin conexión* y recarga.
+**Tus pozos.** El apartado *Tus pozos* guarda tus pozos y sondeos: nombre, posición (toca
+el mapa y pulsa *Usar el último punto tocado*), profundidad, caudal, fecha de perforación y
+resultado (productivo, seco o sin saber), y sus lecturas de nivel con fecha. Si ya los
+tienes en una hoja de cálculo, guárdala como CSV y súbela ahí mismo (o `uv run subphora
+wells import pozos.csv`); vale el CSV de Excel en español, con `;` y coma decimal. En el
+mapa detallado, la capa *Índice actualizado con tus pozos* sube el mapa alrededor de un
+pozo productivo y lo baja alrededor de uno seco (cada pozo pesa la mitad a 150 m y nada a
+más de 600 m, en `config/defaults/wells.yaml`); el índice original no cambia, para que
+compares las dos capas. Tocar el mapa enseña los dos valores y qué pozos los separan.
+*Comparar el mapa con mis pozos* mide si el mapa acierta con tus pozos, aparte de los del
+IGME. Son datos privados: solo en tu servidor (`data/wells/`) y en su copia de cada noche;
+no salen en el informe, y en el paquete solo si marcas la casilla.
+
 `Ctrl-C` para ambos servidores. Las respuestas de Catastro, SIGPAC
 y CartoCiudad se guardan en `data/cache/` (no se sube al repositorio).
 
@@ -92,6 +105,7 @@ uv run subphora national build --region ES-Z   # mapa nacional de una provincia
 uv run subphora national build --all           # toda España (~5 GB libres, varias horas)
 uv run subphora piezometry import              # niveles piezométricos (ver abajo)
 uv run subphora field summary                  # lo registrado en campo que ha llegado
+uv run subphora wells import|summary|validate  # tus pozos: importar un CSV, contarlos, medir el mapa
 uv run subphora users add|password|remove|list # quién puede entrar
 uv run subphora backup create|list|verify|restore  # copias de data/ (ver deploy/GUIA.md)
 ```

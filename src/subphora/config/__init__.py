@@ -29,6 +29,7 @@ from subphora.config.section import SectionSettings
 from subphora.config.server import ApiSettings, StoreSettings
 from subphora.config.sources import Service, SourcesSettings, host_of
 from subphora.config.validation import ValidationSettings
+from subphora.config.wells import WellsSettings
 from subphora.domain.potential import Variable
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -59,6 +60,7 @@ __all__ = [
     "SourcesSettings",
     "StoreSettings",
     "ValidationSettings",
+    "WellsSettings",
     "load_settings",
 ]
 
@@ -90,6 +92,7 @@ class Settings(Section):
     report: ReportSettings
     auth: AuthSettings
     backup: BackupSettings
+    wells: WellsSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:
@@ -106,6 +109,19 @@ class Settings(Section):
             services.append(basin.service)
         if len(set(services)) != len(services):
             raise ValueError("piezometry: each source of levels is imported once")
+        return self
+
+    @model_validator(mode="after")
+    def _wells_layer_drawable(self) -> Self:
+        """The layer updated with the owner's wells takes the legend of a national tile
+        layer of the index, and its id is no other detailed-map layer's."""
+        update = self.wells.update
+        layers = {layer.id: layer for layer in self.national.tiles.layers}
+        legend = layers.get(update.legend_layer)
+        if legend is None or legend.variable is not Variable.INDEX:
+            raise ValueError("wells.update.legend_layer: not a national tile layer of the index")
+        if update.layer_id in layers or update.layer_id in self.parcel.layers:
+            raise ValueError("wells.update.layer_id: already another layer's id")
         return self
 
     @model_validator(mode="after")

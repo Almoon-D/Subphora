@@ -7,6 +7,9 @@ entries of every service it cites; and the pack's GIS files written from them.
   the national legend: no base map is fetched, so making a report calls no service.
 - Field records belong to an area when they were made inside its box or guided to one of
   its spots. Their photos and voice memos join the pack only when the owner asks.
+- The owner's wells inside the area's box join the pack only when the owner asks
+  (decision 0040); otherwise the pack says they were left out, and the report never
+  shows them.
 - A layer that has nothing to hold (no depth without imported levels) is not written, and
   the pack lists it as missing with the reason.
 """
@@ -27,12 +30,14 @@ from subphora.config.national import TileLayer
 from subphora.config.sources import Service
 from subphora.domain.field import Observation
 from subphora.domain.parcel_map import AreaAnalysis, Candidate, ParcelError, ParcelFailure
+from subphora.domain.wells import WellRecord
 from subphora.geo.export import FieldValue, VectorLayer, write_cog, write_gpkg
 from subphora.geo.grid import Bounds, transform_xy
 from subphora.geo.raster import Geometry
 from subphora.geo.render import colour_png
 from subphora.services.field import FieldService
 from subphora.services.parcel import ParcelMapService
+from subphora.services.wells import WellsService
 from subphora.store.file_cache import Clock, utc_now
 from subphora.store.national import read_bands, region_tif
 from subphora.store.parcels import depth_path, read_outline
@@ -52,6 +57,8 @@ class Missing(StrEnum):
     MEDIA_LEFT_OUT = "media_left_out"
     # A record declares a file the server never received.
     MEDIA_NOT_RECEIVED = "media_not_received"
+    # The owner has wells in the area, left out because the owner did not ask for them.
+    WELLS_LEFT_OUT = "wells_left_out"
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +92,10 @@ class ReportData:
     records: tuple[FieldRecord, ...]
     depth_grid: bool
     generated_at: datetime
+    # The owner's wells in the area's box, only when asked for; and whether any was left
+    # out because they were not.
+    wells: tuple[WellRecord, ...] = ()
+    wells_left_out: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,17 +119,19 @@ class ExportService:
         settings: Settings,
         parcel: ParcelMapService,
         field: FieldService,
+        wells: WellsService,
         clock: Clock = utc_now,
     ) -> None:
         self._settings = settings
         self._report = settings.report
         self._parcel = parcel
         self._field = field
+        self._wells = wells
         self._clock = clock
 
-    async def data(self, area_id: str) -> ReportData:
-        """Everything the report shows; raises ParcelError while the map is not done or
-        when its files cannot be read."""
+    async def data(self, area_id: str, wells: bool = False) -> ReportData:
+        """Everything the report shows (and the owner's wells there when ``wells``);
+        raises ParcelError while the map is not done or when its files cannot be read."""
         analysis = await self._parcel.analysis(area_id)
         root = self._parcel.root
         try:
@@ -149,6 +162,7 @@ class ExportService:
             )
             for observation, file in await self._field.records_near(area_id, analysis.bbox)
         )
+        held = await self._wells.records_within(analysis.bbox)
         return ReportData(
             analysis=analysis,
             outline=tuple(outline),
@@ -157,6 +171,8 @@ class ExportService:
             records=records,
             depth_grid=depth_path(root, area_id).exists(),
             generated_at=self._clock(),
+            wells=held if wells else (),
+            wells_left_out=bool(held) and not wells,
         )
 
     def _layers(self) -> list[TileLayer]:
@@ -248,6 +264,8 @@ class ExportService:
             missing.append(Missing.MEDIA_LEFT_OUT)
         if not data.records:
             missing.append(Missing.NO_OBSERVATIONS)
+        if data.wells_left_out:
+            missing.append(Missing.WELLS_LEFT_OUT)
         gpkg = folder / "layers.gpkg"
         write_gpkg(
             gpkg,

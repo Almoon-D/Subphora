@@ -3088,6 +3088,41 @@
           "colour": "#08306b"
         }
       ]
+    },
+    {
+      "id": "potential-wells",
+      "variable": "index",
+      "image": "/api/parcel/787a133302ad16d2/layers/potential-wells?wells=84037f7ffb743c60",
+      "opacity": 0.65,
+      "visible": false,
+      "unit": "index",
+      "legend": [
+        {
+          "min": null,
+          "max": 0.2,
+          "colour": "#ffffcc"
+        },
+        {
+          "min": 0.2,
+          "max": 0.4,
+          "colour": "#a1dab4"
+        },
+        {
+          "min": 0.4,
+          "max": 0.6,
+          "colour": "#41b6c4"
+        },
+        {
+          "min": 0.6,
+          "max": 0.8,
+          "colour": "#2c7fb8"
+        },
+        {
+          "min": 0.8,
+          "max": null,
+          "colour": "#253494"
+        }
+      ]
     }
   ]
 }

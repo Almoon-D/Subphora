@@ -54,6 +54,7 @@ import { PacksPanel } from "./packs/PacksPanel.tsx";
 import { type PackRecord, withStoredAnswers } from "./packs/store.ts";
 import { registerServiceWorker } from "./sw/register.ts";
 import { ParcelPanel } from "./parcel/ParcelPanel.tsx";
+import { WellsPanel } from "./wells/WellsPanel.tsx";
 import { SectionPanel, type SectionView } from "./section/SectionPanel.tsx";
 import {
   areaHeading,
@@ -349,6 +350,18 @@ export function App() {
     setParcels((current) => withParcelResult(current, key, result));
   }
 
+  // A change to the owner's wells: ask again for every finished detailed map, whose layer
+  // "updated with your wells" then carries the registry's new stamp and is drawn again.
+  function onWellsChanged() {
+    for (const [key, view] of Object.entries(parcels)) {
+      if (view.state === "answered" && view.answer.job.state === "done") {
+        void fetchParcel(view.answer.job.id).then((result) => {
+          setParcels((current) => withParcelResult(current, key, result));
+        });
+      }
+    }
+  }
+
   async function onTap(lon: number, lat: number, tapZoom: number) {
     if (!config || !layers) {
       return;
@@ -613,6 +626,7 @@ export function App() {
             onLayer={setParcelLayer}
           />
         )}
+        <WellsPanel tapped={tapped} onChanged={onWellsChanged} />
         <SessionList
           session={session}
           onSelect={(index) => {

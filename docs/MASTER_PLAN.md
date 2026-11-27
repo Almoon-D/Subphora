@@ -157,7 +157,8 @@ iPhone (decision 0004). Two modes:
 - **Research mode:** search (cadastral, SIGPAC, address, municipality, coordinates, drawn
   point or polygon); switchable layers with opacity and legend; the national and parcel
   potential maps; terrain, dip and soil layers; tap-to-explain; ranked candidate spots;
-  parcel comparison; the geological cross-section; report export.
+  parcel comparison; the geological cross-section; report export; the owner's well
+  registry and the detailed map's layer updated with it (§4.3 Learning).
 - **Field mode:** live position with accuracy circle and heading; distance and direction to
   a chosen spot; observations (note, photo, voice memo) and track; downloaded offline packs.
   IndexedDB is the device's source of truth: every observation is written there before the

@@ -36,9 +36,10 @@ class ReportService:
         catalogue = self._catalogue(data)
         return await asyncio.to_thread(self._pdf, data, catalogue)
 
-    async def pack(self, area_id: str, media: bool, target: Path) -> None:
-        """The area's export pack written to ``target`` (a ZIP)."""
-        data = await self._export.data(area_id)
+    async def pack(self, area_id: str, media: bool, wells: bool, target: Path) -> None:
+        """The area's export pack written to ``target`` (a ZIP); the field records'
+        files only with ``media``, the owner's wells only with ``wells``."""
+        data = await self._export.data(area_id, wells=wells)
         catalogue = self._catalogue(data)
         with tempfile.TemporaryDirectory(prefix="subphora-pack-") as folder:
             layers = await self._export.write_layers(data, Path(folder), media)

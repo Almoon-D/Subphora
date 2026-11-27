@@ -626,7 +626,7 @@ export function App() {
             onLayer={setParcelLayer}
           />
         )}
-        <WellsPanel tapped={tapped} onChanged={onWellsChanged} />
+        <WellsPanel tapped={tapped} onChanged={onWellsChanged} db={fieldDb} outbox={outbox} />
         <SessionList
           session={session}
           onSelect={(index) => {

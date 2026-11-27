@@ -40,7 +40,9 @@ who is signed in, and the health check, the only routes open without one).
 - ``GET /api/wells``: the owner's well registry, with a stamp that changes with the wells
   that update the map; ``PUT /api/wells/{id}`` (a well) stores or replaces one, ``DELETE
   /api/wells/{id}`` removes it with its readings, ``POST /api/wells/{id}/readings`` adds a
-  water level once (a retried one changes nothing), ``POST /api/wells/import`` reads a CSV
+  water level once (a retried one changes nothing), ``POST /api/wells/readings`` takes a
+  batch from the device's outbox (each reading created, a duplicate, a conflict or of an
+  unknown well, on its own), ``POST /api/wells/import`` reads a CSV
   file of existing records, and ``GET /api/wells/validation`` grades the national index
   against the owner's wells, apart from the public wells. The registry is private: it is
   never logged, and an export holds it only when asked (``wells=true``).
@@ -92,6 +94,8 @@ from subphora.domain.wells import (
     Change,
     ImportReport,
     OwnerValidation,
+    ReadingBatch,
+    ReadingBatchAnswer,
     Registry,
     Well,
     WellReading,
@@ -620,6 +624,11 @@ def create_app(
             if len(content) > limit:
                 raise WellsError(WellsFailure.TOO_LARGE, f"a file has at most {limit} bytes")
         return await wells(request).import_csv(bytes(content))
+
+    @app.post("/api/wells/readings")
+    async def wells_readings(request: Request) -> ReadingBatchAnswer:
+        batch = _body_of(ReadingBatch, await request.body(), "batch")
+        return ReadingBatchAnswer(results=tuple(await wells(request).add_readings(batch.readings)))
 
     @app.put("/api/wells/{well_id}")
     async def wells_put(

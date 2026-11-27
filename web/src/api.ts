@@ -721,6 +721,38 @@ export interface DepthEstimate {
   karst: boolean;
   /** The sources of the piezometers' levels used, national first; empty when unknown. */
   sources: LevelsSource[];
+  /** The owner's wells used as private levels, nearest first (only in a tap's depth with
+   * the wells; the area's candidates keep the public depth). */
+  own_levels: OwnLevel[];
+}
+
+/** One of the owner's wells as a private level of the water table (session 17). */
+export interface OwnLevel {
+  well_id: string;
+  distance_m: number;
+  ground_m: number;
+  level_m: number;
+  low_m: number;
+  high_m: number;
+  readings: number;
+  first: string;
+  last: string;
+}
+
+export type LevelLeftOut =
+  | "pumping"
+  | "pump_unknown"
+  | "recovering"
+  | "too_old"
+  | "outside_area"
+  | "no_ground_elevation"
+  | "outside_bodies";
+
+/** The depth at a tapped point: public, and with the owner's readings at rest. */
+export interface DepthWithWells {
+  public: DepthEstimate;
+  with_wells: DepthEstimate;
+  left_out: Partial<Record<LevelLeftOut, number>>;
 }
 
 export interface LevelsSource {
@@ -880,6 +912,7 @@ export interface ParcelExplanation {
   built_at: string;
   estimate: PotentialEstimate;
   updated: WellUpdate | null;
+  depth: DepthWithWells | null;
 }
 
 export type ParcelExplainResult = { ok: true; explanation: ParcelExplanation } | { ok: false; failure: ParcelFailure };

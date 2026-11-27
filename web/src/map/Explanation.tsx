@@ -13,6 +13,7 @@ import type {
   WellUpdate,
 } from "../api.ts";
 import { formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
+import { DepthHere } from "../parcel/Depth.tsx";
 import { describeDetail } from "./LayerPanel.tsx";
 import { percent, valueText } from "./national.ts";
 
@@ -294,6 +295,7 @@ export function ParcelExplanationView({ result }: { result: ParcelExplainResult 
       <h3>{t("detailed.explainHeading")}</h3>
       <ScoreWithConfidence estimate={estimate} />
       {explanation.updated && <UpdatedWithWells update={explanation.updated} confidence={estimate.confidence} />}
+      {explanation.depth && <DepthHere depth={explanation.depth} />}
       <p className="note">{t("national.kindNote")}</p>
       <Inputs estimate={estimate} />
       <Missing estimate={estimate} />

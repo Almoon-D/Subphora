@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.15.*"
 
 [[package]]
@@ -1022,7 +1022,7 @@ wheels = [
 
 [[package]]
 name = "subphora"
-version = "0.20.0"
+version = "0.21.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },

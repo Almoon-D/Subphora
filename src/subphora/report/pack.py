@@ -236,9 +236,29 @@ def _wells(data: ReportData) -> bytes:
 
 
 def _well_readings(data: ReportData) -> bytes:
-    header = ("id", "well_id", "measured_at", "depth_to_water_m")
+    header = (
+        "id",
+        "well_id",
+        "measured_at",
+        "depth_to_water_m",
+        "reference",
+        "reference_height_m",
+        "measured_by",
+        "pump",
+        "pump_minutes",
+    )
     rows = [
-        (reading.id, reading.well_id, reading.measured_at.isoformat(), reading.depth_to_water_m)
+        (
+            reading.id,
+            reading.well_id,
+            reading.measured_at.isoformat(),
+            reading.depth_to_water_m,
+            reading.reference.value,
+            reading.reference_height_m,
+            reading.measured_by.value,
+            reading.pump.value,
+            "" if reading.pump_minutes is None else reading.pump_minutes,
+        )
         for record in data.wells
         for reading in record.readings
     ]

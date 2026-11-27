@@ -4,8 +4,10 @@ rule 6, MASTER_PLAN §3 Privacy).
 
 A well is kept as its canonical JSON under its id; the app may replace it (the owner
 corrects a record) or delete it with its readings. A reading is kept once under its id:
-the same id with the same content again changes nothing, with other content it is a
-conflict and the first copy stays. An import writes everything in one transaction and,
+the same id with the same content again changes nothing (a reading kept before its
+reference and pump were asked compares with their defaults), with other content it is a
+conflict and the first copy stays. The device's outbox sends readings in batches, each
+taken or refused on its own. An import writes everything in one transaction and,
 unlike the app, never replaces a well it already holds with different content: such a row
 is a conflict. Nothing here logs a record's content. SQLite's calls block, so each runs in
 a worker thread.
@@ -21,6 +23,8 @@ from pathlib import Path
 from subphora.domain.wells import (
     Change,
     ImportReport,
+    ReadingOutcome,
+    ReadingResult,
     Well,
     WellReading,
     WellRecord,
@@ -129,6 +133,31 @@ class WellsStore:
                 raise WellsError(WellsFailure.UNKNOWN_WELL, f"no well {reading.well_id}")
             return _insert_reading(db, reading)
 
+    async def add_readings(self, readings: Sequence[WellReading]) -> list[ReadingResult]:
+        """Keep each reading of a batch once, in one transaction; a reading of a well not
+        held is refused on its own."""
+        async with self._lock:
+            return await asyncio.to_thread(self._add_readings, readings)
+
+    def _add_readings(self, readings: Sequence[WellReading]) -> list[ReadingResult]:
+        outcomes = {
+            Change.CREATED: ReadingOutcome.CREATED,
+            Change.UNCHANGED: ReadingOutcome.DUPLICATE,
+            Change.CONFLICT: ReadingOutcome.CONFLICT,
+        }
+        results = []
+        with self._connect() as db, db:
+            for reading in readings:
+                if (
+                    db.execute("SELECT 1 FROM wells WHERE id = ?", (reading.well_id,)).fetchone()
+                    is None
+                ):
+                    outcome = ReadingOutcome.UNKNOWN_WELL
+                else:
+                    outcome = outcomes[_insert_reading(db, reading)]
+                results.append(ReadingResult(id=reading.id, outcome=outcome))
+        return results
+
     # ── Import ─────────────────────────────────────────────────────────────────────────
 
     async def import_rows(
@@ -193,4 +222,4 @@ def _insert_reading(db: sqlite3.Connection, reading: WellReading) -> Change:
     if inserted:
         return Change.CREATED
     (held,) = db.execute("SELECT body FROM readings WHERE id = ?", (reading.id,)).fetchone()
-    return Change.UNCHANGED if held == body else Change.CONFLICT
+    return Change.UNCHANGED if WellReading.model_validate_json(held) == reading else Change.CONFLICT

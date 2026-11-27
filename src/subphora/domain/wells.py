@@ -4,8 +4,11 @@
 
 A well has an id (a UUID made where it was first recorded), the owner's name for it, its
 position in degrees, what is known of it (depth, flow, the date it was drilled, a note)
-and its outcome: productive, dry or unknown. Its water-level readings are dated depths to
-the water below the ground. The registry is private data: it lives only in ``data/``.
+and its outcome: productive, dry or unknown. Its water-level readings are typed by hand
+(decision 0042: no instrument): a dated depth to the water below a stated reference (the
+ground, or the top of the casing at a stated height above it), who measured it, and
+whether the pump was stopped or running, and for how long, since a pumping well reads low.
+The registry is private data: it lives only in ``data/``.
 
 The update of the map at a cell is a Beta-Bernoulli update of the map's own value there,
 each known well weighing by its distance; a ``WellUpdate`` carries the value before and
@@ -22,6 +25,7 @@ from typing import Literal, Self
 from pydantic import AwareDatetime, Field, field_validator, model_validator
 
 from subphora.domain import DomainModel
+from subphora.domain.depth import DepthEstimate
 from subphora.domain.validation import DomainValidation, LabelDesign
 
 _UNIT = Field(ge=0, le=1)
@@ -78,19 +82,66 @@ class Well(DomainModel):
         return value
 
 
+class LevelReference(StrEnum):
+    """What a reading's depth is measured from."""
+
+    GROUND = "ground"
+    CASING_TOP = "casing_top"
+
+
+class MeasuredBy(StrEnum):
+    OWNER = "owner"
+    DRILLER = "driller"
+    CONTRACTOR = "contractor"
+    # Not recorded (an imported reading that does not say).
+    UNKNOWN = "unknown"
+
+
+class PumpState(StrEnum):
+    """The well's pump when the level was read: a running pump draws the level down, and a
+    pump stopped a short while ago leaves it still recovering."""
+
+    STOPPED = "stopped"
+    RUNNING = "running"
+    UNKNOWN = "unknown"
+
+
 class WellReading(DomainModel):
-    """A water level measured in a well: the depth to the water below the ground (negative
-    where the water rises above it)."""
+    """A water level read in a well: the depth to the water below ``reference`` (negative
+    where the water rises above it), the reference's height above the ground, who read it,
+    and the pump's state for ``pump_minutes`` before (None: not stated). A reading that does
+    not state them (one imported, or kept before they were asked) is from the ground, by
+    someone unknown, with the pump's state unknown."""
 
     id: str
     well_id: str
     measured_at: AwareDatetime
     depth_to_water_m: float
+    reference: LevelReference = LevelReference.GROUND
+    reference_height_m: float = Field(default=0.0, ge=0)
+    measured_by: MeasuredBy = MeasuredBy.UNKNOWN
+    pump: PumpState = PumpState.UNKNOWN
+    pump_minutes: int | None = Field(default=None, ge=0)
 
     @field_validator("id", "well_id")
     @classmethod
     def _uuid(cls, value: str) -> str:
         return canonical_uuid(value)
+
+    @model_validator(mode="after")
+    def _stated(self) -> Self:
+        if not math.isfinite(self.reference_height_m):
+            raise ValueError("a height is a finite number")
+        if self.reference is LevelReference.GROUND and self.reference_height_m != 0:
+            raise ValueError("the ground stands at no height above itself")
+        if self.pump is PumpState.UNKNOWN and self.pump_minutes is not None:
+            raise ValueError("a pump in an unknown state has no duration")
+        return self
+
+    @property
+    def below_ground_m(self) -> float:
+        """The depth to the water below the ground."""
+        return self.depth_to_water_m - self.reference_height_m
 
     @field_validator("measured_at")
     @classmethod
@@ -140,6 +191,31 @@ class Change(StrEnum):
 class WellSaved(DomainModel):
     id: str
     change: Change
+
+
+class ReadingBatch(DomainModel):
+    """``POST /api/wells/readings``: readings sent from the device's outbox."""
+
+    readings: tuple[WellReading, ...] = Field(min_length=1)
+
+
+class ReadingOutcome(StrEnum):
+    CREATED = "created"
+    # The same id with the same content: a retried sync.
+    DUPLICATE = "duplicate"
+    # The same id with other content: the first copy stays.
+    CONFLICT = "conflict"
+    # The well was deleted (or never stored): nothing is kept.
+    UNKNOWN_WELL = "unknown_well"
+
+
+class ReadingResult(DomainModel):
+    id: str
+    outcome: ReadingOutcome
+
+
+class ReadingBatchAnswer(DomainModel):
+    results: tuple[ReadingResult, ...]
 
 
 class ImportReport(DomainModel):
@@ -209,6 +285,44 @@ class WellUpdate(DomainModel):
         return self
 
 
+class LevelLeftOut(StrEnum):
+    """Why a reading does not enter the depth to water as a private level."""
+
+    # The pump was running: the level is drawn down.
+    PUMPING = "pumping"
+    # The pump's state is not known: it may have been running.
+    PUMP_UNKNOWN = "pump_unknown"
+    # The pump had stopped less than the settings' rest time before: still recovering.
+    RECOVERING = "recovering"
+    # The well's readings at rest are too old or too few for a level.
+    TOO_OLD = "too_old"
+    # The well lies outside the detailed map's grid: its ground and body are not known.
+    OUTSIDE_AREA = "outside_area"
+    # The terrain model has no elevation at the well.
+    NO_GROUND_ELEVATION = "no_ground_elevation"
+    # The well lies in no groundwater body.
+    OUTSIDE_BODIES = "outside_bodies"
+
+
+class DepthWithWells(DomainModel):
+    """The depth to water at a tapped point: from the public piezometry alone, and with the
+    owner's wells read at rest as private levels of their own body (computed when asked;
+    the area's stored map and its candidates keep the public one). ``left_out`` counts the
+    owner's readings that did not enter, by why."""
+
+    public: DepthEstimate
+    with_wells: DepthEstimate
+    left_out: dict[LevelLeftOut, int]
+
+    @model_validator(mode="after")
+    def _apart(self) -> Self:
+        if self.public.own_levels:
+            raise ValueError("the public depth holds no private level")
+        if any(n <= 0 for n in self.left_out.values()):
+            raise ValueError("a reason counts at least one reading")
+        return self
+
+
 class OwnerValidation(DomainModel):
     """``GET /api/wells/validation``: the index against the owner's wells, per domain of
     the national map, apart from the public wells' validation (decision 0030's method)."""
@@ -232,8 +346,17 @@ class OwnerValidation(DomainModel):
 __all__ = [
     "KNOWN_OUTCOMES",
     "Change",
+    "DepthWithWells",
     "ImportReport",
+    "LevelLeftOut",
+    "LevelReference",
+    "MeasuredBy",
     "OwnerValidation",
+    "PumpState",
+    "ReadingBatch",
+    "ReadingBatchAnswer",
+    "ReadingOutcome",
+    "ReadingResult",
     "Registry",
     "Well",
     "WellEvidence",

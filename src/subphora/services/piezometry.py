@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 
 from subphora.config import Settings
-from subphora.config.depth import PiezometrySettings
+from subphora.config.depth import LevelSummary, PiezometrySettings
 from subphora.domain.depth import LevelsSource
 from subphora.domain.piezometry import Piezometer, PiezometryDataset
 from subphora.geo.grid import transform_xy
@@ -71,7 +71,7 @@ def _text(row: dict[str, str], column: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class _Summary:
+class LevelsSummary:
     level: float
     low: float
     high: float
@@ -81,12 +81,12 @@ class _Summary:
 
 
 def summarise(
-    levels: list[tuple[date, float]], settings: PiezometrySettings, today: date
-) -> _Summary | None:
-    """A piezometer's recent median level and seasonal range, or None (left out)."""
+    levels: list[tuple[date, float]], summary: LevelSummary, today: date
+) -> LevelsSummary | None:
+    """A piezometer's (or a well's) recent median level and seasonal range, or None (left
+    out: too old, or too few recent measurements)."""
     if not levels:
         return None
-    summary = settings.summary
     last = max(d for d, _ in levels)
     if (today - last).days > summary.max_age_years * _DAYS_PER_YEAR:
         return None
@@ -96,7 +96,7 @@ def summarise(
         return None
     values = np.array([v for _, v in recent], dtype=np.float64)
     low, median, high = np.quantile(values, [summary.low_quantile, 0.5, summary.high_quantile])
-    return _Summary(
+    return LevelsSummary(
         level=float(median),
         low=float(low),
         high=float(high),
@@ -281,7 +281,7 @@ def _summarised(
     """The piezometer's summary and, per source, the first and last day it gives in the
     summarised window; None when it is left out."""
     levels = [(day, value) for day, (value, _) in station.levels.items()]
-    summary = summarise(levels, settings, today)
+    summary = summarise(levels, settings.summary, today)
     if summary is None:
         return None
     days: dict[str, list[date]] = defaultdict(list)

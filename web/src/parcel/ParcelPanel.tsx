@@ -7,7 +7,7 @@
 import { useState } from "react";
 
 import { packPath, reportPath } from "../api.ts";
-import type { AreaAnalysis, Candidate, DepthEstimate, DrillingCost, ParcelFailure, ParcelLayer } from "../api.ts";
+import type { AreaAnalysis, Candidate, DrillingCost, ParcelFailure, ParcelLayer } from "../api.ts";
 import { formatArea, formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import {
   ConfidenceBreakdown,
@@ -20,6 +20,7 @@ import {
 import { legendText, percent } from "../map/national.ts";
 import { isBlocked } from "../legal/legal.ts";
 import { LegalStatusView } from "../legal/LegalPanel.tsx";
+import { Depth } from "./Depth.tsx";
 import type { ParcelView } from "./parcel.ts";
 
 interface Props {
@@ -131,54 +132,7 @@ function Layers({
   );
 }
 
-const metres = (value: number) => formatNumber(value, 0);
 const euros = (value: string) => formatNumber(Number(value), 0);
-
-function Depth({ depth }: { depth: DepthEstimate }) {
-  const { water_table: table, sources } = depth;
-  if (depth.state === "unknown" || table === null || sources.length === 0 || depth.depth_m === null) {
-    return (
-      <>
-        <p className="note depth" data-depth="unknown" data-reason={depth.reason ?? ""}>
-          {lookup(`detailed.depthUnknown.${depth.reason ?? ""}`, t("detailed.depthUnknown.not_imported"))}
-        </p>
-        {depth.karst && <p className="note karst">{t("detailed.karst")}</p>}
-      </>
-    );
-  }
-  return (
-    <div className="depth" data-depth="estimated">
-      <p>
-        {t("detailed.depth", {
-          depth: metres(depth.depth_m),
-          low: metres(depth.low_m ?? depth.depth_m),
-          high: metres(depth.high_m ?? depth.depth_m),
-        })}
-      </p>
-      {depth.karst && <p className="warning karst">{t("detailed.karst")}</p>}
-      <p className="note">
-        {t("detailed.depthDetail", {
-          ground: metres(depth.ground_m ?? 0),
-          table: metres(table.elevation_m),
-          count: table.piezometers,
-          body: table.body_label || table.body,
-          nearest: `${formatNumber(table.nearest_m / 1000, 1)} km`,
-        })}
-      </p>
-      <ul className="note sources">
-        {sources.map((source) => (
-          <li key={source.service_id} data-levels-source={source.service_id}>
-            {t("detailed.depthSource", {
-              from: formatDate(source.levels_from),
-              to: formatDate(source.levels_to),
-              attribution: source.attribution,
-            })}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function Cost({ cost }: { cost: DrillingCost }) {
   return (

@@ -339,5 +339,82 @@
         "weight": 0.8303310664288827
       }
     ]
+  },
+  "depth": {
+    "public": {
+      "state": "estimated",
+      "reason": null,
+      "ground_m": -499.0,
+      "water_table": {
+        "elevation_m": -532.4538949134627,
+        "low_m": -536.311365385257,
+        "high_m": -528.5964244416684,
+        "body": "ES030MSBT000",
+        "body_label": "Synthetic body (ES030MSBT000)",
+        "piezometers": 2,
+        "nearest_m": 1178.735235897155
+      },
+      "depth_m": 33.453894913462705,
+      "low_m": 29.596424441668432,
+      "high_m": 37.31136538525698,
+      "karst": true,
+      "sources": [
+        {
+          "service_id": "miteco-piezometry-db",
+          "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+          "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+          "file_name": "basedatospiezometria.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "imported_at": "2026-11-26T00:00:00Z",
+          "levels_from": "2023-01-15",
+          "levels_to": "2024-12-15"
+        }
+      ],
+      "own_levels": []
+    },
+    "with_wells": {
+      "state": "estimated",
+      "reason": null,
+      "ground_m": -499.0,
+      "water_table": {
+        "elevation_m": -526.5108298656495,
+        "low_m": -526.5940307231897,
+        "high_m": -526.4276290081093,
+        "body": "ES030MSBT000",
+        "body_label": "Synthetic body (ES030MSBT000)",
+        "piezometers": 3,
+        "nearest_m": 40.23621268040278
+      },
+      "depth_m": 27.510829865649498,
+      "low_m": 27.427629008109307,
+      "high_m": 27.59403072318969,
+      "karst": true,
+      "sources": [
+        {
+          "service_id": "miteco-piezometry-db",
+          "publisher": "Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)",
+          "attribution": "© MITECO, Red de seguimiento del estado cuantitativo",
+          "file_name": "basedatospiezometria.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "imported_at": "2026-11-26T00:00:00Z",
+          "levels_from": "2023-01-15",
+          "levels_to": "2024-12-15"
+        }
+      ],
+      "own_levels": [
+        {
+          "well_id": "5d3c2b1a-0f9e-4d8c-8b7a-6f5e4d3c2b1a",
+          "distance_m": 40.23621268040278,
+          "ground_m": -497.0,
+          "level_m": -526.5,
+          "low_m": -526.5,
+          "high_m": -526.5,
+          "readings": 1,
+          "first": "2026-11-20",
+          "last": "2026-11-20"
+        }
+      ]
+    },
+    "left_out": {}
   }
 }

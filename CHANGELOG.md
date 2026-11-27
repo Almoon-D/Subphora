@@ -7,6 +7,20 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.21.0] - 2026-11-27
+
+- A water level can be typed at the well with no coverage: it is saved on the phone first
+  and reaches your well registry by itself once there is coverage again, never twice.
+- A reading says what it is measured from (the ground, or the top of the casing and its
+  height), who measured it (you, the driller or a contractor) and whether the pump was
+  stopped or running, and for how long.
+- With no coverage, "Tus pozos" lists your wells as the phone last read them, and shows
+  the readings still waiting to be sent; the field export includes them.
+- A tap on a detailed map now gives the depth to water there twice: from the public
+  piezometers, and with your wells' readings taken at rest; readings taken while pumping,
+  or right after, never count, and the tap says how many were left out and why.
+- The spreadsheet import reads the same columns (reference, height, who, pump, minutes).
+
 ## [0.20.0] - 2026-11-27
 
 - A comparison of field instruments with today's prices: water-level meters, home-built

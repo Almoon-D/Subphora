@@ -1,11 +1,13 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The manual export (MASTER_PLAN §4.7): every record not yet wholly on the server, with
-// its file, in one JSON file the user keeps, so that no field data depends on the sync.
+// its file, and every water level not yet in the registry, in one JSON file the user
+// keeps, so that no field data depends on the sync.
+import type { WellReading } from "../wells/wells.ts";
 import type { FieldDb, OutboxEntry } from "./db.ts";
 import type { Observation } from "./records.ts";
 
 export const EXPORT_FORMAT = "subphora-field-export";
-export const EXPORT_VERSION = 1;
+export const EXPORT_VERSION = 2;
 
 export interface ExportedRecord {
   observation: Observation;
@@ -14,11 +16,17 @@ export interface ExportedRecord {
   media: { type: string; base64: string } | null;
 }
 
+export interface ExportedReading {
+  reading: WellReading;
+  outbox: OutboxEntry;
+}
+
 export interface FieldExport {
   format: typeof EXPORT_FORMAT;
   version: typeof EXPORT_VERSION;
   exported_at: string;
   records: ExportedRecord[];
+  well_readings: ExportedReading[];
 }
 
 export function base64(bytes: ArrayBuffer): string {
@@ -42,7 +50,8 @@ export async function unsyncedExport(db: FieldDb, now: Date = new Date()): Promi
       media: media ? { type: media.type, base64: base64(media.bytes) } : null,
     });
   }
-  return { format: EXPORT_FORMAT, version: EXPORT_VERSION, exported_at: now.toISOString(), records };
+  const well_readings = (await db.pendingReadings()).map(({ entry, reading }) => ({ reading, outbox: entry }));
+  return { format: EXPORT_FORMAT, version: EXPORT_VERSION, exported_at: now.toISOString(), records, well_readings };
 }
 
 /** The file's name: the moment of the export, in the viewer's own time. */

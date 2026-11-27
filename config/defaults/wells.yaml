@@ -61,6 +61,11 @@ csv:
     note: [note, nota, observaciones]
     measured_at: [measured_at, fecha_medida, fecha]
     depth_to_water_m: [depth_to_water_m, nivel_m, nivel, profundidad_agua_m]
+    reference: [reference, referencia]
+    reference_height_m: [reference_height_m, altura_referencia_m, altura_brocal_m]
+    measured_by: [measured_by, medido_por, quien_mide]
+    pump: [pump, bomba]
+    pump_minutes: [pump_minutes, minutos_bomba, bomba_minutos]
   # The outcome column's words. A blank outcome is read from the flow: productive above
   # productive_above_l_s, dry at exactly 0, unknown without a flow.
   outcomes:
@@ -68,10 +73,40 @@ csv:
     dry: [dry, seco, "no"]
     unknown: [unknown, desconocido, sin probar]
   productive_above_l_s: 0.0
+  # A reading's level is below its reference: the ground unless the reference column says
+  # the top of the casing (brocal), whose height above the ground is then given. Who read it
+  # and the pump's state (with the minutes it had been so) are blank when not known.
+  references:
+    ground: [ground, suelo, terreno]
+    casing_top: [casing_top, casing, brocal, tubo, boca]
+  measured_by:
+    owner: [owner, propietario, yo]
+    driller: [driller, perforista, sondista]
+    contractor: [contractor, empresa, tecnico]
+  pump:
+    stopped: [stopped, parada, apagada, sin bomba]
+    running: [running, en marcha, encendida, bombeando]
   # Dates and times as written in the file; a time without a zone is local time here.
   date_formats: ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]
   datetime_formats: ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%d/%m/%Y %H:%M"]
   timezone: Europe/Madrid
+
+# The owner's readings as private levels of the depth to water (session 17): each well's
+# readings are summarised as the public piezometers' are (piezometry.yaml), and its level
+# enters the water table only inside its own groundwater body, beside the public
+# piezometry, never written into it. A reading taken while pumping never enters, nor one
+# whose pump state is unknown, nor one taken less than min_rest_minutes after the pump
+# stopped (the level is still recovering); a stopped pump with no time stated counts as
+# at rest. min_rest_minutes is a starting judgement, not a measured recovery time.
+levels:
+  min_rest_minutes: 120
+  # One reading is enough for a level (the owner reads a few, not hundreds).
+  summary:
+    recent_years: 5
+    min_measurements: 1
+    max_age_years: 15
+    low_quantile: 0.1
+    high_quantile: 0.9
 
 # The validation of the index against the owner's wells, reported apart from the public
 # wells' (decision 0030's method and thresholds, validation.yaml): productive wells

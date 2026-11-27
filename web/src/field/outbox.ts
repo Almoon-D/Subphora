@@ -4,8 +4,10 @@
 // already holds comes back as a duplicate and counts as sent, so a sync retried after a
 // cut connection or a reload never duplicates anything. A refusal is kept with its reason;
 // a network failure, a server error or an ended session stops the round, to be tried
-// again later.
-import type { FieldDb, Pending } from "./db.ts";
+// again later. The owner's water levels go the same way, in batches, to the well registry,
+// which keeps each once under its id; one of a well no longer held is refused.
+import type { WellReading } from "../wells/wells.ts";
+import type { FieldDb, Pending, PendingReading } from "./db.ts";
 import type { Observation } from "./records.ts";
 
 export type SyncState = "done" | "offline" | "server_error" | "signed_out";
@@ -17,8 +19,10 @@ export interface SyncReport {
 }
 
 type Outcome = "created" | "duplicate" | "conflict";
+type ReadingOutcome = Outcome | "unknown_well";
 
 const RECORDS = "/api/field/observations";
+const READINGS = "/api/wells/readings";
 const mediaPath = (id: string) => `${RECORDS}/${id}/media`;
 
 class Stop extends Error {
@@ -99,6 +103,48 @@ async function sendRecords(db: FieldDb, fetcher: typeof fetch, batch: Pending[])
   return sent;
 }
 
+async function postReadings(fetcher: typeof fetch, readings: WellReading[]): Promise<Response> {
+  return ask(fetcher, READINGS, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ readings }),
+  });
+}
+
+/** Send readings in one request; a refused batch goes again one at a time, as records do.
+ * Returns the ids the registry took (or already had). */
+async function sendReadings(db: FieldDb, fetcher: typeof fetch, batch: PendingReading[]): Promise<string[]> {
+  const response = await postReadings(
+    fetcher,
+    batch.map((p) => p.reading),
+  );
+  if (!response.ok) {
+    if (batch.length > 1) {
+      const sent: string[] = [];
+      for (const one of batch) {
+        sent.push(...(await sendReadings(db, fetcher, [one])));
+      }
+      return sent;
+    }
+    const [only] = batch;
+    if (only) {
+      await db.markRefused(only.entry.id, await code(response));
+    }
+    return [];
+  }
+  const { results } = (await response.json()) as { results: { id: string; outcome: ReadingOutcome }[] };
+  const sent: string[] = [];
+  for (const { id, outcome } of results) {
+    if (outcome === "created" || outcome === "duplicate") {
+      await db.markRecordSent(id);
+      sent.push(id);
+    } else {
+      await db.markRefused(id, outcome);
+    }
+  }
+  return sent;
+}
+
 type MediaOutcome = "sent" | "refused" | "resend";
 
 async function sendMedia(db: FieldDb, fetcher: typeof fetch, id: string): Promise<MediaOutcome> {
@@ -125,10 +171,11 @@ async function sendMedia(db: FieldDb, fetcher: typeof fetch, id: string): Promis
   return "refused";
 }
 
-/** One round: every unsent record in batches, then every unsent file, until nothing is
- * left that the server has not refused, or the network or the server fails. Every pass
- * moves each entry it tries on (sent, refused, or its record back once to send again),
- * or leaves it for the next round, so a round always ends. */
+/** One round: every unsent record in batches, then every unsent file, then every unsent
+ * water level in batches, until nothing is left that the server has not refused, or the
+ * network or the server fails. Every pass moves each entry it tries on (sent, refused, or
+ * its record back once to send again), or leaves it for the next round, so a round always
+ * ends. */
 export async function syncOnce(db: FieldDb, batchSize: number, fetcher: typeof fetch = fetch): Promise<SyncReport> {
   let sent = 0;
   // Entries not to try again in this round, and those whose record was put back once.
@@ -139,8 +186,23 @@ export async function syncOnce(db: FieldDb, batchSize: number, fetcher: typeof f
       const waiting = (await db.pending()).filter((p) => p.entry.refused === null && !later.has(p.entry.id));
       const records = waiting.filter((p) => !p.entry.record_sent).slice(0, batchSize);
       const files = waiting.filter((p) => p.entry.record_sent && p.entry.media_sent === false);
-      if (records.length === 0 && files.length === 0) {
+      const readings =
+        records.length === 0 && files.length === 0
+          ? (await db.pendingReadings())
+              .filter((p) => p.entry.refused === null && !p.entry.record_sent && !later.has(p.entry.id))
+              .slice(0, batchSize)
+          : [];
+      if (records.length === 0 && files.length === 0 && readings.length === 0) {
         return { state: "done", sent };
+      }
+      if (readings.length > 0) {
+        const taken = new Set(await sendReadings(db, fetcher, readings));
+        sent += taken.size;
+        for (const reading of readings) {
+          if (!taken.has(reading.entry.id)) {
+            later.add(reading.entry.id);
+          }
+        }
       }
       if (records.length > 0) {
         const taken = new Set(await sendRecords(db, fetcher, records));

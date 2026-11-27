@@ -25,7 +25,7 @@ from subphora.domain.potential import (
     Variable,
 )
 from subphora.domain.validation import DomainValidation
-from subphora.domain.wells import WellUpdate
+from subphora.domain.wells import DepthWithWells, WellUpdate
 
 _TOLERANCE = 1e-4
 _UNIT = Field(ge=0, le=1)
@@ -227,6 +227,9 @@ class ParcelExplanation(DomainModel):
     # The estimate's value updated with the owner's wells (decision 0040); None where the
     # cell has no score.
     updated: WellUpdate | None = None
+    # The depth to water at the point, public and with the owner's levels; None where the
+    # wells were not asked.
+    depth: DepthWithWells | None = None
 
     @model_validator(mode="after")
     def _updated_from_the_estimate(self) -> Self:

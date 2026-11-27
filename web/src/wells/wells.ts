@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The owner's well registry in the browser (decision 0040): its records, the calls that
-// read and change it, and the checks a well's form makes before sending it. The registry is
-// private: it is asked for only from this server, never kept by the service worker.
+// read and change it, and the checks a well's or a reading's form makes before sending it.
+// The registry is private: it is asked for only from this server, never kept by the
+// service worker (the device keeps its own copy in IndexedDB, to read readings offline).
 import type { DomainValidation } from "../api.ts";
 
 export type WellOutcome = "productive" | "dry" | "unknown";
@@ -19,12 +20,31 @@ export interface Well {
   note: string | null;
 }
 
+export type LevelReference = "ground" | "casing_top";
+export const REFERENCES: readonly LevelReference[] = ["ground", "casing_top"];
+export type MeasuredBy = "owner" | "driller" | "contractor" | "unknown";
+/** Who can be chosen in the form; "unknown" is for readings imported without it. */
+export const READERS: readonly MeasuredBy[] = ["owner", "driller", "contractor"];
+export type PumpState = "stopped" | "running" | "unknown";
+export const PUMP_STATES: readonly PumpState[] = ["stopped", "running", "unknown"];
+
+/** A water level typed at the well (session 17): its depth below the reference (the ground,
+ * or the top of the casing at its height above the ground), who read it, and the pump's
+ * state for `pump_minutes` before (null: not stated). */
 export interface WellReading {
   id: string;
   well_id: string;
   measured_at: string;
   depth_to_water_m: number;
+  reference: LevelReference;
+  reference_height_m: number;
+  measured_by: MeasuredBy;
+  pump: PumpState;
+  pump_minutes: number | null;
 }
+
+/** The depth to the water below the ground. */
+export const belowGround = (reading: WellReading): number => reading.depth_to_water_m - reading.reference_height_m;
 
 export interface WellRecord {
   well: Well;
@@ -228,12 +248,62 @@ export function newId(): string {
   return crypto.randomUUID();
 }
 
-/** A reading of a well at a local date and time (``datetime-local``) and depth to water. */
-export function readingOf(wellId: string, localTime: string, depth: string, id: string = newId()): WellReading | null {
-  const level = typedNumber(depth);
-  const when = new Date(localTime);
-  if (level === null || Number.isNaN(level) || localTime === "" || Number.isNaN(when.getTime())) {
-    return null;
+/** What the owner typed in a reading's form; numbers as typed. */
+export interface ReadingForm {
+  /** A local date and time (`datetime-local`). */
+  when: string;
+  depth: string;
+  reference: LevelReference;
+  height: string;
+  measured_by: MeasuredBy;
+  pump: PumpState;
+  minutes: string;
+}
+
+export const EMPTY_READING: ReadingForm = {
+  when: "",
+  depth: "",
+  reference: "ground",
+  height: "",
+  measured_by: "owner",
+  pump: "stopped",
+  minutes: "",
+};
+
+export type ReadingProblem = "reading" | "height" | "minutes";
+
+/** The reading a form describes, or the first thing wrong with it. A casing top needs its
+ * height above the ground; the pump's minutes are whole and only with a known state. */
+export function readingOf(
+  wellId: string,
+  form: ReadingForm,
+  id: string = newId(),
+): { ok: true; reading: WellReading } | { ok: false; problem: ReadingProblem } {
+  const level = typedNumber(form.depth);
+  const when = new Date(form.when);
+  if (level === null || Number.isNaN(level) || form.when === "" || Number.isNaN(when.getTime())) {
+    return { ok: false, problem: "reading" };
   }
-  return { id, well_id: wellId, measured_at: when.toISOString(), depth_to_water_m: level };
+  const height = form.reference === "ground" ? 0 : typedNumber(form.height);
+  if (height === null || !(height >= 0)) {
+    return { ok: false, problem: "height" };
+  }
+  const minutes = form.pump === "unknown" ? null : typedNumber(form.minutes);
+  if (minutes !== null && !(Number.isInteger(minutes) && minutes >= 0)) {
+    return { ok: false, problem: "minutes" };
+  }
+  return {
+    ok: true,
+    reading: {
+      id,
+      well_id: wellId,
+      measured_at: when.toISOString(),
+      depth_to_water_m: level,
+      reference: form.reference,
+      reference_height_m: height,
+      measured_by: form.measured_by,
+      pump: form.pump,
+      pump_minutes: minutes,
+    },
+  };
 }

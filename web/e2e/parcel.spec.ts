@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // The detailed map of an area in a real browser against a mocked API: the job while it
 // runs, the area's mean, its layers drawn as one image, its candidates with their legal
-// status, a tap that explains a cell, the failures, and two areas compared.
+// status, a tap that explains a cell (with the depth to water public and with the owner's
+// readings), the failures, and two areas compared.
 import { readFileSync } from "node:fs";
 
 import { expect, test, type Page } from "@playwright/test";
@@ -153,6 +154,13 @@ test("a tap on the detailed map explains its cell", async ({ page }) => {
   await expect(updated).toContainText("Confianza");
   await expect(updated).toContainText("Productivo a 40 m");
   await expect(updated).toContainText("sigue siendo un índice");
+  // The depth to water here: the public one, and with the well's reading at rest beside it.
+  const depth = explanation.locator(".depth-here");
+  await expect(depth.locator('[data-depth-kind="public"]')).toContainText("Profundidad del agua: unos 33 m");
+  const withWells = depth.locator('[data-depth-kind="with-wells"]');
+  await expect(withWells).toContainText("Profundidad del agua: unos 28 m");
+  await expect(withWells).toContainText("de 2 piezómetro(s)");
+  await expect(withWells).toContainText("Tu pozo a 40 m: agua a 29,50 m bajo el suelo (1 lectura(s), del 20 de noviembre de 2026");
   expect(mocks.explained[0]?.pathname).toBe(`/api/parcel/${DAIMIEL_ID}/explain`);
 });
 

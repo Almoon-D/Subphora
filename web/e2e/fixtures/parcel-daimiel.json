@@ -804,7 +804,8 @@
                 "levels_from": "2023-01-15",
                 "levels_to": "2024-12-15"
               }
-            ]
+            ],
+            "own_levels": []
           },
           "cost": {
             "currency": "EUR",
@@ -1349,7 +1350,8 @@
                 "levels_from": "2023-01-15",
                 "levels_to": "2024-12-15"
               }
-            ]
+            ],
+            "own_levels": []
           },
           "cost": {
             "currency": "EUR",
@@ -1894,7 +1896,8 @@
                 "levels_from": "2023-01-15",
                 "levels_to": "2024-12-15"
               }
-            ]
+            ],
+            "own_levels": []
           },
           "cost": {
             "currency": "EUR",
@@ -2439,7 +2442,8 @@
                 "levels_from": "2023-01-15",
                 "levels_to": "2024-12-15"
               }
-            ]
+            ],
+            "own_levels": []
           },
           "cost": {
             "currency": "EUR",
@@ -2984,7 +2988,8 @@
                 "levels_from": "2023-01-15",
                 "levels_to": "2024-12-15"
               }
-            ]
+            ],
+            "own_levels": []
           },
           "cost": {
             "currency": "EUR",

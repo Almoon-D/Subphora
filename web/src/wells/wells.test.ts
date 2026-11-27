@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   addReading,
+  belowGround,
   deleteWell,
   EMPTY_FORM,
+  EMPTY_READING,
   fetchRegistry,
   formOf,
   importWells,
@@ -66,20 +68,44 @@ describe("a well's form", () => {
 });
 
 describe("a reading", () => {
-  it("is the local time as UTC and the depth to water", () => {
-    const reading = readingOf(ID, "2026-06-01T08:30", "12,5", "r");
-    expect(reading).toEqual({
-      id: "r",
-      well_id: ID,
-      measured_at: new Date("2026-06-01T08:30").toISOString(),
-      depth_to_water_m: 12.5,
+  const typed = { ...EMPTY_READING, when: "2026-06-01T08:30", depth: "12,5" };
+
+  it("is the local time as UTC, the depth below its reference, who read it and the pump", () => {
+    const answer = readingOf(ID, { ...typed, reference: "casing_top", height: "0,4", measured_by: "driller", minutes: "180" }, "r");
+    expect(answer).toEqual({
+      ok: true,
+      reading: {
+        id: "r",
+        well_id: ID,
+        measured_at: new Date("2026-06-01T08:30").toISOString(),
+        depth_to_water_m: 12.5,
+        reference: "casing_top",
+        reference_height_m: 0.4,
+        measured_by: "driller",
+        pump: "stopped",
+        pump_minutes: 180,
+      },
     });
+    if (answer.ok) {
+      expect(belowGround(answer.reading)).toBeCloseTo(12.1);
+    }
   });
 
-  it("needs both its time and its level", () => {
-    expect(readingOf(ID, "", "3")).toBeNull();
-    expect(readingOf(ID, "2026-06-01T08:30", "")).toBeNull();
-    expect(readingOf(ID, "2026-06-01T08:30", "hondo")).toBeNull();
+  it("from the ground has no height, and an unknown pump no minutes, whatever was typed", () => {
+    const answer = readingOf(ID, { ...typed, height: "3", pump: "unknown", minutes: "20" }, "r");
+    expect(answer.ok && [answer.reading.reference_height_m, answer.reading.pump_minutes]).toEqual([0, null]);
+    const blank = readingOf(ID, typed, "r");
+    expect(blank.ok && blank.reading.pump_minutes).toBeNull();
+  });
+
+  it("needs its time and level, a casing's height, and whole minutes", () => {
+    expect(readingOf(ID, { ...typed, when: "" })).toEqual({ ok: false, problem: "reading" });
+    expect(readingOf(ID, { ...typed, depth: "" })).toEqual({ ok: false, problem: "reading" });
+    expect(readingOf(ID, { ...typed, depth: "hondo" })).toEqual({ ok: false, problem: "reading" });
+    expect(readingOf(ID, { ...typed, reference: "casing_top" })).toEqual({ ok: false, problem: "height" });
+    expect(readingOf(ID, { ...typed, reference: "casing_top", height: "-1" })).toEqual({ ok: false, problem: "height" });
+    expect(readingOf(ID, { ...typed, minutes: "12,5" })).toEqual({ ok: false, problem: "minutes" });
+    expect(readingOf(ID, { ...typed, pump: "running", minutes: "-3" })).toEqual({ ok: false, problem: "minutes" });
   });
 });
 
@@ -99,7 +125,18 @@ describe("the registry's calls", () => {
       failure: "store_unavailable",
       detail: "the registry failed",
     });
-    expect(await addReading({ id: "r", well_id: ID, measured_at: "", depth_to_water_m: 1 }, answering(409, '{"code":"conflict"}'))).toEqual({
+    const reading = {
+      id: "r",
+      well_id: ID,
+      measured_at: "",
+      depth_to_water_m: 1,
+      reference: "ground" as const,
+      reference_height_m: 0,
+      measured_by: "owner" as const,
+      pump: "stopped" as const,
+      pump_minutes: null,
+    };
+    expect(await addReading(reading, answering(409, '{"code":"conflict"}'))).toEqual({
       ok: false,
       failure: "conflict",
       detail: null,

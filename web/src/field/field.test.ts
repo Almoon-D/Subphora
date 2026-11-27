@@ -1,7 +1,8 @@
 // Copyright (c) 2026 Almoon-D. All rights reserved.
 // Field mode's mechanics without a browser: ids, distances and the "at the spot" rule,
 // the track's sampling, the device store, the outbox against a server that behaves like
-// ours (idempotent upserts) and fails in each way it can, the export and the tab's session.
+// ours (idempotent upserts) and fails in each way it can, the export, the tab's session,
+// and the owner's water levels kept on the device and sent to the well registry.
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 
@@ -23,6 +24,7 @@ import {
   withMedia,
 } from "./records.ts";
 import { loadFieldSession, NO_FIELD, saveFieldSession } from "./session.ts";
+import type { Registry, WellReading } from "../wells/wells.ts";
 
 const DAIMIEL: [number, number] = [-3.61, 39.07];
 
@@ -151,6 +153,10 @@ class FakeServer {
   failures: ({ status: number; code?: string } | "network")[] = [];
   /** Codes to refuse records with, by id. */
   refuse = new Map<string, string>();
+  /** The well registry: the wells it holds, and its readings by id. */
+  wells = new Set<string>();
+  readings = new Map<string, string>();
+  readingPosts = 0;
 
   fetch: typeof fetch = (input, init) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
@@ -160,6 +166,28 @@ class FakeServer {
     }
     if (failure) {
       return Promise.resolve(Response.json({ code: failure.code ?? "x" }, { status: failure.status }));
+    }
+    if (init?.method === "POST" && url.endsWith("/api/wells/readings")) {
+      this.readingPosts += 1;
+      const { readings } = JSON.parse(init.body as string) as {
+        readings: WellReading[];
+      };
+      const results = readings.map((r) => {
+        if (!this.wells.has(r.well_id)) {
+          return { id: r.id, outcome: "unknown_well" };
+        }
+        const body = JSON.stringify(r);
+        const stored = this.readings.get(r.id);
+        if (stored === undefined) {
+          this.readings.set(r.id, body);
+          return { id: r.id, outcome: "created" };
+        }
+        return {
+          id: r.id,
+          outcome: stored === body ? "duplicate" : "conflict",
+        };
+      });
+      return Promise.resolve(Response.json({ results }));
     }
     if (init?.method === "POST") {
       this.posts += 1;
@@ -426,6 +454,202 @@ describe("the tab's field session", () => {
       setItem: () => {
         throw new Error("full");
       },
+    });
+  });
+});
+
+const WELL_ID = "0b9f4c1e-6d2a-4f3b-9c8e-1a2b3c4d5e6f";
+
+function level(depth: number, pump: WellReading["pump"] = "stopped", well = WELL_ID): WellReading {
+  return {
+    id: uuidv7(),
+    well_id: well,
+    measured_at: "2026-11-20T08:00:00.000Z",
+    depth_to_water_m: depth,
+    reference: "casing_top",
+    reference_height_m: 0.5,
+    measured_by: "owner",
+    pump,
+    pump_minutes: pump === "unknown" ? null : 600,
+  };
+}
+
+describe("the owner's water levels", () => {
+  it("are kept on the device with their outbox entry, apart from field records", async () => {
+    const db = await freshDb();
+    await fill(db);
+    const reading = level(13);
+    await db.recordReading(reading);
+    expect(await db.counts()).toEqual({ unsynced: 5, refused: 0 });
+    expect((await db.pending()).map((p) => p.observation.id)).not.toContain(reading.id);
+    expect(await db.pendingReadings()).toEqual([
+      {
+        entry: {
+          id: reading.id,
+          kind: "well_reading",
+          record_sent: false,
+          media_sent: null,
+          refused: null,
+        },
+        reading,
+      },
+    ]);
+    // Only ever added: the same id again fails instead of replacing it.
+    await expect(db.recordReading({ ...reading, depth_to_water_m: 99 })).rejects.toThrow();
+    expect((await db.pendingReadings())[0]?.reading.depth_to_water_m).toBe(13);
+  });
+
+  it("go to the registry once, after the field records, and leave the outbox", async () => {
+    const db = await freshDb();
+    await fill(db);
+    const server = new FakeServer();
+    server.wells.add(WELL_ID);
+    const readings = [level(13), level(2, "running")];
+    for (const reading of readings) {
+      await db.recordReading(reading);
+    }
+    const report = await syncOnce(db, 50, server.fetch);
+    expect(report).toEqual({ state: "done", sent: 7 });
+    expect([...server.readings.keys()].sort()).toEqual(readings.map((r) => r.id).sort());
+    expect(server.readingPosts).toBe(1);
+    expect(await db.counts()).toEqual({ unsynced: 0, refused: 0 });
+    // A later round sends nothing again.
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "done",
+      sent: 0,
+    });
+    expect(server.readingPosts).toBe(1);
+  });
+
+  it("wait offline, and a batch whose answer was lost goes again without duplicating", async () => {
+    const db = await freshDb();
+    const server = new FakeServer();
+    server.wells.add(WELL_ID);
+    const reading = level(13);
+    await db.recordReading(reading);
+    server.failures = ["network"];
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "offline",
+      sent: 0,
+    });
+    expect(await db.counts()).toEqual({ unsynced: 1, refused: 0 });
+    // The server took it but the answer never came: the next round finds it held.
+    server.readings.set(reading.id, JSON.stringify(reading));
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "done",
+      sent: 1,
+    });
+    expect(server.readings.size).toBe(1);
+    expect(await db.counts()).toEqual({ unsynced: 0, refused: 0 });
+  });
+
+  it("are kept with the reason when refused, and a server error refuses nothing", async () => {
+    const db = await freshDb();
+    const server = new FakeServer();
+    server.wells.add(WELL_ID);
+    const orphan = level(13, "stopped", "11111111-2222-4333-8444-555555555555");
+    const changed = level(14);
+    await db.recordReading(orphan);
+    await db.recordReading(changed);
+    server.failures = [{ status: 503 }];
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "server_error",
+      sent: 0,
+    });
+    expect(await db.counts()).toEqual({ unsynced: 2, refused: 0 });
+    server.readings.set(changed.id, JSON.stringify({ ...changed, depth_to_water_m: 1 }));
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "done",
+      sent: 0,
+    });
+    const refused = await db.pendingReadings();
+    expect(refused.map((p) => [p.reading.id, p.entry.refused])).toEqual(
+      [
+        [orphan.id, "unknown_well"],
+        [changed.id, "conflict"],
+      ].sort((a, b) => (a[0] ?? "").localeCompare(b[0] ?? "")),
+    );
+    expect(await db.counts()).toEqual({ unsynced: 2, refused: 2 });
+  });
+
+  it("are refused one by one when a batch is refused", async () => {
+    const db = await freshDb();
+    const server = new FakeServer();
+    server.wells.add(WELL_ID);
+    const readings = [level(13), level(14)];
+    for (const reading of readings) {
+      await db.recordReading(reading);
+    }
+    server.failures = [
+      { status: 400, code: "invalid_well" },
+      { status: 400, code: "invalid_well" },
+    ];
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({
+      state: "done",
+      sent: 1,
+    });
+    const left = await db.pendingReadings();
+    expect(left.map((p) => p.entry.refused)).toEqual(["invalid_well"]);
+  });
+
+  it("are in the export until the registry has them", async () => {
+    const db = await freshDb();
+    const reading = level(13);
+    await db.recordReading(reading);
+    const exported = await unsyncedExport(db);
+    expect(exported.records).toEqual([]);
+    expect(exported.well_readings).toEqual([
+      {
+        reading,
+        outbox: {
+          id: reading.id,
+          kind: "well_reading",
+          record_sent: false,
+          media_sent: null,
+          refused: null,
+        },
+      },
+    ]);
+    const server = new FakeServer();
+    server.wells.add(WELL_ID);
+    await syncOnce(db, 50, server.fetch);
+    expect((await unsyncedExport(db)).well_readings).toEqual([]);
+  });
+
+  it("keep the device's copy of the registry, and a store of the earlier version", async () => {
+    const factory = new IDBFactory();
+    // The store as the version before readings made it, with a record in its outbox.
+    await new Promise<void>((resolve, reject) => {
+      const request = factory.open("subphora-field", 1);
+      request.onupgradeneeded = () => {
+        const old = request.result;
+        old.createObjectStore("observations", { keyPath: "id" }).add({ id: "a", kind: "note" });
+        old.createObjectStore("media", { keyPath: "id" });
+        old.createObjectStore("outbox", { keyPath: "id" }).add({
+          id: "a",
+          record_sent: false,
+          media_sent: null,
+          refused: null,
+        });
+      };
+      request.onsuccess = () => {
+        request.result.close();
+        resolve();
+      };
+      request.onerror = () => {
+        reject(request.error ?? new Error("open failed"));
+      };
+    });
+    const db = await openFieldDb(factory);
+    expect((await db.pending()).map((p) => p.observation.id)).toEqual(["a"]);
+    expect(await db.registryCopy()).toBeUndefined();
+    const registry: Registry = { wells: [], stamp: "0123456789abcdef" };
+    await db.keepRegistry(registry, new Date("2026-11-27T07:00:00Z"));
+    await db.keepRegistry({ ...registry, stamp: "fedcba9876543210" }, new Date("2026-11-27T08:00:00Z"));
+    expect(await db.registryCopy()).toEqual({
+      key: "registry",
+      registry: { wells: [], stamp: "fedcba9876543210" },
+      read_at: "2026-11-27T08:00:00.000Z",
     });
   });
 });

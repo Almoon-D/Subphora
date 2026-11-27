@@ -3,14 +3,21 @@
 // flow and water levels over time; a form to log or correct a well at the point tapped on
 // the map; a reading's form; the CSV import of existing records; and how the map did
 // against these wells, apart from the public ones. A change asks the map to draw the
-// layer "updated with your wells" again.
-import { useEffect, useState } from "react";
+// layer "updated with your wells" again. A reading is typed at the well head, often with
+// no coverage (session 17): it is kept on the device first and sent by the outbox, and the
+// list of wells is read from the device's copy while the server is out of reach.
+import { useEffect, useRef, useState } from "react";
 
 import type { Position } from "../api.ts";
+import type { FieldDb, PendingReading, RegistryCopy } from "../field/db.ts";
+import type { OutboxView } from "../field/hooks.ts";
+import { uuidv7 } from "../field/records.ts";
 import { formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import {
   addReading,
   type Answer,
+  belowGround,
+  EMPTY_READING,
   deleteWell,
   EMPTY_FORM,
   fetchOwnerValidation,
@@ -22,10 +29,15 @@ import {
   newId,
   OUTCOMES,
   type OwnerValidation,
+  PUMP_STATES,
+  READERS,
+  type ReadingForm,
   readingOf,
+  REFERENCES,
   type Registry,
   saveWell,
   type WellForm,
+  type WellReading,
   type WellRecord,
   wellFromForm,
 } from "./wells.ts";
@@ -35,6 +47,10 @@ interface Props {
   tapped: Position | null;
   /** Called once a change to the wells that update the map is stored. */
   onChanged: () => void;
+  /** The device's store (null while it opens or where IndexedDB is missing) and its
+   * outbox, which sends the readings kept there. */
+  db: FieldDb | null;
+  outbox: Pick<OutboxView, "sync" | "refresh" | "syncing">;
 }
 
 type Notice = { kind: "ok"; text: string } | { kind: "error"; text: string } | null;
@@ -44,19 +60,45 @@ function failureText(answer: Extract<Answer<unknown>, { ok: false }>): string {
   return answer.detail ? `${reason} (${answer.detail})` : reason;
 }
 
-function Reading({ record, onSaved }: { record: WellRecord; onSaved: (notice: Notice) => void }) {
-  const [when, setWhen] = useState("");
-  const [depth, setDepth] = useState("");
+function Reading({
+  record,
+  db,
+  onKept,
+  onSaved,
+}: {
+  record: WellRecord;
+  db: FieldDb | null;
+  /** A reading kept on the device, for the outbox to send. */
+  onKept: () => void;
+  onSaved: (notice: Notice) => void;
+}) {
+  const [form, setForm] = useState<ReadingForm>(EMPTY_READING);
+  const set = (change: Partial<ReadingForm>) => {
+    setForm((current) => ({ ...current, ...change }));
+  };
   async function submit() {
-    const reading = readingOf(record.well.id, when, depth);
-    if (!reading) {
-      onSaved({ kind: "error", text: t("wells.problem.reading") });
+    const made = readingOf(record.well.id, form, uuidv7());
+    if (!made.ok) {
+      onSaved({ kind: "error", text: t(`wells.problem.${made.problem}`) });
       return;
     }
-    const answer = await addReading(reading);
+    if (db) {
+      // On the device first (hard rule 5): confirmed once it is on disk, then sent.
+      try {
+        await db.recordReading(made.reading);
+      } catch {
+        onSaved({ kind: "error", text: t("wells.readingNotKept") });
+        return;
+      }
+      setForm(EMPTY_READING);
+      onSaved({ kind: "ok", text: t("wells.readingKept") });
+      onKept();
+      return;
+    }
+    // No store on this device: straight to the server, confirmed only once it has it.
+    const answer = await addReading(made.reading);
     if (answer.ok) {
-      setWhen("");
-      setDepth("");
+      setForm(EMPTY_READING);
     }
     onSaved(answer.ok ? { kind: "ok", text: t("wells.readingSaved") } : { kind: "error", text: failureText(answer) });
   }
@@ -72,9 +114,9 @@ function Reading({ record, onSaved }: { record: WellRecord; onSaved: (notice: No
         {t("wells.readingWhen")}
         <input
           type="datetime-local"
-          value={when}
+          value={form.when}
           onChange={(event) => {
-            setWhen(event.target.value);
+            set({ when: event.target.value });
           }}
         />
       </label>
@@ -82,29 +124,119 @@ function Reading({ record, onSaved }: { record: WellRecord; onSaved: (notice: No
         {t("wells.readingDepth")}
         <input
           inputMode="decimal"
-          value={depth}
+          value={form.depth}
           onChange={(event) => {
-            setDepth(event.target.value);
+            set({ depth: event.target.value });
           }}
         />
       </label>
+      <label>
+        {t("wells.readingReference")}
+        <select
+          value={form.reference}
+          onChange={(event) => {
+            set({ reference: event.target.value as ReadingForm["reference"] });
+          }}
+        >
+          {REFERENCES.map((reference) => (
+            <option key={reference} value={reference}>
+              {t(`wells.reference.${reference}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {form.reference === "casing_top" && (
+        <label>
+          {t("wells.readingHeight")}
+          <input
+            inputMode="decimal"
+            value={form.height}
+            onChange={(event) => {
+              set({ height: event.target.value });
+            }}
+          />
+        </label>
+      )}
+      <label>
+        {t("wells.readingBy")}
+        <select
+          value={form.measured_by}
+          onChange={(event) => {
+            set({
+              measured_by: event.target.value as ReadingForm["measured_by"],
+            });
+          }}
+        >
+          {READERS.map((reader) => (
+            <option key={reader} value={reader}>
+              {t(`wells.measuredBy.${reader}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        {t("wells.readingPump")}
+        <select
+          value={form.pump}
+          onChange={(event) => {
+            set({ pump: event.target.value as ReadingForm["pump"] });
+          }}
+        >
+          {PUMP_STATES.map((pump) => (
+            <option key={pump} value={pump}>
+              {t(`wells.pump.${pump}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {form.pump !== "unknown" && (
+        <label>
+          {t(`wells.readingMinutes.${form.pump}`)}
+          <input
+            inputMode="numeric"
+            value={form.minutes}
+            onChange={(event) => {
+              set({ minutes: event.target.value });
+            }}
+          />
+        </label>
+      )}
+      <p className="note">{t("wells.pumpHint")}</p>
       <button type="submit">{t("wells.addReading")}</button>
     </form>
   );
 }
 
+/** A reading as the list shows it: the water below the ground, and the pump if it ran. */
+function readingText(reading: WellReading): string {
+  const pump = reading.pump === "running" ? ` ${t("wells.whilePumping")}` : "";
+  return `${t("wells.readingShort", { depth: formatNumber(belowGround(reading), 2), date: formatDate(reading.measured_at) })}${pump}`;
+}
+
 function WellItem({
   record,
+  pending,
+  offline,
+  db,
+  onKept,
   onEdit,
   onChanged,
 }: {
   record: WellRecord;
+  /** The readings of this well still on the device, waiting for the outbox. */
+  pending: PendingReading[];
+  /** The list is the device's copy: a well cannot be changed now, only read. */
+  offline: boolean;
+  db: FieldDb | null;
+  onKept: () => void;
   onEdit: () => void;
   onChanged: (notice: Notice, mapChanged: boolean) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const { well, readings } = record;
   const last = readings.at(-1);
+  const waiting = pending.filter((p) => p.entry.refused === null);
+  const refused = pending.filter((p) => p.entry.refused !== null);
   return (
     <li className="well" data-well={well.id} data-outcome={well.outcome}>
       <p>
@@ -113,44 +245,55 @@ function WellItem({
         {well.flow_l_s !== null && ` · ${t("wells.flowShort", { flow: formatNumber(well.flow_l_s, 2) })}`}
       </p>
       {last ? (
-        <p className="note">
-          {t("wells.readings", {
-            count: readings.length,
-            depth: formatNumber(last.depth_to_water_m, 2),
-            date: formatDate(last.measured_at),
-          })}
-        </p>
+        <p className="note">{t("wells.readings", { count: readings.length, last: readingText(last) })}</p>
       ) : (
         <p className="note">{t("wells.noReadings")}</p>
       )}
+      {waiting.length > 0 && (
+        <p className="note" data-pending-readings={waiting.length}>
+          {t("wells.pendingReadings", { count: waiting.length, list: waiting.map((p) => readingText(p.reading)).join("; ") })}
+        </p>
+      )}
+      {refused.map((p) => (
+        <p key={p.entry.id} className="error" data-refused-reading={p.entry.refused}>
+          {t("wells.refusedReading", {
+            reading: readingText(p.reading),
+            reason: lookup(`wells.error.${p.entry.refused ?? ""}`, p.entry.refused ?? ""),
+          })}
+        </p>
+      ))}
       <Reading
         record={record}
+        db={db}
+        onKept={onKept}
         onSaved={(notice) => {
           onChanged(notice, false);
         }}
       />
-      <p>
-        <button type="button" className="secondary" onClick={onEdit}>
-          {t("wells.edit")}
-        </button>{" "}
-        <button
-          type="button"
-          className="secondary"
-          data-delete={confirming ? "confirm" : "ask"}
-          onClick={() => {
-            if (!confirming) {
-              setConfirming(true);
-              return;
-            }
-            void deleteWell(well.id).then((answer) => {
-              setConfirming(false);
-              onChanged(answer.ok ? { kind: "ok", text: t("wells.deleted") } : { kind: "error", text: failureText(answer) }, answer.ok);
-            });
-          }}
-        >
-          {confirming ? t("wells.deleteConfirm") : t("wells.delete")}
-        </button>
-      </p>
+      {!offline && (
+        <p>
+          <button type="button" className="secondary" onClick={onEdit}>
+            {t("wells.edit")}
+          </button>{" "}
+          <button
+            type="button"
+            className="secondary"
+            data-delete={confirming ? "confirm" : "ask"}
+            onClick={() => {
+              if (!confirming) {
+                setConfirming(true);
+                return;
+              }
+              void deleteWell(well.id).then((answer) => {
+                setConfirming(false);
+                onChanged(answer.ok ? { kind: "ok", text: t("wells.deleted") } : { kind: "error", text: failureText(answer) }, answer.ok);
+              });
+            }}
+          >
+            {confirming ? t("wells.deleteConfirm") : t("wells.delete")}
+          </button>
+        </p>
+      )}
     </li>
   );
 }
@@ -288,8 +431,11 @@ function ValidationView({ result }: { result: OwnerValidation }) {
   );
 }
 
-export function WellsPanel({ tapped, onChanged }: Props) {
+export function WellsPanel({ tapped, onChanged, db, outbox }: Props) {
   const [registry, setRegistry] = useState<Answer<Registry> | null>(null);
+  // The device's copy, shown while the server is out of reach; and the readings waiting.
+  const [copy, setCopy] = useState<RegistryCopy | null>(null);
+  const [pending, setPending] = useState<PendingReading[]>([]);
   const [form, setForm] = useState<WellForm>(EMPTY_FORM);
   const [editing, setEditing] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
@@ -298,17 +444,66 @@ export function WellsPanel({ tapped, onChanged }: Props) {
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
-    let live = true;
-    void fetchRegistry().then((answer) => {
-      if (live) {
-        setRegistry(answer);
+    const run = { live: true };
+    void fetchRegistry().then(async (answer) => {
+      // The list last read stays on screen while the server is out of reach: the
+      // device's copy (this page's own reading of it, or an earlier one kept on disk).
+      let stored: RegistryCopy | undefined;
+      try {
+        if (!answer.ok && answer.failure === "network") {
+          stored = await db?.registryCopy();
+        }
+      } catch {
+        // The device's copy is a convenience: the list from the server stands without it.
+      }
+      if (!run.live) {
+        return;
+      }
+      setRegistry(answer);
+      if (answer.ok) {
+        setCopy({ key: "registry", registry: answer.body, read_at: new Date().toISOString() });
+      } else if (stored) {
+        setCopy(stored);
+      } else if (answer.failure !== "network") {
+        setCopy(null);
       }
     });
+    if (db) {
+      void db.pendingReadings().then(
+        (found) => {
+          if (run.live) {
+            setPending(found);
+          }
+        },
+        () => undefined,
+      );
+    }
     return () => {
-      live = false;
+      run.live = false;
     };
-  }, [version]);
+  }, [version, db]);
 
+  // The list read from the server is kept on the device, once the device's store is open.
+  useEffect(() => {
+    if (db && registry?.ok) {
+      db.keepRegistry(registry.body).catch(() => undefined);
+    }
+  }, [db, registry]);
+
+  // Once a round of the outbox ends, what it sent is in the registry: read it again.
+  const wasSyncing = useRef(false);
+  useEffect(() => {
+    if (wasSyncing.current && !outbox.syncing) {
+      setVersion((v) => v + 1);
+    }
+    wasSyncing.current = outbox.syncing;
+  }, [outbox.syncing]);
+
+  function kept() {
+    setVersion((v) => v + 1);
+    outbox.refresh();
+    outbox.sync();
+  }
   function changed(next: Notice, mapChanged: boolean) {
     setNotice(next);
     setVersion((v) => v + 1);
@@ -316,6 +511,8 @@ export function WellsPanel({ tapped, onChanged }: Props) {
       onChanged();
     }
   }
+
+  const shown = registry?.ok ? registry.body : (copy?.registry ?? null);
 
   async function submit() {
     const made = wellFromForm(form, editing ?? newId());
@@ -349,22 +546,31 @@ export function WellsPanel({ tapped, onChanged }: Props) {
       <h2 id="wells-heading">{t("wells.heading")}</h2>
       <p className="note">{t("wells.privacy")}</p>
       {registry === null && <p className="note">{t("wells.loading")}</p>}
-      {registry && !registry.ok && (
+      {registry && !registry.ok && !copy && (
         // Read on opening, not asked for: no alert (the page's alerts answer what was done).
         <p className="error" data-wells-failure={registry.failure}>
           {failureText(registry)}
         </p>
       )}
-      {registry?.ok && (
+      {registry && !registry.ok && copy && (
+        <p className="note" data-wells-copy={copy.read_at}>
+          {t("wells.deviceCopy", { date: formatDate(copy.read_at) })}
+        </p>
+      )}
+      {shown && (
         <>
-          {registry.body.wells.length === 0 ? (
+          {shown.wells.length === 0 ? (
             <p className="note">{t("wells.empty")}</p>
           ) : (
             <ul className="well-list">
-              {registry.body.wells.map((record) => (
+              {shown.wells.map((record) => (
                 <WellItem
                   key={record.well.id}
                   record={record}
+                  pending={pending.filter((p) => p.reading.well_id === record.well.id)}
+                  offline={!registry?.ok}
+                  db={db}
+                  onKept={kept}
                   onEdit={() => {
                     setEditing(record.well.id);
                     setForm(formOf(record.well));

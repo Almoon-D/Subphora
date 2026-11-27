@@ -119,9 +119,9 @@ test("an area's detailed map runs, then shows its mean, layer and candidates", a
   const downloads = panel(page).locator(`[data-downloads="${DAIMIEL_ID}"]`);
   await expect(downloads.locator('[data-download="report"]')).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/report.pdf`);
   const pack = downloads.locator('[data-download="pack"]');
-  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=false`);
+  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=false&wells=false`);
   await downloads.getByLabel("Incluir en el paquete las fotos y notas de voz de campo").check();
-  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=true`);
+  await expect(pack).toHaveAttribute("href", `/api/parcel/${DAIMIEL_ID}/pack.zip?media=true&wells=false`);
   // The index is drawn first; another layer replaces it.
   await expect(map(page)).toHaveAttribute("data-parcel", `${DAIMIEL_ID}:potential-index:5`);
   await expect.poll(() => mocks.images).toContain(`/api/parcel/${DAIMIEL_ID}/layers/potential-index`);
@@ -146,6 +146,13 @@ test("a tap on the detailed map explains its cell", async ({ page }) => {
   await expect(explanation.locator(".score")).toContainText("Índice");
   await expect(explanation.locator('[data-criterion="slope"]')).toBeVisible();
   await expect(explanation).toContainText("Celda de 5 m del mapa detallado");
+  // Beside the map's own index, the value updated with the owner's wells and the well that moved it.
+  const updated = explanation.locator(".updated-with-wells");
+  await expect(updated).toContainText("Actualizado con tus pozos: índice 0,83");
+  await expect(updated).toContainText("antes 0,76");
+  await expect(updated).toContainText("Confianza");
+  await expect(updated).toContainText("Productivo a 40 m");
+  await expect(updated).toContainText("sigue siendo un índice");
   expect(mocks.explained[0]?.pathname).toBe(`/api/parcel/${DAIMIEL_ID}/explain`);
 });
 

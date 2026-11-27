@@ -91,6 +91,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     field_sub.add_parser(
         "summary", help="count the stored records by kind, their files and tracks (data/field)"
     )
+    wells = sub.add_parser("wells", help="your private well registry (data/wells)")
+    wells_sub = wells.add_subparsers(dest="wells_command", required=True)
+    wells_import = wells_sub.add_parser(
+        "import", help="read a CSV file of existing wells and water levels into the registry"
+    )
+    wells_import.add_argument("file", metavar="PATH", help="the CSV file")
+    wells_sub.add_parser("summary", help="count the wells by outcome, and their readings")
+    wells_sub.add_parser(
+        "validate", help="grade the national index against your wells, apart from IGME's"
+    )
     args = parser.parse_args(argv)
     if args.command is None:
         parser.print_help()
@@ -111,6 +121,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _piezometry_import(settings, args.file)
     if args.command == "field":
         return _field_summary(settings)
+    if args.command == "wells":
+        return _wells(settings, args.wells_command, getattr(args, "file", None))
     if args.sources_command == "list":
         print(_catalogue_table(settings))
         return 0
@@ -244,6 +256,45 @@ def _field_summary(settings: Settings) -> int:
     if summary.first_recorded_at and summary.last_recorded_at:
         first = summary.first_recorded_at.isoformat()
         print(f"recorded from {first} to {summary.last_recorded_at.isoformat()} (UTC)")
+    return 0
+
+
+def _wells(settings: Settings, command: str, file: str | None) -> int:
+    """The registry's commands. They print counts and states, never a well's content."""
+    from pathlib import Path
+
+    from subphora.config import REPO_ROOT
+    from subphora.domain.wells import WellsError
+    from subphora.services.wells import WellsService
+
+    service = WellsService(settings, REPO_ROOT)
+    try:
+        if command == "import" and file is not None:
+            report = asyncio.run(service.import_csv(Path(file).read_bytes()))
+            wells = ", ".join(f"{n} {c.value}" for c, n in report.wells.items() if n)
+            readings = ", ".join(f"{n} {c.value}" for c, n in report.readings.items() if n)
+            print(f"{report.rows} rows: wells {wells or 'none'}; readings {readings or 'none'}")
+            if report.conflict_rows:
+                rows = ", ".join(str(r) for r in report.conflict_rows)
+                print(f"Kept what the registry held (rows that disagree with it): {rows}")
+            return 0
+        if command == "summary":
+            registry = asyncio.run(service.registry())
+            outcomes: dict[str, int] = {}
+            for record in registry.wells:
+                outcomes[record.well.outcome.value] = outcomes.get(record.well.outcome.value, 0) + 1
+            readings_count = sum(len(r.readings) for r in registry.wells)
+            counted = ", ".join(f"{n} {o}" for o, n in sorted(outcomes.items())) or "none"
+            print(f"{len(registry.wells)} wells ({counted}); {readings_count} readings")
+            return 0
+        result = asyncio.run(service.validation())
+    except (OSError, WellsError) as exc:
+        print(f"FAILED: {exc}")
+        return EXIT_FAILED_CHECK
+    for v in result.validations:
+        auc = "" if v.auc is None else f", AUC {v.auc.value:.2f} ({v.auc.low:.2f}-{v.auc.high:.2f})"
+        print(f"{v.domain}: {v.state.value}, {v.productive} productive, {v.dry} dry{auc}")
+    print(f"not on the national map: {result.off_map}; outcome unknown: {result.unknown_outcome}")
     return 0
 
 

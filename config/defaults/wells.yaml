@@ -1,0 +1,82 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The owner's well registry and what the map learns from it (MASTER_PLAN §4.3 Learning,
+# §3 Privacy; decision 0040). The registry is private: one SQLite database in data/
+# (git-ignored, hard rule 6), copied by the nightly backup with the rest of data/, never
+# written to a log, and in an export pack only when the owner asks for it.
+
+# Relative to the repository root unless absolute. A busy database is waited for this long
+# before the request fails.
+store:
+  database: data/wells/wells.sqlite
+  busy_timeout_s: 5
+
+# The longest well name and note, in characters.
+name_max_chars: 120
+note_max_chars: 2000
+
+# The update of the map from the wells whose outcome is known (productive or dry): a
+# Beta-Bernoulli update of the value at each cell (the calibrated probability where the
+# cell's domain is calibrated, otherwise the index, which stays labelled an index).
+update:
+  # The map's own value counts as this many wells of evidence: one well next to a cell
+  # outweighs it by half, two by as much again.
+  prior_strength: 2.0
+  # A well's evidence weighs 1 at the well and half at this distance, then halves again
+  # with every such step.
+  half_weight_m: 150
+  # Beyond this distance a well weighs nothing: the map is not changed there. At least
+  # half_weight_m (checked). Both are a starting judgement, not a measured range: the
+  # validation against the owner's wells is what can tell (decision 0040).
+  range_m: 600
+  # The value before the update is kept this far from 0 and 1, so that evidence can
+  # always move it and the interval stays defined.
+  prior_margin: 0.01
+  # The coverage of the updated value's interval.
+  level: 0.9
+  # The detailed map's layer of the updated value, drawn and explained with the legend of
+  # this national tile layer (national.yaml; its variable must be the index).
+  layer_id: potential-wells
+  legend_layer: potential-index
+
+# CSV import of existing records: one row per well, or one per water-level reading with
+# the well's columns repeated. Each column is recognised by any of its names (ignoring
+# case, spaces and accents). The delimiter is a comma, a semicolon or a tab; with a
+# semicolon, a decimal comma is read as a point. Positions are longitude and latitude in
+# degrees (ETRS89), or x and y with the EPSG code of their CRS in a crs column.
+csv:
+  max_bytes: 5242880
+  max_rows: 20000
+  columns:
+    id: [id]
+    name: [name, nombre, pozo]
+    longitude: [longitude, lon, longitud]
+    latitude: [latitude, lat, latitud]
+    x: [x, utm_x, coord_x]
+    y: [y, utm_y, coord_y]
+    crs: [crs, epsg, srs]
+    depth_m: [depth_m, profundidad_m, profundidad]
+    flow_l_s: [flow_l_s, caudal_l_s, caudal]
+    outcome: [outcome, resultado]
+    drilled_on: [drilled_on, fecha_perforacion]
+    note: [note, nota, observaciones]
+    measured_at: [measured_at, fecha_medida, fecha]
+    depth_to_water_m: [depth_to_water_m, nivel_m, nivel, profundidad_agua_m]
+  # The outcome column's words. A blank outcome is read from the flow: productive above
+  # productive_above_l_s, dry at exactly 0, unknown without a flow.
+  outcomes:
+    productive: [productive, productivo, "si", agua]
+    dry: [dry, seco, "no"]
+    unknown: [unknown, desconocido, sin probar]
+  productive_above_l_s: 0.0
+  # Dates and times as written in the file; a time without a zone is local time here.
+  date_formats: ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]
+  datetime_formats: ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%d/%m/%Y %H:%M"]
+  timezone: Europe/Madrid
+
+# The validation of the index against the owner's wells, reported apart from the public
+# wells' (decision 0030's method and thresholds, validation.yaml): productive wells
+# against dry ones, per hydrogeological domain of the national map.
+validation:
+  labels_source: >-
+    Your wells (the private registry): productive and dry, scored on the national map's
+    index.

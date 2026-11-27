@@ -834,6 +834,29 @@ export interface ParcelAnswer {
 
 export type ParcelResult = { ok: true; answer: ParcelAnswer } | { ok: false; failure: ParcelFailure };
 
+/** A known well that moved the value at a point, and its weight there. */
+export interface WellEvidence {
+  well_id: string;
+  outcome: "productive" | "dry";
+  distance_m: number;
+  weight: number;
+}
+
+/** The estimate's value updated with the owner's wells (decision 0040): an index stays an
+ * index; a probability only where the domain is calibrated. */
+export interface WellUpdate {
+  kind: "index" | "probability";
+  prior: number;
+  value: number;
+  low: number;
+  high: number;
+  level: number;
+  prior_strength: number;
+  half_weight_m: number;
+  range_m: number;
+  evidence: WellEvidence[];
+}
+
 export interface ParcelExplanation {
   longitude: number;
   latitude: number;
@@ -841,6 +864,7 @@ export interface ParcelExplanation {
   cell_m: number;
   built_at: string;
   estimate: PotentialEstimate;
+  updated: WellUpdate | null;
 }
 
 export type ParcelExplainResult = { ok: true; explanation: ParcelExplanation } | { ok: false; failure: ParcelFailure };
@@ -891,8 +915,8 @@ export function reportPath(id: string): string {
   return `${parcelPath(id)}/report.pdf`;
 }
 
-export function packPath(id: string, media: boolean): string {
-  return `${parcelPath(id)}/pack.zip?media=${String(media)}`;
+export function packPath(id: string, media: boolean, wells = false): string {
+  return `${parcelPath(id)}/pack.zip?media=${String(media)}&wells=${String(wells)}`;
 }
 
 export async function fetchParcel(id: string, fetchFn: Fetch = fetch): Promise<ParcelResult> {

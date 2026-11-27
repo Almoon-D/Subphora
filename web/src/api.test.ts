@@ -187,7 +187,8 @@ describe("fetchFeatureInfo", () => {
 describe("report downloads", () => {
   it("names the area's report and pack, with photos only when asked", () => {
     expect(reportPath("0123456789abcdef")).toBe("/api/parcel/0123456789abcdef/report.pdf");
-    expect(packPath("0123456789abcdef", false)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=false");
-    expect(packPath("0123456789abcdef", true)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=true");
+    expect(packPath("0123456789abcdef", false)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=false&wells=false");
+    expect(packPath("0123456789abcdef", true)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=true&wells=false");
+    expect(packPath("0123456789abcdef", false, true)).toBe("/api/parcel/0123456789abcdef/pack.zip?media=false&wells=true");
   });
 });

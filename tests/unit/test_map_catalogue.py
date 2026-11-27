@@ -211,8 +211,12 @@ def test_the_browser_test_fixtures_match_the_api() -> None:
     for name in ("parcel-daimiel.json", "parcel-campos.json"):
         done = ParcelAnswer.model_validate_json((fixtures / name).read_bytes())
         assert done.job.analysis is not None
-        assert [layer.id for layer in done.layers] == load_settings().parcel.layers
+        settings = load_settings()
+        layers = [*settings.parcel.layers, settings.wells.update.layer_id]
+        assert [layer.id for layer in done.layers] == layers
     tapped = ParcelExplanation.model_validate_json(
         (fixtures / "explain-parcel-daimiel.json").read_bytes()
     )
     assert tapped.area_id == queued.job.id
+    assert tapped.updated is not None
+    assert len(tapped.updated.evidence) == 1

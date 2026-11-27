@@ -29,13 +29,21 @@ who is signed in, and the health check, the only routes open without one).
 - ``GET /api/parcel/{id}/layers/{layer}``: a layer of the detailed map as one PNG.
 - ``GET /api/parcel/{id}/report.pdf``: the area's PDF report; ``GET
   /api/parcel/{id}/pack.zip?media=``: the export pack (the PDF, a GeoPackage, COGs and CSV
-  tables; photos and voice memos only with ``media=true``). Both are downloads, sent
+  tables; photos and voice memos only with ``media=true``, the owner's wells there only
+  with ``wells=true``). Both are downloads, sent
   nowhere else.
 - ``GET /api/legal?lon=&lat=&region=``: the legal status at a point of a region (ISO
   3166-2): its water authority, groundwater body and status, the rules that apply there
   with their sources and dates, the verdict and the disclaimer; an area's legal panel.
 - ``POST /api/section`` (a line's two ends): the interpretive geological cross-section
   under it, with the confidence of every cell and "unknown" below the evidence.
+- ``GET /api/wells``: the owner's well registry, with a stamp that changes with the wells
+  that update the map; ``PUT /api/wells/{id}`` (a well) stores or replaces one, ``DELETE
+  /api/wells/{id}`` removes it with its readings, ``POST /api/wells/{id}/readings`` adds a
+  water level once (a retried one changes nothing), ``POST /api/wells/import`` reads a CSV
+  file of existing records, and ``GET /api/wells/validation`` grades the national index
+  against the owner's wells, apart from the public wells. The registry is private: it is
+  never logged, and an export holds it only when asked (``wells=true``).
 - ``POST /api/field/observations`` (a batch of field records): each stored once, its
   outcome (created, duplicate or conflict) in the answer; a retried batch changes nothing.
 - ``PUT /api/field/observations/{id}/media``: a photo's or voice memo's file, once its
@@ -80,6 +88,17 @@ from subphora.domain.parcel_map import JobState, ParcelError, ParcelExplanation,
 from subphora.domain.parcels import Position
 from subphora.domain.potential import CellExplanation, NationalError, NationalFailure
 from subphora.domain.section import CrossSection, SectionError, SectionFailure
+from subphora.domain.wells import (
+    Change,
+    ImportReport,
+    OwnerValidation,
+    Registry,
+    Well,
+    WellReading,
+    WellSaved,
+    WellsError,
+    WellsFailure,
+)
 from subphora.geo import MAX_TILE_ZOOM
 from subphora.report import CatalogueError, ReportService
 from subphora.services.aoi import AoiService
@@ -93,6 +112,7 @@ from subphora.services.national_map import NationalMapService
 from subphora.services.parcel import ParcelMapService
 from subphora.services.parcels import ParcelService
 from subphora.services.section import SectionService
+from subphora.services.wells import WellsService
 from subphora.sources import CatalogueClient
 from subphora.sources.client import Transport
 from subphora.store import FileCache
@@ -163,7 +183,16 @@ _FIELD_STATUS = {
     FieldFailure.MEDIA_MISMATCH: 400,
     FieldFailure.STORE_UNAVAILABLE: 503,
 }
+_WELLS_STATUS = {
+    WellsFailure.INVALID_WELL: 400,
+    WellsFailure.INVALID_CSV: 422,
+    WellsFailure.TOO_LARGE: 413,
+    WellsFailure.UNKNOWN_WELL: 404,
+    WellsFailure.CONFLICT: 409,
+    WellsFailure.STORE_UNAVAILABLE: 503,
+}
 _AREA_ID = fastapi.Path(pattern=r"^[0-9a-f]{16}$")
+_UUID = fastapi.Path(pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 _OBSERVATION_ID = fastapi.Path(
     pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
 )
@@ -224,8 +253,10 @@ def create_app(
             )
             app.state.section = SectionService(client, settings, cache, root)
             app.state.field = FieldService(settings, root)
+            app.state.wells = WellsService(settings, root)
             app.state.report = ReportService(
-                settings, ExportService(settings, app.state.parcel, app.state.field)
+                settings,
+                ExportService(settings, app.state.parcel, app.state.field, app.state.wells),
             )
             stack.callback(app.state.national.close)
             stack.push_async_callback(app.state.parcel.close)
@@ -400,11 +431,12 @@ def create_app(
         job = await parcel(request).submit(area)
         if job.state in (JobState.QUEUED, JobState.RUNNING):
             response.status_code = 202
-        return parcel_answer(settings, job)
+        return parcel_answer(settings, job, await wells(request).current_stamp())
 
     @app.get("/api/parcel/{area_id}")
     async def parcel_job(area_id: Annotated[str, _AREA_ID], request: Request) -> ParcelAnswer:
-        return parcel_answer(settings, await parcel(request).job(area_id))
+        job = await parcel(request).job(area_id)
+        return parcel_answer(settings, job, await wells(request).current_stamp())
 
     @app.get("/api/parcel/{area_id}/explain")
     async def parcel_explain(
@@ -413,7 +445,7 @@ def create_app(
         lat: Annotated[float, Query(ge=-85, le=85)],
         request: Request,
     ) -> ParcelExplanation:
-        return await parcel(request).explain(area_id, lon, lat)
+        return await wells(request).explain(parcel(request), area_id, lon, lat)
 
     def report(request: Request) -> ReportService:
         service: ReportService = request.app.state.report
@@ -433,13 +465,16 @@ def create_app(
 
     @app.get("/api/parcel/{area_id}/pack.zip", response_class=FileResponse)
     async def parcel_pack(
-        area_id: Annotated[str, _AREA_ID], request: Request, media: bool = False
+        area_id: Annotated[str, _AREA_ID],
+        request: Request,
+        media: bool = False,
+        wells: bool = False,
     ) -> FileResponse:
         handle, name = tempfile.mkstemp(prefix="subphora-pack-", suffix=".zip")
         os.close(handle)
         target = Path(name)
         try:
-            await report(request).pack(area_id, media, target)
+            await report(request).pack(area_id, media, wells, target)
         except BaseException:
             target.unlink(missing_ok=True)
             raise
@@ -455,6 +490,14 @@ def create_app(
     async def parcel_layer(
         area_id: Annotated[str, _AREA_ID], layer_id: str, request: Request
     ) -> Response:
+        if layer_id == settings.wells.update.layer_id:
+            # Drawn from the wells known now: never kept (the registry is private and
+            # changes).
+            return Response(
+                content=await wells(request).layer(parcel(request), area_id),
+                media_type=_PNG,
+                headers={"Cache-Control": "no-store"},
+            )
         content = await parcel(request).image(area_id, layer_id)
         # An area's id changes with its settings and code: its images never change.
         return Response(
@@ -535,6 +578,77 @@ def create_app(
         if outcome is Outcome.CREATED:
             response.status_code = 201
         return MediaAnswer(id=observation_id, outcome=outcome)
+
+    @app.exception_handler(WellsError)
+    async def wells_failed(_request: Request, exc: WellsError) -> JSONResponse:
+        if exc.failure is WellsFailure.STORE_UNAVAILABLE:
+            _log.error("the well registry failed: %s", exc.detail)
+        return JSONResponse(
+            status_code=_WELLS_STATUS[exc.failure],
+            content={"code": exc.failure.value, "detail": exc.detail},
+        )
+
+    def wells(request: Request) -> WellsService:
+        service: WellsService = request.app.state.wells
+        return service
+
+    def _body_of[T: DomainModel](model: type[T], raw: bytes, what: str) -> T:
+        try:
+            return model.model_validate_json(raw)
+        except ValidationError as exc:
+            # Where the record is wrong, never what it holds (it is private).
+            where = ".".join(str(part) for part in exc.errors()[0]["loc"])
+            raise WellsError(
+                WellsFailure.INVALID_WELL, f"the {what} is not valid at {where or 'root'}"
+            ) from exc
+
+    @app.get("/api/wells")
+    async def wells_list(request: Request, response: Response) -> Registry:
+        response.headers["Cache-Control"] = "no-store"
+        return await wells(request).registry()
+
+    @app.get("/api/wells/validation")
+    async def wells_validation(request: Request) -> OwnerValidation:
+        return await wells(request).validation()
+
+    @app.post("/api/wells/import")
+    async def wells_import(request: Request) -> ImportReport:
+        limit = settings.wells.csv.max_bytes
+        content = bytearray()
+        async for chunk in request.stream():
+            content += chunk
+            if len(content) > limit:
+                raise WellsError(WellsFailure.TOO_LARGE, f"a file has at most {limit} bytes")
+        return await wells(request).import_csv(bytes(content))
+
+    @app.put("/api/wells/{well_id}")
+    async def wells_put(
+        well_id: Annotated[str, _UUID], request: Request, response: Response
+    ) -> WellSaved:
+        well = _body_of(Well, await request.body(), "well")
+        if well.id != well_id:
+            raise WellsError(WellsFailure.INVALID_WELL, "the well's id is not the address's")
+        saved = await wells(request).save(well)
+        if saved.change is Change.CREATED:
+            response.status_code = 201
+        return saved
+
+    @app.delete("/api/wells/{well_id}", status_code=204)
+    async def wells_delete(well_id: Annotated[str, _UUID], request: Request) -> Response:
+        await wells(request).delete(well_id)
+        return Response(status_code=204)
+
+    @app.post("/api/wells/{well_id}/readings")
+    async def wells_reading(
+        well_id: Annotated[str, _UUID], request: Request, response: Response
+    ) -> WellSaved:
+        reading = _body_of(WellReading, await request.body(), "reading")
+        if reading.well_id != well_id:
+            raise WellsError(WellsFailure.INVALID_WELL, "the reading's well is not the address's")
+        saved = await wells(request).add_reading(reading)
+        if saved.change is Change.CREATED:
+            response.status_code = 201
+        return saved
 
     @app.get("/api/areas/{area_id}")
     async def area(area_id: str, request: Request, response: Response) -> AreaBoundary:

@@ -21,9 +21,14 @@ explanation and the detailed maps come from the synthetic Spain and are regenera
 | `parcel-queued.json` | `POST /api/parcel` with `area-point-daimiel.json`, before its job ran |
 | `parcel-daimiel.json` | `GET /api/parcel/{id}` once that job is done, on the synthetic services with synthetic piezometric levels nearby: a validated domain, each candidate with its depth and cost |
 | `parcel-campos.json` | the same for `area-sigpac-campos.json`, outside the national build and far from every piezometer: not validated, depth unknown |
-| `explain-parcel-daimiel.json` | `GET /api/parcel/{id}/explain` at the Daimiel map's first candidate |
+| `explain-parcel-daimiel.json` | `GET /api/parcel/{id}/explain` at the Daimiel map's first candidate, after one synthetic productive well was logged 40 m east of it (its `updated` value) |
 | `section-daimiel.json` | `POST /api/section` along a 1.2 km line running east through the Daimiel point, on the synthetic services: three units, a projected contact, the fault, a borehole and the water table |
 | `legal-daimiel.json` | `GET /api/legal` at the Daimiel point's centre (region ES-CM) on the synthetic services: the synthetic body in poor status, Tajo plan and regional law not loaded, distances not measured |
+
+The layer "updated with your wells" of the two detailed maps and the `updated` value of the
+tap were merged by hand from a regeneration of 2026-11-27; the rest of these files is from
+the regeneration of 2026-11-26 (a full one also changes the legal answers, which the
+browser tests of the legal panel read as they are).
 
 `tests/unit/test_map_catalogue.py` checks that they still match the API's models (and
 `map.json` its answer); regenerate them when it fails.

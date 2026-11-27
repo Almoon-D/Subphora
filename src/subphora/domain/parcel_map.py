@@ -25,6 +25,7 @@ from subphora.domain.potential import (
     Variable,
 )
 from subphora.domain.validation import DomainValidation
+from subphora.domain.wells import WellUpdate
 
 _TOLERANCE = 1e-4
 _UNIT = Field(ge=0, le=1)
@@ -223,6 +224,17 @@ class ParcelExplanation(DomainModel):
     cell_m: float = Field(gt=0)
     built_at: AwareDatetime
     estimate: PotentialEstimate
+    # The estimate's value updated with the owner's wells (decision 0040); None where the
+    # cell has no score.
+    updated: WellUpdate | None = None
+
+    @model_validator(mode="after")
+    def _updated_from_the_estimate(self) -> Self:
+        if (self.updated is not None) and self.estimate.score is None:
+            raise ValueError("only a scored cell is updated")
+        if self.updated is not None and self.updated.kind != self.estimate.kind:
+            raise ValueError("the update is of the estimate's own kind")
+        return self
 
 
 class ParcelError(Exception):

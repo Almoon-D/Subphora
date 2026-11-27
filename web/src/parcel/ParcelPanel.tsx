@@ -256,9 +256,10 @@ function Candidates({ analysis }: { analysis: AreaAnalysis }) {
 }
 
 /** The area's PDF report and export pack, saved by the browser; field photos and voice
- * memos go in the pack only when ticked. */
+ * memos, and the owner's wells (private), go in the pack only when ticked. */
 function Downloads({ analysis }: { analysis: AreaAnalysis }) {
   const [media, setMedia] = useState(false);
+  const [wells, setWells] = useState(false);
   return (
     <div className="downloads" data-downloads={analysis.id}>
       <h3>{t("report.download.heading")}</h3>
@@ -278,8 +279,19 @@ function Downloads({ analysis }: { analysis: AreaAnalysis }) {
         />{" "}
         {t("report.download.media")}
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={wells}
+          data-pack-wells
+          onChange={(event) => {
+            setWells(event.target.checked);
+          }}
+        />{" "}
+        {t("report.download.wells")}
+      </label>
       <p>
-        <a className="button" href={packPath(analysis.id, media)} download data-download="pack">
+        <a className="button" href={packPath(analysis.id, media, wells)} download data-download="pack">
           {t("report.download.pack")}
         </a>
       </p>

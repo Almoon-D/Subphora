@@ -8,6 +8,8 @@ tests/national_support.py (no network): ``uv run python scripts/e2e_fixtures.py`
 - The detailed maps of the Daimiel point and the Campos enclosure on that synthetic Spain:
   ``parcel-queued.json``, ``parcel-daimiel.json``, ``explain-parcel-daimiel.json`` and
   ``parcel-campos.json``. Campos lies outside both boxes and far from every piezometer.
+  Before the tap, one synthetic productive well is logged 40 m east of the first
+  candidate, so the tap's answer carries its value updated with the owner's wells.
 - The legal panel at the Daimiel point's centre: ``legal-daimiel.json``.
 - The cross-section under a 1.2 km line running east through the Daimiel point, across the
   synthetic fault: ``section-daimiel.json``.
@@ -39,12 +41,16 @@ from subphora.sources import CatalogueClient  # noqa: E402
 from subphora.store import FileCache  # noqa: E402
 from subphora.store.piezometry import write_piezometry  # noqa: E402
 from tests.national_support import FakeSpain, small_settings, terrain_elevation  # noqa: E402
+from tests.support import signed_in  # noqa: E402
 
 FIXTURES = ROOT / "web" / "e2e" / "fixtures"
 BOXES = ("-3.80,40.30,-3.55,40.55", "-3.75,38.85,-3.50,39.30")
 # The water table under the synthetic terrain (tests/national_support.py's valley).
 DEPTH_BELOW_GROUND_M = 45.0
 WELL_SPACING_M = 700.0
+# The synthetic well logged before the tap: a made-up id and name, 40 m east of the spot.
+SYNTHETIC_WELL_ID = "5d3c2b1a-0f9e-4d8c-8b7a-6f5e4d3c2b1a"
+WELL_OFFSET_DEG = 40 / 86_000
 # A 1.2 km line running east through the Daimiel point (area-point-daimiel.json).
 SECTION_LINE = {"start": [-3.6184, 39.0675], "end": [-3.6046, 39.0675]}
 
@@ -137,30 +143,35 @@ async def main(root: Path) -> None:
     transport = FakeSpain(whole_body=True).transport()
     with ThreadPoolExecutor(max_workers=1) as executor:
         app = create_app(settings, root=root, transport=transport, executor=executor)
-        async with app.router.lifespan_context(app):
-            asgi = httpx.ASGITransport(app=app)
-            async with httpx.AsyncClient(transport=asgi, base_url="http://test") as api:
-                _write("national.json", (await api.get("/api/national")).json())
-                explained = await api.get(
-                    "/api/national/explain", params={"lon": -3.70, "lat": 40.42}
-                )
-                _write("explain-madrid.json", explained.json())
-                lon, lat = point["centre"]
-                params = {"lon": lon, "lat": lat, "region": point["region_code"]}
-                _write("legal-daimiel.json", (await api.get("/api/legal", params=params)).json())
-                queued = (await api.post("/api/parcel", json=point)).json()
-                _write("parcel-queued.json", queued)
-                daimiel = await _settle(api, queued["job"]["id"])
-                _write("parcel-daimiel.json", daimiel)
-                first = daimiel["job"]["analysis"]["candidates"][0]
-                tapped = await api.get(
-                    f"/api/parcel/{queued['job']['id']}/explain",
-                    params={"lon": first["longitude"], "lat": first["latitude"]},
-                )
-                _write("explain-parcel-daimiel.json", tapped.json())
-                started = (await api.post("/api/parcel", json=campos)).json()
-                _write("parcel-campos.json", await _settle(api, started["job"]["id"]))
-                await section(api)
+        async with app.router.lifespan_context(app), signed_in(app, settings, root) as api:
+            _write("national.json", (await api.get("/api/national")).json())
+            explained = await api.get("/api/national/explain", params={"lon": -3.70, "lat": 40.42})
+            _write("explain-madrid.json", explained.json())
+            lon, lat = point["centre"]
+            params = {"lon": lon, "lat": lat, "region": point["region_code"]}
+            _write("legal-daimiel.json", (await api.get("/api/legal", params=params)).json())
+            queued = (await api.post("/api/parcel", json=point)).json()
+            _write("parcel-queued.json", queued)
+            daimiel = await _settle(api, queued["job"]["id"])
+            _write("parcel-daimiel.json", daimiel)
+            first = daimiel["job"]["analysis"]["candidates"][0]
+            well = {
+                "id": SYNTHETIC_WELL_ID,
+                "name": "Synthetic well",
+                "longitude": round(first["longitude"] + WELL_OFFSET_DEG, 7),
+                "latitude": round(first["latitude"], 7),
+                "outcome": "productive",
+            }
+            logged = await api.put(f"/api/wells/{SYNTHETIC_WELL_ID}", json=well)
+            logged.raise_for_status()
+            tapped = await api.get(
+                f"/api/parcel/{queued['job']['id']}/explain",
+                params={"lon": first["longitude"], "lat": first["latitude"]},
+            )
+            _write("explain-parcel-daimiel.json", tapped.json())
+            started = (await api.post("/api/parcel", json=campos)).json()
+            _write("parcel-campos.json", await _settle(api, started["job"]["id"]))
+            await section(api)
 
 
 if __name__ == "__main__":

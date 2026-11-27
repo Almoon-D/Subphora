@@ -10,6 +10,7 @@ import type {
   ExplainResult,
   ParcelExplainResult,
   PotentialEstimate,
+  WellUpdate,
 } from "../api.ts";
 import { formatDate, formatNumber, lookup, t } from "../i18n/index.ts";
 import { describeDetail } from "./LayerPanel.tsx";
@@ -211,6 +212,61 @@ export function NationalExplanation({ result }: { result: ExplainResult }) {
 }
 
 /** The detailed map's answer at a tapped point inside its area. */
+/** The value updated with the owner's wells beside the map's own, with the estimate's
+ * confidence next to it, and the wells that moved it (decision 0040). */
+export function UpdatedWithWells({ update, confidence }: { update: WellUpdate; confidence: Confidence }) {
+  const values = {
+    value: score(update.value),
+    low: score(update.low),
+    high: score(update.high),
+    prior: score(update.prior),
+  };
+  return (
+    <div className="updated-with-wells" data-updated={update.value} data-wells={update.evidence.length}>
+      <p>
+        <strong>
+          {update.kind === "probability"
+            ? t("explain.updated.probability", {
+                ...values,
+                value: percent(update.value),
+                low: percent(update.low),
+                high: percent(update.high),
+                prior: percent(update.prior),
+              })
+            : t("explain.updated.index", values)}
+        </strong>
+        {" · "}
+        <span className={`confidence confidence-${confidence.label}`}>
+          {t("explain.confidence", { label: t(`explain.confidence.${confidence.label}`), value: score(confidence.value) })}
+        </span>
+      </p>
+      <p className="note">
+        {update.evidence.length === 0
+          ? t("explain.updated.none", { range: formatNumber(update.range_m) })
+          : t("explain.updated.wells", {
+              count: update.evidence.length,
+              list: update.evidence
+                .map((e) =>
+                  t("explain.updated.well", {
+                    outcome: t(`wells.outcome.${e.outcome}`),
+                    distance: formatNumber(e.distance_m),
+                    weight: score(e.weight),
+                  }),
+                )
+                .join("; "),
+            })}
+      </p>
+      <p className="note">
+        {t("explain.updated.note", {
+          half: formatNumber(update.half_weight_m),
+          range: formatNumber(update.range_m),
+          strength: formatNumber(update.prior_strength, 1),
+        })}
+      </p>
+    </div>
+  );
+}
+
 export function ParcelExplanationView({ result }: { result: ParcelExplainResult }) {
   if (!result.ok) {
     return (
@@ -226,6 +282,7 @@ export function ParcelExplanationView({ result }: { result: ParcelExplainResult 
     <li className="info-layer parcel-explanation">
       <h3>{t("detailed.explainHeading")}</h3>
       <ScoreWithConfidence estimate={estimate} />
+      {explanation.updated && <UpdatedWithWells update={explanation.updated} confidence={estimate.confidence} />}
       <p className="note">{t("national.kindNote")}</p>
       <Inputs estimate={estimate} />
       <Missing estimate={estimate} />

@@ -61,8 +61,8 @@ reduce the uncertainty.
 - No paid service, paid API or recurring cost without the owner's approval in a decision.
 - No unprompted recommendations to hire a hydrogeologist or other professional. The
   professional export pack (session 12) exists for when the owner chooses to use one.
-- No instrument beyond decision 0042's: a water-level meter, then a 4-electrode resistivity
-  meter that the app never drives; its readings come in as files (§4.8).
+- No field instrument is bought or built (decision 0042): subsurface measurements come from
+  surveys the owner hires when a spot needs one (§4.8).
 
 ## 3. Constraints
 
@@ -294,13 +294,12 @@ tables (CSV).
 
 ### 4.8 Room for hardware
 
-Decision 0042 chose the instruments: a water-level meter for the owner's wells (session 17),
-then a 4-electrode OhmPi meter for vertical soundings (sessions 18-19), with the evidence in
-`docs/knowledge/field-instruments.md`. Observations have a `kind`, so a sounding is a new
-kind rather than a new store. The app never starts a measurement: it imports the meter's
-files, and the import refuses unless the safety checklist of hard rule 3 passed before the
-first reading (session 18). OhmPi's and other GPL code stay outside Subphora; inversion uses
-pyGIMLi (Apache-2.0).
+Decision 0042: no instrument is bought or built; the owner hires a survey when a candidate
+spot justifies it, and the options and prices are in `docs/knowledge/field-instruments.md`.
+The design keeps two things open: observations have a `kind`, so an instrument reading or a
+survey line would be a new kind rather than a new store; and a measurement that injects
+current is gated by the safety checklist of hard rule 3, which the session that first
+controls or imports instrument data would enforce in code.
 
 ### 4.9 Deployment (session 13)
 
@@ -361,7 +360,5 @@ Each session ends in something the owner can see or run. The table with status i
 | 15 | Satellite and climate layers | Late-summer vegetation anomaly (irrigation masked), ground motion, rainfall |
 | 16 | Hardware planning | Options compared with prices; the owner decides |
 | 17 | Water levels in the field | A level typed at the well with no coverage reaches the registry and the depth to water |
-| 18 | Resistivity meter: build and safety | The build guide with prices; a sounding's file refused without a passed checklist |
-| 19 | Soundings to the map | A sounding's layered model with ranges, at its point and in the cross-section |
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

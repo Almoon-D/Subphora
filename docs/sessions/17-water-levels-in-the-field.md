@@ -4,15 +4,14 @@ Model and effort: Opus 5.5, high.
 
 ## Goal
 
-The owner measures the water level in each of their wells with the meter of decision 0042,
-types the reading at the well head with no coverage, and the reading reaches the well
-registry and the depth to water without being lost.
+The owner types a water level for one of their wells at the well head with no coverage
+(their own reading, a driller's or a contractor's: decision 0042 buys no instrument), and
+the reading reaches the well registry and the depth to water without being lost.
 
 ## Read
 
 - `docs/MASTER_PLAN.md` § 4.7 (Field mode and offline), § 4.3 (Learning); decisions 0031,
   0036, 0040, 0042.
-- `docs/knowledge/field-instruments.md` (Manual water-level meter).
 - `src/subphora/store/wells.py`, `src/subphora/services/wells.py`, `src/subphora/model/depth.py`,
   `web/src/wells/`, `web/src/field/outbox.ts`, `web/src/field/db.ts`.
 - ROADMAP → Follow-ups from session 14.
@@ -22,20 +21,19 @@ registry and the depth to water without being lost.
 1. A reading typed in the well panel with no connection is written to IndexedDB first and
    travels through the outbox (client-generated id, server upsert, append-only), as field
    records do (hard rule 5). Today the panel refuses it.
-2. A reading records what the meter gives: depth to water below a stated reference (top of
-   casing or ground), the reference's height above ground, the time, and whether the pump
-   was running or stopped (and for how long), since a pumping well reads low.
+2. A reading records depth to water below a stated reference (top of casing or ground), the
+   reference's height above ground, the time, who measured it (owner, driller, contractor),
+   and whether the pump was running or stopped (and for how long), since a pumping well
+   reads low.
 3. The owner's readings enter depth to water as private levels inside their groundwater
    body, apart from the public piezometry, with their dates; a reading taken while pumping
    never does.
-4. `README.md`: a short Spanish note on buying the meter (length, probe, what to check) and
-   on measuring (reference point, pump stopped, repeat twice).
-5. Tests: offline entry, reload mid-sync and retry (browser), the pumping flag kept out of
+4. Tests: offline entry, reload mid-sync and retry (browser), the pumping flag kept out of
    depth, privacy (no reading in logs or unticked exports).
 
 ## DO NOT BUILD
 
-- Loggers or any automatic reading; the resistivity meter (sessions 18-19).
+- Instrument code of any kind, loggers or any automatic reading (decision 0042).
 
 ## Done when
 

@@ -6,7 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
-| [0042](0042-field-instrument-path.md) | Field instruments: a water-level meter, then a 4-electrode resistivity meter | proposed, awaiting the owner's ruling |
+| [0042](0042-field-instrument-path.md) | No field instrument: contracted surveys when a spot needs one | accepted |
 | [0041](0041-vegetation-anomaly-and-context-layers.md) | The late-summer vegetation anomaly enters only where validation admits it | accepted |
 | [0040](0040-well-registry-and-beta-update.md) | The owner's wells: a private registry and a Beta update shown as its own layer | accepted |
 | [0039](0039-home-mini-pc-and-login.md) | A home mini PC behind Caddy; sessions in SQLite; backups read back every night | accepted |

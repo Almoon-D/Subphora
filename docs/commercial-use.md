@@ -43,9 +43,5 @@ keeps its attribution text from `config/defaults/sources.yaml`.
 - Many customers instead of a few users: accounts, separation of each customer's private
   data, data-protection duties (MASTER_PLAN §4.9 is single-owner today).
 - The legal guidance shown to customers stays "guidance, not legal advice" (hard rule 2).
-- Open instrument licences (decision 0042, `docs/knowledge/field-instruments.md`): OhmPi's
-  hardware is CERN-OHL-S-2.0 and its software, ResIPy and hvsrpy GPL-3.0, so a paid product
-  reads their files and never links their code; selling built or modified OhmPi meters means
-  publishing their sources under the same licence.
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

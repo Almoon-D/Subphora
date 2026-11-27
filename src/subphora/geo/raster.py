@@ -77,6 +77,46 @@ def burn(window: GridWindow, shapes: Sequence[tuple[Geometry, float]], fill: flo
     return np.asarray(result, dtype=np.float32)
 
 
+def burn_box(
+    box: tuple[float, float, float, float], shapes: Sequence[Geometry], size: int
+) -> tuple[NDArray[np.float32], Affine]:
+    """Polygons (in the box's CRS) burnt as 1 into a ``size``-pixel square raster of the
+    box, 0 elsewhere, with its transform."""
+    west, south, east, north = box
+    transform = Affine((east - west) / size, 0.0, west, 0.0, -(north - south) / size, north)
+    if not shapes:
+        return np.zeros((size, size), dtype=np.float32), transform
+    result = rasterize(
+        [(shape, 1.0) for shape in shapes],
+        out_shape=(size, size),
+        transform=transform,
+        fill=0.0,
+        dtype="float32",
+    )
+    return np.asarray(result, dtype=np.float32), transform
+
+
+def write_geotiff(data: NDArray[np.float32], transform: Affine, crs: str) -> bytes:
+    """A float GeoTIFF in memory (deflate), NaN as its nodata."""
+    profile = {
+        "driver": "GTiff",
+        "height": data.shape[0],
+        "width": data.shape[1],
+        "count": 1,
+        "dtype": "float32",
+        "crs": crs,
+        "transform": transform,
+        "nodata": float("nan"),
+        "compress": "deflate",
+        "predictor": 3,
+        "tiled": True,
+    }
+    with MemoryFile() as memory:
+        with memory.open(**profile) as dataset:
+            dataset.write(np.asarray(data, dtype=np.float32), 1)
+        return bytes(memory.read())
+
+
 def warp_into(
     target: FloatGrid,
     window: GridWindow,
@@ -208,6 +248,7 @@ __all__ = [
     "RasterReadError",
     "Resampling",
     "burn",
+    "burn_box",
     "distance_to",
     "distance_to_points",
     "empty",
@@ -216,4 +257,5 @@ __all__ = [
     "points_mask",
     "read_geotiff",
     "warp_into",
+    "write_geotiff",
 ]

@@ -10,6 +10,9 @@ decision 0030), run inside the region's compute job.
 - A domain is the groundwater body drawn at a cell, or the land outside every body. Each
   body of the region, and the outside, gets a validation: measured, or why not.
 - The skill grid holds each measured domain's skill component; NaN elsewhere.
+- A criterion admitted by validation (the late-summer vegetation anomaly) is tried in each
+  domain with the same wells and background cells, and enters only the domains where it
+  improves the AUC (``model/validation.py``).
 """
 
 import hashlib
@@ -25,11 +28,18 @@ from subphora.config.model import ModelSettings
 from subphora.config.national import WaterPointsDataset
 from subphora.config.validation import LabelSettings, ValidationSettings
 from subphora.domain.potential import Variable
-from subphora.domain.validation import NO_BODY, DomainValidation
+from subphora.domain.validation import NO_BODY, CriterionTrial, DomainValidation
 from subphora.geo.grid import GridWindow
 from subphora.geo.raster import FloatGrid
 from subphora.model.evaluate import ABSENT, Category, InputGrids, Quality, evaluate
-from subphora.model.validation import Labelled, not_validated, skill_of, validate_domain
+from subphora.model.validation import (
+    Labelled,
+    auc_gain,
+    not_validated,
+    skill_of,
+    trial,
+    validate_domain,
+)
 
 # The label of the domain outside every groundwater body.
 NO_BODY_LABEL = "Outside every groundwater body"
@@ -110,6 +120,33 @@ def _scored(
     return cells
 
 
+def _labelled(
+    cells: Sequence[tuple[int, int, float, float]], scores: NDArray[np.float64], block_m: float
+) -> Labelled:
+    return Labelled.of(
+        [float(scores[r, k]) for r, k, _, _ in cells], [(x, y) for _, _, x, y in cells], block_m
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _DomainSample:
+    """The labelled cells and background cells of one domain, scored by any index."""
+
+    productive: list[tuple[int, int, float, float]]
+    dry: list[tuple[int, int, float, float]]
+    background: list[tuple[int, int, float, float]]
+
+    def scored(
+        self, index: NDArray[np.float64], block_m: float
+    ) -> tuple[Labelled, Labelled, Labelled]:
+        """The productive, dry and background points scored by ``index``."""
+        return (
+            _labelled(self.productive, index, block_m),
+            _labelled(self.dry, index, block_m),
+            _labelled(self.background, index, block_m),
+        )
+
+
 def validate_region(
     region_id: str,
     window: GridWindow,
@@ -121,55 +158,127 @@ def validate_region(
     settings: ValidationSettings,
     validated_at: datetime,
 ) -> tuple[tuple[DomainValidation, ...], FloatGrid]:
-    """Every domain's validation in the region, and its skill grid."""
+    """Every domain's validation in the region, and its skill grid.
+
+    Each criterion admitted by validation is tried in every domain against the model
+    without it; the validation reported is that of the model with the criteria each domain
+    admitted."""
     excluded = {c.variable for c in model.criteria if c.id in settings.labels.excluded_criteria}
-    kept = {v: g for v, g in grids.items() if v not in excluded}
-    index = evaluate(
-        model,
-        InputGrids(values=kept, categories=categories),
-        quality,
-        grids[Variable.WATER_POINT_DISTANCE_M],
-    ).index
+    inputs = InputGrids(
+        values={v: g for v, g in grids.items() if v not in excluded}, categories=categories
+    )
+    evidence = grids[Variable.WATER_POINT_DISTANCE_M]
+    base = evaluate(model, inputs, quality, evidence).index
+    tried = [c for c in model.gated if c.variable in inputs.values]
+    everywhere = np.ones(base.shape, dtype=bool)
+    with_index = {
+        c.id: evaluate(model, inputs, quality, evidence, admitted={c.id: everywhere}).index
+        for c in tried
+    }
     body_categories = categories[Variable.GROUNDWATER_BODY]
     domains = domain_codes(grids[Variable.GROUNDWATER_BODY], body_categories)
     keys = domain_keys(body_categories)
     rng = _rng(settings, region_id)
-    productive = _scored(window, wells.productive, index)
-    dry = _scored(window, wells.dry, index)
-    rows, columns = np.nonzero(~np.isnan(index))
+    productive = _scored(window, wells.productive, base)
+    dry = _scored(window, wells.dry, base)
+    rows, columns = np.nonzero(~np.isnan(base))
     cell_domains = domains[rows, columns]
-    results = []
-    skill = np.full(index.shape, np.nan, dtype=np.float32)
+    with_dry = bool(settings.labels.dry_kinds)
+    samples: list[_DomainSample] = []
+    first: list[DomainValidation] = []
+    trials: list[tuple[CriterionTrial, ...]] = []
     for code, (key, label) in enumerate(keys):
-
-        def of(cells: list[tuple[int, int, float, float]], wanted: int = code) -> Labelled:
-            chosen = [c for c in cells if domains[c[0], c[1]] == wanted]
-            return Labelled.of(
-                [float(index[r, k]) for r, k, _, _ in chosen],
-                [(x, y) for _, _, x, y in chosen],
-                settings.block_m,
-            )
-
         inside = np.flatnonzero(cell_domains == code)
         if inside.size > settings.background_per_domain:
             inside = rng.choice(inside, size=settings.background_per_domain, replace=False)
-        sample_rows, sample_columns = rows[inside], columns[inside]
-        background = Labelled.of(
-            index[sample_rows, sample_columns].tolist(),
-            [
-                (window.west + (k + 0.5) * window.cell_m, window.north - (r + 0.5) * window.cell_m)
-                for r, k in zip(sample_rows.tolist(), sample_columns.tolist(), strict=True)
+        sample = _DomainSample(
+            productive=[c for c in productive if domains[c[0], c[1]] == code],
+            dry=[c for c in dry if domains[c[0], c[1]] == code],
+            background=[
+                (
+                    r,
+                    k,
+                    window.west + (k + 0.5) * window.cell_m,
+                    window.north - (r + 0.5) * window.cell_m,
+                )
+                for r, k in zip(rows[inside].tolist(), columns[inside].tolist(), strict=True)
             ],
-            settings.block_m,
         )
-        result = validate_domain(
-            key, label, of(productive), of(dry), background, settings, validated_at, rng
+        samples.append(sample)
+        scored = sample.scored(base, settings.block_m)
+        without = validate_domain(key, label, *scored, settings, validated_at, rng)
+        first.append(without)
+        domain_trials = []
+        for criterion in tried:
+            scored_with = sample.scored(with_index[criterion.id], settings.block_m)
+            with_ = validate_domain(key, label, *scored_with, settings, validated_at, rng)
+            negative = 1 if with_dry else 2
+            gain = (
+                auc_gain(
+                    (scored[0], scored[negative]),
+                    (scored_with[0], scored_with[negative]),
+                    settings,
+                    rng,
+                )
+                if without.auc is not None and with_.auc is not None
+                else None
+            )
+            domain_trials.append(
+                trial(criterion.id, without, with_, gain, settings.trials.min_gain_low)
+            )
+        trials.append(tuple(domain_trials))
+    admitted = {
+        c.id: np.isin(
+            domains,
+            [
+                code
+                for code, t in enumerate(trials)
+                if any(x.criterion == c.id and x.admitted for x in t)
+            ],
         )
+        for c in tried
+    }
+    final = evaluate(model, inputs, quality, evidence, admitted=admitted).index
+    results = []
+    skill = np.full(base.shape, np.nan, dtype=np.float32)
+    for code, (key, label) in enumerate(keys):
+        if any(t.admitted for t in trials[code]):
+            result = validate_domain(
+                key,
+                label,
+                *samples[code].scored(final, settings.block_m),
+                settings,
+                validated_at,
+                rng,
+            )
+        else:
+            result = first[code]
+        result = result.model_copy(update={"trials": trials[code]})
         results.append(result)
         value = skill_of(result, model.confidence)
         if value is not None:
             skill[domains == code] = value
     return tuple(results), skill
+
+
+def admitted_grids(
+    body: FloatGrid,
+    categories: Sequence[Category],
+    validations: Mapping[str, DomainValidation],
+    model: ModelSettings,
+) -> dict[str, NDArray[np.bool_]]:
+    """Per criterion admitted by validation, the cells of the domains that admitted it."""
+    domains = domain_codes(body, categories)
+    keys = domain_keys(categories)
+    result = {}
+    for criterion in model.gated:
+        codes = [
+            code
+            for code, (key, _) in enumerate(keys)
+            if key in validations and criterion.id in validations[key].admitted
+        ]
+        result[criterion.id] = np.isin(domains, codes)
+    return result
 
 
 def skill_grid(

@@ -7,6 +7,9 @@
   is missing everywhere.
 - The index is the weighted mean of the suitabilities present: the weights renormalised
   over the criteria present at that cell. No input present: no index (NaN).
+- A criterion admitted by validation (``admission: validated``) counts only in the cells
+  of ``admitted``: elsewhere it is not part of the model at all, neither in the index nor
+  in the weight the coverage is measured against.
 - Confidence is the weighted sum of five components (coverage, resolution, age,
   evidence, skill); a cell without an index has no confidence either. The skill is the
   measured skill of the cell's domain, or ``skill_not_measured`` where it has none.
@@ -109,11 +112,18 @@ def evaluate(
     quality: Mapping[str, Quality],
     evidence_distance_m: NDArray[np.floating],
     skill: NDArray[np.floating] | None = None,
+    admitted: Mapping[str, NDArray[np.bool_]] | None = None,
 ) -> Evaluation:
     """Index and confidence on the grids; ``quality`` per criterion whose variable is
-    among the grids; ``skill`` per cell, NaN (or no grid) where its domain is unmeasured."""
+    among the grids; ``skill`` per cell, NaN (or no grid) where its domain is unmeasured;
+    ``admitted`` per criterion admitted by validation, the cells where it is part of the
+    model (a criterion left out is admitted nowhere)."""
     shape = np.shape(evidence_distance_m)
-    total_weight = sum(c.weight for c in model.criteria)
+    admitted = admitted or {}
+    total_weight = np.full(shape, sum(c.weight for c in model.criteria if not c.gated))
+    for criterion in model.gated:
+        if criterion.id in admitted:
+            total_weight = total_weight + np.where(admitted[criterion.id], criterion.weight, 0.0)
     weighted = np.zeros(shape)
     present_weight = np.zeros(shape)
     resolution = np.zeros(shape)
@@ -123,8 +133,12 @@ def evaluate(
         # No input at any scale, or none at this one (the faults on the national map).
         if criterion.variable is None or criterion.variable not in grids.values:
             continue
+        if criterion.gated and criterion.id not in admitted:
+            continue
         values = grids.values[criterion.variable]
         suit = suitability(criterion, values, grids.categories.get(criterion.variable, ()))
+        if criterion.gated:
+            suit = np.where(admitted[criterion.id], suit, np.nan)
         suitabilities[criterion.id] = suit
         present = ~np.isnan(suit)
         weight = np.where(present, criterion.weight, 0.0)

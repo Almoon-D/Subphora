@@ -127,7 +127,8 @@ async def test_a_point_gets_its_map_candidates_and_layers(
     summary = analysis["summary"]
     present = {c["criterion"] for c in summary["contributions"]}
     assert {"lineaments", "bedding_dip", "slope", "permeability"} <= present
-    assert [m["criterion"] for m in summary["missing"]] == ["piezometric_depth"]
+    # The vegetation anomaly is computed for the national map only (no domain admitted it).
+    assert [m["criterion"] for m in summary["missing"]] == ["vegetation", "piezometric_depth"]
     assert summary["kind"] == "index"
     assert summary["mean_index"] == pytest.approx(
         sum(c["mean_contribution"] for c in summary["contributions"]), abs=1e-4
@@ -177,6 +178,7 @@ async def test_a_missing_detailed_input_lowers_confidence(
     without = partial["job"]["analysis"]["summary"]
     assert {m["criterion"]: m["reason"] for m in without["missing"]} == {
         "bedding_dip": "no_data",
+        "vegetation": "no_dataset",
         "piezometric_depth": "no_dataset",
     }
     assert without["mean_confidence"]["value"] < with_dip["mean_confidence"]["value"]

@@ -155,6 +155,30 @@ criteria:
         inventory: groundwater has been found or tapped nearby. Its yield is mostly not
         recorded (docs/knowledge/igme.md), so only the distance counts; expert default.
 
+  # The late-summer vegetation anomaly (MASTER_PLAN §4.3, decision 0003): vegetation that
+  # stays greener than the dry land around it through late summer may reach groundwater.
+  # It enters a hydrogeological domain only where the validation with it beats the
+  # validation without it (validation.yaml trials); its weight is then added to the
+  # others' (which add up to 1) and every weight is renormalised as anywhere.
+  - id: vegetation
+    weight: 0.08
+    weight_source: >-
+      Expert default, about as much as wetness or drainage; it counts only where the
+      validation of session 07 shows it adds skill.
+    admission: validated
+    variable: vegetation_anomaly
+    lookup:
+      kind: breaks
+      unit: ndvi
+      breaks: [-0.03, 0.03, 0.1, 0.2]
+      values: [0.3, 0.5, 0.7, 0.85, 1.0]
+      source: >-
+        Groundwater-dependent vegetation stays green in the dry season while the land
+        around it dries (Barron et al. 2014, Hydrological Processes 28:372-385; Eamus et
+        al. 2015, Hydrology and Earth System Sciences 19:4229-4256). Late-summer NDVI minus
+        the mean of the non-irrigated land within 2 km, over several summers; class
+        limits and values are an expert default.
+
   - id: piezometric_depth
     weight: 0.10
     weight_source: Expert default.
@@ -205,3 +229,5 @@ confidence:
     status: {full_years: 6, zero_years: 18}
     # An inventory added to over decades.
     inventory: {full_years: 10, zero_years: 50}
+    # Vegetation changes with land use and drought: a composite ages in a few years.
+    vegetation: {full_years: 2, zero_years: 10}

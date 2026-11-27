@@ -7,6 +7,7 @@ against the other sections by ``Settings``.
 """
 
 import re
+from datetime import date
 from itertools import pairwise
 from pathlib import Path
 from typing import Self
@@ -103,12 +104,99 @@ class WaterPointsDataset(Dataset):
     page_size: PositiveInt
 
 
+_MONTH_DAY = r"^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+
+
+class Season(Section):
+    """A stretch of each year, as month-day (inclusive)."""
+
+    start: str = Field(pattern=_MONTH_DAY)
+    end: str = Field(pattern=_MONTH_DAY)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        if self.end <= self.start:
+            raise ValueError("a season ends after it starts, within one year")
+        return self
+
+    def dates(self, year: int) -> tuple[date, date]:
+        return (
+            date.fromisoformat(f"{year}-{self.start}"),
+            date.fromisoformat(f"{year}-{self.end}"),
+        )
+
+    def summers(self, today: date, count: int) -> list[int]:
+        """The ``count`` years whose season ended before ``today``, oldest first."""
+        last = today.year if self.dates(today.year)[1] < today else today.year - 1
+        return list(range(last - count + 1, last + 1))
+
+
+class Bands(Section):
+    """The STAC asset keys of the bands read."""
+
+    red: str = Field(min_length=1)
+    nir: str = Field(min_length=1)
+    scene_class: str = Field(min_length=1)
+
+
+class IrrigationMask(Section):
+    """The enclosures whose irrigation coefficient marks them irrigated, from SIGPAC's
+    vector tiles (docs/knowledge/sigpac.md)."""
+
+    service: str
+    # The tile path under the service, with {z}, {x} and {y}.
+    path: str = Field(pattern=r"^/.*\{z\}.*\{x\}.*\{y\}.*$")
+    zoom: int = Field(ge=12, le=15)
+    # A tile answered 404 is asked again as its four children, down to this zoom.
+    deepest_zoom: int = Field(ge=12, le=15)
+    layer: str = Field(min_length=1)
+    coefficient_field: str = Field(min_length=1)
+    # An enclosure with at least this irrigation coefficient (percent) is irrigated.
+    min_coefficient: PositiveFloat = Field(le=100)
+    # Each tile's enclosures are burnt into a square raster this many pixels a side, then
+    # averaged onto the grid; a cell this share irrigated or more is masked.
+    raster_px: int = Field(ge=64, le=4096)
+    masked_share: float = Field(gt=0, le=1)
+
+    @model_validator(mode="after")
+    def _zooms(self) -> Self:
+        if self.deepest_zoom < self.zoom:
+            raise ValueError("irrigation: deepest_zoom is above zoom")
+        return self
+
+
+class VegetationDataset(Dataset):
+    """Sentinel-2 L2A scenes of late summer (docs/knowledge/copernicus.md): searched in
+    ``service`` (STAC), their pixels read from ``pixels_service``."""
+
+    collection: str = Field(min_length=1)
+    pixels_service: str
+    page_size: PositiveInt = Field(le=500)
+    season: Season
+    years: PositiveInt
+    min_years: PositiveInt
+    max_cloud_pct: float = Field(gt=0, le=100)
+    scenes_per_year: PositiveInt
+    bands: Bands
+    valid_scene_classes: list[int] = Field(min_length=1)
+    read_cell_m: PositiveFloat
+    neighbourhood_m: PositiveFloat
+    irrigation: IrrigationMask
+
+    @model_validator(mode="after")
+    def _years(self) -> Self:
+        if self.min_years > self.years:
+            raise ValueError("vegetation: min_years exceeds years")
+        return self
+
+
 class Datasets(Section):
     permeability: PermeabilityDataset
     terrain: TerrainDataset
     soil: SoilDataset
     groundwater_bodies: GroundwaterBodiesDataset
     water_points: WaterPointsDataset
+    vegetation: VegetationDataset
 
     def all(self) -> dict[str, Dataset]:
         return {
@@ -117,7 +205,26 @@ class Datasets(Section):
             "soil": self.soil,
             "groundwater_bodies": self.groundwater_bodies,
             "water_points": self.water_points,
+            "vegetation": self.vegetation,
         }
+
+
+class GroundMotion(Section):
+    """The EGMS Ortho vertical-velocity GeoTIFFs the owner downloads (EU Login) and copies
+    into ``directory``: context for the map, not a model input."""
+
+    service: str
+    # Relative to the repository root unless absolute; data/ is git-ignored.
+    directory: Path
+    # The vertical component's files (U), not the east-west one (E).
+    pattern: str = Field(min_length=1)
+
+    def path(self, root: Path) -> Path:
+        return self.directory if self.directory.is_absolute() else root / self.directory
+
+
+class ContextLayers(Section):
+    ground_motion: GroundMotion
 
 
 # The dataset each input variable is made from (the build's mechanics).
@@ -130,6 +237,7 @@ VARIABLE_DATASET: dict[Variable, str] = {
     Variable.CLAY_PCT: "soil",
     Variable.GROUNDWATER_STATUS: "groundwater_bodies",
     Variable.WATER_POINT_DISTANCE_M: "water_points",
+    Variable.VEGETATION_ANOMALY: "vegetation",
 }
 
 
@@ -194,6 +302,7 @@ class NationalSettings(Section):
     buffer_m: float = Field(ge=0)
     grids: list[GridSettings] = Field(min_length=1)
     datasets: Datasets
+    context: ContextLayers
     build: BuildSettings
     tiles: TilesSettings
 

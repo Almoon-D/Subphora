@@ -99,6 +99,59 @@ datasets:
     detail: {}
     ageing: inventory
 
+  # The late-summer vegetation anomaly (decision 0041): Sentinel-2 L2A scenes of the season
+  # below, searched in the STAC catalogue and read from the cloud-optimised GeoTIFFs at
+  # read_cell_m (an overview, never the 10 m pixels). Per Sentinel-2 tile: the
+  # scenes_per_year least cloudy scenes of each summer, pixels kept only where the scene
+  # classification is valid; NDVI's median per summer, then over the summers. A cell needs
+  # min_years summers. The anomaly is a cell's NDVI minus the mean over the land within
+  # neighbourhood_m that is not irrigated: greener than the dry land around it in late
+  # summer, summer after summer. Irrigated enclosures are masked, and NaN.
+  vegetation:
+    service: earth-search
+    collection: sentinel-2-l2a
+    pixels_service: sentinel-cogs
+    page_size: 100
+    # Mid-July to mid-September: rain-fed crops are harvested and dry; what stays green
+    # is irrigated, evergreen, or draws on water the soil no longer holds.
+    season: {start: "07-15", end: "09-15"}
+    years: 5
+    min_years: 3
+    max_cloud_pct: 30
+    scenes_per_year: 2
+    bands: {red: red, nir: nir, scene_class: scl}
+    # Scene classification (SCL): 4 vegetation, 5 not vegetated. Clouds, shadows, water,
+    # snow and defective pixels are left out.
+    valid_scene_classes: [4, 5]
+    # The 80 m overview of the 10 m bands: the one just finer than the 100 m grid.
+    read_cell_m: 80
+    neighbourhood_m: 2000
+    irrigation:
+      service: sigpac-mvt
+      path: "/recinto@3857@pbf/{z}/{x}/{y}.pbf"
+      zoom: 12
+      # SIGPAC answers 404 for some dense zoom-12 tiles and serves their zoom-13 children.
+      deepest_zoom: 13
+      layer: recinto
+      coefficient_field: coef_regadio
+      min_coefficient: 1
+      # 512 pixels on a zoom-12 tile: about 15 m on the ground in Spain.
+      raster_px: 512
+      # A cell a quarter irrigated or more is left out: its greenness is the irrigation's.
+      masked_share: 0.25
+    # 10 m pixels; the edition is the last summer composited, set at each build.
+    detail: {cell_m: 10}
+    ageing: vegetation
+
+# Context layers the build grids and publishes, never model inputs (decision 0003).
+context:
+  # EGMS Ortho, vertical component: the owner downloads the 100 km tiles over his area
+  # with an EU Login account and copies the GeoTIFFs here (docs/knowledge/copernicus.md).
+  ground_motion:
+    service: egms
+    directory: data/egms
+    pattern: "EGMS_L3_*_100km_U_*.tif"
+
 # The build: worker processes for the grids and tiles (0: one per CPU), and where the grids
 # and tiles are written (relative to the repository root; data/ is git-ignored).
 build:
@@ -161,3 +214,20 @@ tiles:
       unit: twi
       breaks: [6, 8, 10, 12]
       colours: ["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"]
+    # Shown whether or not the anomaly entered the model: browner (red) to greener (green)
+    # than the dry land around; irrigated land is not drawn.
+    - id: vegetation-anomaly
+      variable: vegetation_anomaly
+      visible: false
+      opacity: 0.7
+      unit: ndvi
+      breaks: [-0.1, -0.03, 0.03, 0.1, 0.2]
+      colours: ["#a6611a", "#dfc27d", "#f5f5f5", "#a6dba0", "#5aae61", "#1b7837"]
+    # Where EGMS was imported: sinking (red) to rising (blue), in mm per year.
+    - id: ground-motion
+      variable: ground_motion_mm_yr
+      visible: false
+      opacity: 0.75
+      unit: mm_yr
+      breaks: [-10, -5, -2, 2, 5]
+      colours: ["#b2182b", "#ef8a62", "#fddbc7", "#f7f7f7", "#91bfdb", "#2166ac"]

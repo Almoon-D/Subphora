@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0041](0041-vegetation-anomaly-and-context-layers.md) | The late-summer vegetation anomaly enters only where validation admits it | accepted |
 | [0040](0040-well-registry-and-beta-update.md) | The owner's wells: a private registry and a Beta update shown as its own layer | accepted |
 | [0039](0039-home-mini-pc-and-login.md) | A home mini PC behind Caddy; sessions in SQLite; backups read back every night | accepted |
 | [0038](0038-report-and-export-pack.md) | The report: one shared catalogue, WeasyPrint with no fetching, GDAL for the pack | accepted |

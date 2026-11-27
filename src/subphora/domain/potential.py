@@ -39,9 +39,15 @@ class Variable(StrEnum):
     # dip of the bedding measured nearest to it.
     LINEAMENT_DENSITY = "lineament_density"
     BEDDING_DIP_DEG = "bedding_dip_deg"
+    # How much greener a cell stays in late summer than the dry land around it, irrigated
+    # land masked (Sentinel-2 NDVI over several summers; session 15).
+    VEGETATION_ANOMALY = "vegetation_anomaly"
     # The groundwater body drawn at a cell (its code; -1 outside every body): the
     # hydrogeological domain the model is validated in. Not a criterion's input.
     GROUNDWATER_BODY = "groundwater_body"
+    # Context, not a criterion's input: the vertical ground motion of the European Ground
+    # Motion Service, in mm per year (negative: the ground sinks), where it was imported.
+    GROUND_MOTION_MM_YR = "ground_motion_mm_yr"
     INDEX = "index"
     CONFIDENCE = "confidence"
     # The confidence's skill component where the cell's domain was measured; NaN elsewhere.
@@ -60,7 +66,9 @@ DISTANCES: frozenset[Variable] = frozenset(
 # The model's results, not inputs.
 RESULTS: frozenset[Variable] = frozenset({Variable.INDEX, Variable.CONFIDENCE, Variable.SKILL})
 # Grids that are neither a criterion's input nor a result.
-AUXILIARY: frozenset[Variable] = frozenset({Variable.GROUNDWATER_BODY})
+AUXILIARY: frozenset[Variable] = frozenset(
+    {Variable.GROUNDWATER_BODY, Variable.GROUND_MOTION_MM_YR}
+)
 
 
 class InputSource(DomainModel):
@@ -122,6 +130,9 @@ class MissingReason(StrEnum):
     NO_DATASET = "no_dataset"
     # The input has no value at this cell.
     NO_DATA = "no_data"
+    # A criterion that enters only where validation shows it helps, and did not help in
+    # this cell's hydrogeological domain (or nothing measured it there).
+    NOT_ADMITTED = "not_admitted"
 
 
 class MissingInput(DomainModel):

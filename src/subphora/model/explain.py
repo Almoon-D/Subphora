@@ -12,7 +12,7 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
-from subphora.config.model import BreaksLookup, ConfidenceSettings, ModelSettings
+from subphora.config.model import BreaksLookup, ConfidenceSettings, Criterion, ModelSettings
 from subphora.domain.potential import (
     ComponentId,
     Confidence,
@@ -60,7 +60,9 @@ def explain_cell(
     """``values`` are the cell's raw inputs (NaN where none; a variable left out has no
     input at this scale); ``quality`` and ``sources`` are per criterion whose variable is
     among them; a distance at its cap in ``distance_caps_m`` is "at least" that far;
-    ``validation`` is that of the cell's domain."""
+    ``validation`` is that of the cell's domain, whose trials admit (or not) the criteria
+    that enter only where validation shows they help."""
+    admitted = validation.admitted
     grids = InputGrids(
         values={v: np.array([value], dtype=np.float64) for v, value in values.items()},
         categories=categories,
@@ -72,6 +74,7 @@ def explain_cell(
         quality,
         np.array([evidence_distance_m]),
         np.array([math.nan if skill is None else skill]),
+        {c.id: np.array([True]) for c in model.gated if c.id in admitted},
     )
     present = [
         c
@@ -106,13 +109,7 @@ def explain_cell(
         )
     present_ids = {c.id for c in present}
     missing = tuple(
-        MissingInput(
-            criterion=c.id,
-            weight=c.weight,
-            reason=MissingReason.NO_DATASET
-            if c.variable is None or c.variable not in values
-            else MissingReason.NO_DATA,
-        )
+        MissingInput(criterion=c.id, weight=c.weight, reason=_missing_reason(c, values, admitted))
         for c in model.criteria
         if c.id not in present_ids
     )
@@ -131,6 +128,16 @@ def explain_cell(
         validation=validation,
         probability=probability,
     )
+
+
+def _missing_reason(
+    criterion: Criterion, values: Mapping[Variable, float], admitted: frozenset[str]
+) -> MissingReason:
+    if criterion.variable is None or criterion.variable not in values:
+        return MissingReason.NO_DATASET
+    if criterion.gated and criterion.id not in admitted:
+        return MissingReason.NOT_ADMITTED
+    return MissingReason.NO_DATA
 
 
 def confidence_of(

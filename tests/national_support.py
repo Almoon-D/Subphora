@@ -20,6 +20,10 @@ httpx.MockTransport, answering any window with made-up but well-formed data.
   to the centre (where the fault runs) and sandstone east of it; none when ``lithology``
   is false.
 - The borehole of the water points (300 m east of the centre) went 120 m deep.
+- Earth Search: one Sentinel-2 scene of tile MGRS-30TVK per summer searched, 5 % cloud.
+  Its bands (``read_band``, in place of GDAL's range reader) cover the region in EPSG:25830:
+  NDVI 0.5 within ``green_m`` of the valley floor (0.2 elsewhere), clear sky everywhere.
+- SIGPAC vector tiles: 404 at every zoom (no enclosure, so nothing irrigated).
 """
 
 import io
@@ -36,6 +40,8 @@ from pyproj import Transformer
 from rasterio.transform import from_origin
 
 from subphora.config import Settings
+from subphora.sources import CatalogueClient
+from subphora.sources.sentinel import Band, BandRead
 from tests.support import fast_settings
 
 type Handler = Callable[[httpx.Request], httpx.Response]
@@ -137,12 +143,16 @@ class FakeSpain:
         timeout: frozenset[str] = frozenset(),
         wells: float | None = None,
         whole_body: bool = False,
+        green_m: float = 600.0,
     ) -> None:
         self.fail = fail or {}
         self.bedding = bedding
         self.lithology = lithology
         self.wells = wells
         self.whole_body = whole_body
+        self.green_m = green_m
+        # The band files the build asked GDAL to read.
+        self.bands_read: list[str] = []
         # Hosts whose every request times out.
         self.timeout = timeout
         self.requests: list[httpx.Request] = []
@@ -178,6 +188,10 @@ class FakeSpain:
             return self._feature_info(request)
         if host == "gis.miteco.gob.es":
             return self._bodies(request)
+        if host == "earth-search.aws.element84.com":
+            return self._scenes(request)
+        if host == "sigpac-hubcloud.es" and path.startswith("/mvt/"):
+            return httpx.Response(404, content=b"<html>404 - File or directory not found.</html>")
         if host == "www.ign.es":
             return _collection([_feature(_square(*MADRID), nationalCode="34132800000")])
         return httpx.Response(404)
@@ -304,4 +318,49 @@ class FakeSpain:
             content=json.dumps(
                 {"type": "FeatureCollection", "features": [body], "numberMatched": 1}
             ).encode(),
+        )
+
+    @staticmethod
+    def _scenes(request: httpx.Request) -> httpx.Response:
+        """One clear scene of one tile in the searched summer."""
+        year = request.url.params["datetime"][:4]
+        base = f"https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/fake/{year}"
+        scale = [{"nodata": 0, "scale": 0.0001, "offset": -0.1}]
+        item = {
+            "type": "Feature",
+            "id": f"S2A_30TVK_{year}0820_0_L2A",
+            "properties": {
+                "grid:code": "MGRS-30TVK",
+                "eo:cloud_cover": 5.0,
+                "datetime": f"{year}-08-20T11:00:00Z",
+            },
+            "assets": {
+                "red": {"href": f"{base}/B04.tif", "raster:bands": scale},
+                "nir": {"href": f"{base}/B08.tif", "raster:bands": scale},
+                "scl": {"href": f"{base}/SCL.tif", "raster:bands": [{"nodata": 0}]},
+            },
+        }
+        return _collection([item], links=[])
+
+    def read_band(
+        self, client: CatalogueClient, band: Band, cell_m: float, _resampling: object
+    ) -> BandRead:
+        """The synthetic scene's band over the region at ``cell_m``, after the same host
+        check the real reader makes."""
+        client.ensure_allowed(httpx.URL(band.href))
+        self.bands_read.append(band.href)
+        west, north = 400_000.0, 4_520_000.0
+        width, height = round(80_000 / cell_m), round(90_000 / cell_m)
+        xs = west + (np.arange(width) + 0.5) * cell_m
+        green = np.broadcast_to(np.abs(xs - _VALLEY_X) <= self.green_m, (height, width))
+        name = band.href.rsplit("/", 1)[-1]
+        if name == "SCL.tif":
+            data = np.full((height, width), 4, dtype=np.uint8)
+        elif name == "B04.tif":
+            data = np.full((height, width), 2000, dtype=np.uint16)
+        else:
+            # Reflectance 0.15 (NDVI 0.2) or 0.3 (NDVI 0.5) over red at 0.1.
+            data = np.where(green, 4000, 2500).astype(np.uint16)
+        return BandRead(
+            data=data, transform=from_origin(west, north, cell_m, cell_m), crs=_VALLEY_CRS
         )

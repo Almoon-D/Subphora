@@ -101,6 +101,9 @@ test("a tap explains the index with its confidence, inputs and missing data", as
   // The synthetic wells validate the domain: the skill is measured and shown with its AUC.
   await expect(explanation.locator('[data-component="skill"]')).not.toContainText("sin medir todavía");
   await expect(explanation.locator('[data-validation="validated"]')).toContainText("AUC");
+  // The vegetation was tried here and did not improve the validation: it stays out.
+  await expect(explanation.locator('[data-trial="vegetation"][data-outcome="no_gain"]')).toContainText("no entra aquí");
+  await expect(explanation.locator('[data-missing="not_admitted"]')).toHaveCount(1);
   await expect(explanation).toContainText("No es una probabilidad");
   const [asked] = mocks.explained;
   expect(Number(asked?.searchParams.get("lon"))).toBeCloseTo(MADRID.longitude, 2);

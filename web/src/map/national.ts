@@ -25,7 +25,7 @@ export function nationalAnswersTap(national: NationalMap | null, layers: MapLaye
   return national.regions.some(({ bbox: [west, south, east, north] }) => west <= lon && lon <= east && south <= lat && lat <= north);
 }
 
-const DIGITS: Readonly<Record<string, number>> = { index: 1, confidence: 1, twi: 0, deg: 0, m: 0, pct: 0 };
+const DIGITS: Readonly<Record<string, number>> = { index: 1, confidence: 1, twi: 0, deg: 0, m: 0, pct: 0, mm_yr: 0, ndvi: 2 };
 
 /** A number in a unit, as the legend and the explanation write it. */
 export function formatQuantity(value: number, unit: string): string {
@@ -40,6 +40,8 @@ export function formatQuantity(value: number, unit: string): string {
       return `${number} %`;
     case "km_km2":
       return `${number} km/km²`;
+    case "mm_yr":
+      return `${number} mm/año`;
     default:
       return number;
   }

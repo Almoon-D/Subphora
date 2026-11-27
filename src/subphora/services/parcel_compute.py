@@ -85,7 +85,13 @@ from subphora.services.national_compute import (
     warped,
     water_point_positions,
 )
-from subphora.services.validation import domain_codes, domain_keys, domain_validations, skill_grid
+from subphora.services.validation import (
+    admitted_grids,
+    domain_codes,
+    domain_keys,
+    domain_validations,
+    skill_grid,
+)
 from subphora.store.national import Category as StoredCategory
 from subphora.store.national import CriterionQuality, RegionManifest, write_region
 from subphora.store.parcels import write_analysis, write_depth, write_image, write_outline
@@ -334,6 +340,9 @@ def compute_parcel(spec: ParcelJobSpec) -> AreaAnalysis:
         quality,
         grids[Variable.WATER_POINT_DISTANCE_M],
         skill,
+        # A criterion the national validation admitted in a domain counts there, even
+        # where this scale has no input for it (it is then missing, and says so).
+        admitted_grids(grids[Variable.GROUNDWATER_BODY], body_categories, by_domain, spec.model),
     )
     grids[Variable.INDEX] = evaluation.index.astype(np.float32)
     grids[Variable.CONFIDENCE] = evaluation.confidence.astype(np.float32)

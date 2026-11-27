@@ -269,7 +269,8 @@
               "water_points"
             ],
             "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-            "validated_at": "2026-11-26T14:33:30.588772Z"
+            "validated_at": "2026-11-26T14:33:30.588772Z",
+            "trials": []
           }
         ]
       },
@@ -595,7 +596,8 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T14:33:30.588772Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z",
+              "trials": []
             },
             "probability": null
           },
@@ -1139,7 +1141,8 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T14:33:30.588772Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z",
+              "trials": []
             },
             "probability": null
           },
@@ -1683,7 +1686,8 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T14:33:30.588772Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z",
+              "trials": []
             },
             "probability": null
           },
@@ -2227,7 +2231,8 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T14:33:30.588772Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z",
+              "trials": []
             },
             "probability": null
           },
@@ -2771,7 +2776,8 @@
                 "water_points"
               ],
               "labels_source": "IGME water-point inventory: wells and boreholes with a recorded yield (productive); no public source records dry wells yet.",
-              "validated_at": "2026-11-26T14:33:30.588772Z"
+              "validated_at": "2026-11-26T14:33:30.588772Z",
+              "trials": []
             },
             "probability": null
           },

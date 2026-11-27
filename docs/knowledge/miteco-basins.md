@@ -92,6 +92,14 @@ WFS at `…/<service>/ows`). Catalogue ids: `miteco-gw-bodies`, `miteco-gw-statu
 - Recharge and climate grids of the hydrological evaluation (`rechid_recarga`,
   `rechid_precipitacion`…), drainage directions `MDD25` and accumulation `Sup25x25` (25 m)
   are also served. `(GET agua.html, 2026-11-24)`
+- `https://gis.miteco.gob.es/geoserver/agua/rechid_recarga/wms` (layer `rechid_recarga`,
+  "Recarga de acuíferos (mm) (1940/41-2005/06)") and `…/agua/rechid_precipitacion/wms`
+  (`rechid_precipitacion`) are 1 km grids of the SIMPA model's natural-regime means:
+  annual recharge and rainfall, mm. Capabilities offer EPSG:25828-25831, 4326 and 3857;
+  `Fees` "CC BY 4.0. Nombrar a la fuente: Ministerio para la Transición Ecológica y el Reto
+  Demográfico". GetFeatureInfo as JSON answers the cell's value as `GRAY_INDEX` (20 mm of
+  recharge near Daimiel), with no geometry. `(GetCapabilities, GetFeatureInfo, 2026-11-27)`
+- AEMET publishes no recharge; these are the only nationwide recharge grids found.
 
 ## Feature info (GetFeatureInfo)
 

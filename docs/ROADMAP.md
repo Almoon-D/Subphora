@@ -22,7 +22,8 @@
 | 12 | `docs/sessions/done/12-report.md` | Opus 5.5, medium | done |
 | 13 | `docs/sessions/done/13-deployment.md` | Opus 5.5, high | done — version 1 |
 | 14 | `docs/sessions/done/14-well-registry-learning.md` | Opus 5.5, high | done |
-| 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | next |
+| 15 | `docs/sessions/done/15-satellite-climate.md` | Opus 5.5, high | done |
+| 15a | `docs/sessions/15a-recent-rainfall-and-detailed-vegetation.md` | Opus 5.5, high | next (needs the owner's AEMET key) |
 | 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
 
 ## Live verification queue
@@ -90,7 +91,11 @@
   (`parcel.yaml` terrain `model`); unblocked by a browser look at the download centre, then
   a session that reads MDT02 where it covers the area.
 - VERIFY-LIVE(egms-terms): the Copernicus Land data-policy page did not answer from the
-  cloud; read it before session 15 uses EGMS. Queued by 01.
+  cloud; read it before the owner imports EGMS files. Queued by 01.
+- VERIFY-LIVE(egms-format): the owner downloads the EGMS Ortho vertical tiles of their area
+  (EU Login) into `data/egms/`, rebuilds, and checks that "Movimiento vertical del suelo"
+  shows mm per year where expected; the file name pattern and the GeoTIFF layout come from
+  ESA's product description, not a real file. Queued by 15.
 - VERIFY-LIVE(regional-hosts-unreached): the spatial data services of Aragón, Asturias,
   Castilla y León, Castilla-La Mancha, Extremadura, Galicia, Murcia, La Rioja and Ceuta, the
   ACA and five basin authorities did not answer from the cloud (resets, TLS failures, a
@@ -112,13 +117,15 @@
 - VERIFY-LIVE(national-all): the owner runs `uv run subphora national build --all` on a
   machine with ~5 GB free (estimate: ~2 GB of grids, 2-3 GB of cached terrain windows) and
   records the time, the size and any region that failed. Two provinces were built live (05).
+  Since 15 the cache also holds Earth Search pages (~16 MB per 3,000 km²: some 3 GB for
+  Spain) and the Sentinel-2 composites; SIGPAC tiles are kept only as burnt rasters.
 - VERIFY-LIVE(national-editions): which MDT25 coverage the IGN WCS serves (the IDEE
   catalogue holds the first, 2009-2015, and the second, 2015-2021; the WCS names neither)
   and the groundwater bodies' scale; their confidence uses the "unknown" value until a
   record states them (IGN, MITECO). Queued by 05; unblocked by the IGN's answer or the
   WCS's metadata naming its coverage.
 - VERIFY-LIVE(keyed-services): `aemet-opendata` is "not checked"
-  until the owner's key exists (session 15). Queued by 01.
+  until the owner's key exists (session 15a). Queued by 01.
 
 ## Follow-ups
 
@@ -131,6 +138,11 @@
   tiles and taps do not. A well weighs across a groundwater body's edge as within it. (14)
 - The owner's water levels are not yet used for depth to water; they could join the
   piezometric levels as private ones, inside their body. (14)
+- Only 2,707 of IGME's 139,699 water points record a yield, nearly all in Asturias, Almería
+  and León: the validation that admits the vegetation (and measures skill) cannot run in
+  most of Spain until the owner's wells or another source label more wells. (15)
+- The Earth Search pages could be trimmed with the STAC `fields` and `query` extensions
+  (both offered) to shrink the cache: about a sixth smaller per page. (15)
 - `scripts/e2e_fixtures.py` now signs in; a full regeneration also changes the legal answers
   (09a loaded the rules), so the browser tests of the legal panel need updating with it. (14)
 
@@ -254,6 +266,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 15 — Satellite and climate layers (2026-11-27, version 0.19.0)
+
+- Landed (decision 0041): Sentinel-2 through Earth Search and its AWS COGs (80 m overview),
+  the five-summer composite per tile, the anomaly against the dry land within 2 km with
+  SIGPAC's irrigated enclosures masked; the criterion tried per domain (paired bootstrap
+  AUC gain) and used only where admitted (the detailed map lists it as missing until 15a);
+  trials in the validation, "not admitted" in the explanation; context layers: EGMS
+  ground motion (owner's files in `data/egms`), SIMPA recharge and rainfall (MITECO).
+- Live, Almería (ES-AL, 32 min cold): 4 domains validated; the vegetation entered Medio-Bajo
+  Andarax (AUC 0.846 → 0.856, gain 0.010 [0.003, 0.016]) and stayed out of Nacimiento,
+  Níjar and Campo de Dalías (gain intervals reach 0). A La Mancha box had 4,491 water points
+  and none with a yield: nothing measured, so nothing entered.
+- Fixed on live data: SIGPAC tiles holding points among the enclosures; 404 tiles at z12.
+- Deferred to 15a: AEMET recent rainfall (needs the key), the 10 m vegetation detail.
+- VERIFY-LIVE: egms-format (new); egms-terms, keyed-services moved to the owner and 15a.
 
 ### 14 — Well registry and learning from the field (2026-11-27, version 0.18.0)
 

@@ -21,16 +21,18 @@ from pathlib import Path
 from typing import Any
 
 from subphora.config import Settings
-from subphora.config.national import GridSettings
+from subphora.config.national import GridSettings, GroundMotion
 from subphora.countries.es.areas import all_provinces, ign_province_code, provinces_of
 from subphora.domain.potential import InputSource
 from subphora.geo.grid import (
     Bounds,
+    GridWindow,
     buffered,
     geometry_bounds,
     transform_bounds,
     window_around,
 )
+from subphora.geo.raster import read_geotiff
 from subphora.geo.tiles import tiles_covering
 from subphora.services.fetching import Fetched
 from subphora.services.inputs import InputFailure, InputFetcher
@@ -42,8 +44,10 @@ from subphora.services.national_compute import (
     compute_region,
     render_tiles,
 )
+from subphora.services.vegetation import BandReader, VegetationFetcher, VegetationInput
 from subphora.sources import CatalogueClient
 from subphora.sources.boundaries import boundary_params, parse_boundary
+from subphora.sources.sentinel import read_band
 from subphora.store import FileCache
 from subphora.store.file_cache import Clock, utc_now
 from subphora.store.national import (
@@ -156,8 +160,10 @@ class NationalBuilder:
         cache: FileCache,
         root: Path,
         clock: Clock = utc_now,
+        band_reader: BandReader = read_band,
     ) -> None:
         self._inputs = InputFetcher(client, settings, cache, clock)
+        self._vegetation = VegetationFetcher(client, self._inputs, band_reader)
         self._settings = settings
         self._national = settings.national
         self._root = root
@@ -187,6 +193,13 @@ class NationalBuilder:
         dataset = self._national.datasets.all()[dataset_name]
         return self._inputs.source(dataset.service, dataset.detail, fetched)
 
+    def _vegetation_source(self, vegetation: VegetationInput) -> InputSource:
+        """The vegetation input's source: dated by its oldest answer, its edition the last
+        summer composited."""
+        dataset = self._national.datasets.vegetation
+        detail = dataset.detail.model_copy(update={"edition": vegetation.summers[-1]})
+        return self._inputs.source(dataset.pixels_service, detail, vegetation.fetched)
+
     async def prepare(self, region: BuildRegion) -> RegionJob:
         """Download everything one region needs; raises BuildFailure."""
         try:
@@ -210,7 +223,7 @@ class NationalBuilder:
         )
         inputs = self._inputs
         terrain_dataset = datasets.terrain
-        permeability, terrain, soil, bodies, points = await asyncio.gather(
+        permeability, terrain, soil, bodies, points, vegetation = await asyncio.gather(
             inputs.arcgis(
                 datasets.permeability.service,
                 datasets.permeability.path,
@@ -238,6 +251,10 @@ class NationalBuilder:
                 [datasets.water_points.kind_field, self._settings.validation.labels.yield_field],
                 datasets.water_points.page_size,
             ),
+            self._vegetation.fetch(datasets.vegetation, window, self._clock().date()),
+        )
+        ground_motion = await asyncio.to_thread(
+            ground_motion_files, national.context.ground_motion, self._root, window
         )
         return RegionJob(
             root=self.output,
@@ -257,6 +274,7 @@ class NationalBuilder:
                 "soil": self._source("soil", soil[1]),
                 "groundwater_bodies": self._source("groundwater_bodies", bodies[1]),
                 "water_points": self._source("water_points", points[1]),
+                "vegetation": self._vegetation_source(vegetation),
             },
             inputs=RegionInputs(
                 boundary=boundary,
@@ -265,6 +283,9 @@ class NationalBuilder:
                 soil=soil[0],
                 groundwater_bodies=bodies[0],
                 water_points=points[0],
+                vegetation=vegetation.composites,
+                irrigated_share=vegetation.irrigated_share,
+                ground_motion=ground_motion,
             ),
         )
 
@@ -360,6 +381,30 @@ class NationalBuilder:
         )
         await asyncio.to_thread(write_json, map_path(root), summary)
         return counts
+
+
+def ground_motion_files(settings: GroundMotion, root: Path, window: GridWindow) -> list[bytes]:
+    """The imported EGMS GeoTIFFs whose extent meets the window (``context.ground_motion``);
+    none when nothing was imported. Blocks."""
+    folder = settings.path(root)
+    if not folder.is_dir():
+        return []
+    chosen = []
+    for path in sorted(folder.glob(settings.pattern)):
+        content = path.read_bytes()
+        raster = read_geotiff(content)
+        height, width = raster.data.shape
+        west, north = raster.transform @ (0, 0)
+        east, south = raster.transform @ (width, height)
+        box = transform_bounds(
+            (min(west, east), min(south, north), max(west, east), max(south, north)),
+            raster.crs,
+            window.crs,
+        )
+        w_west, w_south, w_east, w_north = window.bounds
+        if box[0] < w_east and w_west < box[2] and box[1] < w_north and w_south < box[3]:
+            chosen.append(content)
+    return chosen
 
 
 __all__ = [

@@ -11,15 +11,15 @@ The source catalogue (`config/defaults/sources.yaml`) names the file for each se
 | File | Covers |
 |---|---|
 | `catastro.md` | Catastro WMS, INSPIRE WFS, non-protected data, reference format |
-| `sigpac.md` | SIGPAC (FEGA) queries, WMS, OGC API |
+| `sigpac.md` | SIGPAC (FEGA) queries, WMS, vector tiles, OGC API |
 | `ign-cnig.md` | PNOA, IGN base maps, MDT (WCS and downloads), CartoCiudad |
 | `igme.md` | MAGNA, GEODE, 1:200,000 maps, dip data, water points, 3D models |
-| `miteco-basins.md` | Groundwater bodies, status, risk, piezometers, DPH (national services) |
+| `miteco-basins.md` | Groundwater bodies, status, risk, piezometers, DPH, SIMPA recharge and rainfall (national services) |
 | `water-authorities.md` | Every basin authority and regional water agency: services, level series, terms |
 | `regional-layers.md` | The survey of every region for decision 0023: verdicts per theme, boundaries |
 | `junta-andalucia.md` | REDIAM services and the Andalusian Mediterranean basins |
 | `soil.md` | Soil options and the recommendation (decision 0013) |
-| `copernicus.md` | Sentinel-2 (CDSE STAC) and EGMS |
+| `copernicus.md` | Sentinel-2 (CDSE and Earth Search STAC, the AWS COGs) and EGMS |
 | `aemet.md` | AEMET OpenData |
 | `google-maps.md` | Map Tiles API terms, prices, caps (not used: decision 0020) |
 | `nationwide-inputs.md` | What covers all of Spain, for session 05 |

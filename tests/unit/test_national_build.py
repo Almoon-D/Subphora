@@ -16,7 +16,7 @@ from subphora import __version__
 from subphora.api import create_app
 from subphora.config import Settings
 from subphora.domain.potential import Variable
-from subphora.domain.validation import NO_BODY, ValidationState
+from subphora.domain.validation import NO_BODY, TrialOutcome, ValidationState
 from subphora.services.national import (
     BuildReport,
     NationalBuilder,
@@ -40,7 +40,9 @@ def settings() -> Settings:
 
 async def build(settings: Settings, root: Path, spain: FakeSpain, spec: str = BOX) -> BuildReport:
     async with CatalogueClient(settings.sources, __version__, spain.transport()) as client:
-        builder = NationalBuilder(client, settings, FileCache(root / "cache"), root)
+        builder = NationalBuilder(
+            client, settings, FileCache(root / "cache"), root, band_reader=spain.read_band
+        )
         with ThreadPoolExecutor(max_workers=2) as executor:
             return await builder.build(resolve_region(settings, spec), executor, 2)
 
@@ -114,8 +116,25 @@ async def test_the_build_writes_grids_tiles_and_the_map(settings: Settings, tmp_
     }
     assert (built.validated, built.chance, built.unmeasured) == (0, 0, 2)
     assert np.isnan(bands["skill"]).all()
+    # Nothing measured, so the vegetation anomaly entered no domain, and each says why.
+    for validation in manifest.validation:
+        assert [(t.criterion, t.outcome) for t in validation.trials] == [
+            ("vegetation", TrialOutcome.NOT_MEASURED)
+        ]
+    # The anomaly is a band (and a map layer) whether or not it entered the model: the
+    # synthetic valley floor stays greener than the dry land around it.
+    anomaly = bands["vegetation_anomaly"]
+    assert np.nanmax(anomaly[inside]) > 0.1
+    assert np.nanmin(anomaly[inside]) < 0
+    # Every scene band came through the catalogue's host check.
+    assert spain.bands_read
+    assert all("sentinel-cogs" in href for href in spain.bands_read)
+    # No EGMS file imported: no ground-motion band, and its layer has no tile.
+    assert Variable.GROUND_MOTION_MM_YR not in manifest.bands
     for layer in settings.national.tiles.layers:
-        if layer.variable is not Variable.SKILL:
+        if layer.variable is Variable.GROUND_MOTION_MM_YR:
+            assert report.tiles[layer.id] == 0
+        elif layer.variable is not Variable.SKILL:
             assert report.tiles[layer.id] > 0
             assert tiles_path(root, layer.id).exists()
     # Paged: the permeability layer was asked for its second page.
@@ -123,6 +142,56 @@ async def test_the_build_writes_grids_tiles_and_the_map(settings: Settings, tmp_
         r.url.params["resultOffset"] for r in spain.requests if "Permeabilidad" in r.url.path
     ]
     assert offsets == ["0", "1000"]
+
+
+async def test_imported_ground_motion_becomes_a_band_and_a_layer(
+    settings: Settings, tmp_path: Path
+) -> None:
+    from pyproj import Transformer
+
+    from tests.national_support import geotiff
+
+    to_laea = Transformer.from_crs("EPSG:4326", "EPSG:3035", always_xy=True)
+    x, y = to_laea.transform(-3.70, 40.42)
+    folder = settings.national.context.ground_motion.path(tmp_path)
+    folder.mkdir(parents=True)
+    # The owner's download: a tile over the box sinking 4 mm a year, one far away (Galicia),
+    # and a file that is not a vertical-velocity tile.
+    near = geotiff(
+        (x - 20_000, y - 20_000, x + 20_000, y + 20_000),
+        "EPSG:3035",
+        100,
+        lambda xs, _: xs * 0 - 4.0,
+        "float32",
+    )
+    far_x, far_y = to_laea.transform(-8.5, 42.9)
+    far = geotiff(
+        (far_x - 1000, far_y - 1000, far_x + 1000, far_y + 1000),
+        "EPSG:3035",
+        100,
+        lambda xs, _: xs * 0 + 9.0,
+        "float32",
+    )
+    (folder / "EGMS_L3_E31N20_100km_U_2019_2023_1.tif").write_bytes(near)
+    (folder / "EGMS_L3_E28N24_100km_U_2019_2023_1.tif").write_bytes(far)
+    (folder / "EGMS_L3_E31N20_100km_E_2019_2023_1.tif").write_bytes(far)
+    report = await build(settings, tmp_path, FakeSpain())
+    assert report.failed == []
+    root = output(settings, tmp_path)
+    (manifest,) = read_manifests(root)
+    assert Variable.GROUND_MOTION_MM_YR in manifest.bands
+    with rasterio.open(region_tif(root, manifest.region_id)) as dataset:
+        bands = dict(zip(dataset.descriptions, dataset.read(), strict=True))
+    motion = bands["ground_motion_mm_yr"]
+    assert np.allclose(motion[~np.isnan(motion)], -4.0)
+    # Context only: the index does not read it.
+    assert "ground_motion" not in {c.id for c in settings.model.criteria}
+    (layer,) = [
+        layer
+        for layer in settings.national.tiles.layers
+        if layer.variable is Variable.GROUND_MOTION_MM_YR
+    ]
+    assert report.tiles[layer.id] > 0
 
 
 async def test_a_province_is_clipped_to_its_official_boundary(

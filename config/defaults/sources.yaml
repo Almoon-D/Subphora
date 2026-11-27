@@ -156,6 +156,27 @@ services:
     knowledge: docs/knowledge/sigpac.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
+  # Vector tiles of the enclosures with their irrigation coefficient (coef_regadio), which
+  # the queries and the OGC API do not carry: the irrigation mask of the vegetation anomaly.
+  - id: sigpac-mvt
+    name: SIGPAC enclosures (vector tiles)
+    publisher: Fondo Español de Garantía Agraria (FEGA)
+    kind: rest
+    coverage: [ES]
+    base_url: https://sigpac-hubcloud.es/mvt
+    cors: true
+    licence: CC BY 4.0
+    attribution: "SIGPAC, FEGA, CC BY 4.0"
+    terms_url: https://sigpac-hubcloud.es/
+    knowledge: docs/knowledge/sigpac.md
+    # The campaign changes once a year.
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: one zoom-15 tile of enclosures as GeoJSON (Daimiel)
+      path: /recinto@3857@geojson/15/16054/12510.geojson
+      expect_content_type: application/json
+      expect_text: "coef_regadio"
+
   # ── IGN / CNIG (docs/knowledge/ign-cnig.md) ───────────────────────────────────────────
   - id: ign-pnoa-wmts
     name: PNOA orthophoto (WMTS)
@@ -610,6 +631,40 @@ services:
     knowledge: docs/knowledge/miteco-basins.md
     politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
 
+  # The natural-regime water resources model (SIMPA, CEDEX) on a 1 km grid: mean annual
+  # rainfall and aquifer recharge, 1940/41-2005/06 (docs/knowledge/miteco-basins.md).
+  - id: miteco-recharge
+    name: Mean annual aquifer recharge, SIMPA 1940-2006 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/rechid_recarga/wms
+    layers: [rechid_recarga]
+    crs: [EPSG:3857, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "MITECO, evaluación de recursos hídricos (SIMPA), CC BY 4.0"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
+  - id: miteco-rainfall
+    name: Mean annual rainfall, SIMPA 1940-2006 (WMS)
+    publisher: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO)
+    kind: wms
+    coverage: [ES]
+    base_url: https://gis.miteco.gob.es/geoserver/agua/rechid_precipitacion/wms
+    layers: [rechid_precipitacion]
+    crs: [EPSG:3857, EPSG:25830]
+    web_mercator: true
+    cors: true
+    licence: CC BY 4.0
+    attribution: "MITECO, evaluación de recursos hídricos (SIMPA), CC BY 4.0"
+    terms_url: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua.html
+    knowledge: docs/knowledge/miteco-basins.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 604800}
+
   # ── Basin authorities and regional water agencies (docs/knowledge/water-authorities.md)
   - id: chguadiana-wms
     name: Guadiana basin services, piezometric network and abstraction limits (WMS)
@@ -924,6 +979,46 @@ services:
       path: /collections/sentinel-2-l2a
       expect_content_type: application/json
       expect_text: "sentinel-2-l2a"
+
+  # The Sentinel-2 L2A archive as cloud-optimised GeoTIFFs on AWS Open Data, searched in
+  # Element 84's public STAC: the same products as the CDSE catalogue's, readable without
+  # an account (decision 0041). GDAL reads only the overview it needs, by HTTP ranges.
+  - id: earth-search
+    name: Earth Search STAC (Sentinel-2 L2A on AWS Open Data)
+    publisher: Element 84, from ESA Copernicus Sentinel-2 data
+    kind: rest
+    coverage: [ES]
+    base_url: https://earth-search.aws.element84.com/v1
+    cors: true
+    licence: "Copernicus Sentinel data legal notice: free and open, with attribution"
+    attribution: "Contains modified Copernicus Sentinel data [year]"
+    terms_url: https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice
+    knowledge: docs/knowledge/copernicus.md
+    politeness: {max_concurrent: 2, min_interval_s: 0.5, cache_lifetime_s: 2592000}
+    sample:
+      description: the Sentinel-2 L2A collection record
+      path: /collections/sentinel-2-l2a
+      expect_content_type: application/json
+      expect_text: "Sentinel_Data_Legal_Notice"
+
+  - id: sentinel-cogs
+    name: Sentinel-2 L2A cloud-optimised GeoTIFFs (AWS Open Data)
+    publisher: ESA Copernicus, processed by Sinergise and Element 84, hosted by AWS
+    kind: download
+    coverage: [ES]
+    base_url: https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs
+    cors: true
+    licence: "Copernicus Sentinel data legal notice: free and open, with attribution"
+    attribution: "Contains modified Copernicus Sentinel data [year]"
+    terms_url: https://sentinels.copernicus.eu/documents/247904/690755/Sentinel_Data_Legal_Notice
+    knowledge: docs/knowledge/copernicus.md
+    # A late-summer composite never changes once that summer is over: kept a year.
+    politeness: {max_concurrent: 4, min_interval_s: 0.0, cache_lifetime_s: 31536000}
+    sample:
+      description: one scene's STAC record in the bucket (tile 30SVJ, 30 August 2025)
+      path: /30/S/VJ/2025/8/S2B_30SVJ_20250830_0_L2A/S2B_30SVJ_20250830_0_L2A.json
+      expect_content_type: application/json
+      expect_text: "S2B_30SVJ_20250830_0_L2A"
 
   - id: egms
     name: European Ground Motion Service (viewer and downloads)

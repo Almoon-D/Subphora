@@ -1,7 +1,7 @@
 # SIGPAC (FEGA)
 
-Host `sigpac-hubcloud.es`. Catalogue ids: `sigpac-wms`, `sigpac-queries`, `sigpac-ogcapi`.
-Findings observed on 2026-11-24.
+Host `sigpac-hubcloud.es`. Catalogue ids: `sigpac-wms`, `sigpac-queries`, `sigpac-ogcapi`,
+`sigpac-mvt`. Findings observed on 2026-11-24 and 2026-11-27.
 
 ## Where SIGPAC is served
 
@@ -59,6 +59,20 @@ Findings observed on 2026-11-24.
 - Layers `AU.Sigpac:recinto`, `AU.Sigpac:cultivo_declarado`, `AU.Sigpac:e_paisaje`
   (and line and point variants); EPSG:3857 offered; `AccessConstraints` "none". A GetMap of
   `AU.Sigpac:recinto` in EPSG:3857 returns a PNG. `(GetCapabilities, GetMap, 2026-11-24)`
+
+## Vector tiles — `https://sigpac-hubcloud.es/mvt`
+
+- `/recinto@3857@pbf/{z}/{x}/{y}.pbf` answers a Mapbox vector tile of the current
+  campaign's enclosures, layer `recinto`; `/recinto@3857@geojson/…` the same as GeoJSON.
+  Each enclosure carries `coef_regadio` (the irrigation coefficient, a percentage: 0 is
+  rainfed, 100 fully irrigated; empty for some uses) among its attributes. `(GET /mvt/recinto@3857@pbf/15/16054/12510.pbf, 2026-11-27)`
+- Some dense tiles at zoom 12 answer 404 ("File or directory not found") while their four
+  zoom-13 children are served. Over Daimiel a served z12 tile was 650 KB, a z15 tile
+  20-30 KB. `(GET /mvt/…, 2026-11-27)`
+- A tile can hold a point among the enclosures (`12/2012/1588`, in Almería): a polygon
+  reader must skip non-polygon geometries rather than refuse the tile. `(GET /mvt/…, 2026-11-27)`
+- `tests/fixtures/sources/sigpac_mvt_recinto_15_16054_12510.pbf` is one real z15 tile near
+  Daimiel: 93 enclosures, 38 of them with some irrigation. `(GET /mvt/…, 2026-11-27)`
 
 ## OGC API Features — `https://sigpac-hubcloud.es/ogcapi`
 

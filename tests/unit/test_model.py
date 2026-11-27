@@ -191,6 +191,7 @@ def test_the_explanation_of_a_cell_matches_the_grid() -> None:
     assert {m.criterion: m.reason for m in estimate.missing} == {
         "lineaments": MissingReason.NO_DATASET,
         "bedding_dip": MissingReason.NO_DATASET,
+        "vegetation": MissingReason.NO_DATASET,
         "piezometric_depth": MissingReason.NO_DATASET,
         "soil": MissingReason.NO_DATA,
     }
@@ -315,3 +316,44 @@ def test_a_contribution_is_share_times_suitability() -> None:
 def test_an_input_value_is_one_thing(value: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         InputValue.model_validate(value)
+
+
+# ── A criterion admitted by validation ─────────────────────────────────────────────────
+
+
+def test_a_gated_criterion_counts_only_where_admitted_and_in_the_coverage_there() -> None:
+    values = {**BEST, Variable.VEGETATION_ANOMALY: 0.25}
+    quality = {**QUALITY, "vegetation": PERFECT}
+    gate = weight("vegetation")
+    present = sum(c.weight for c in MODEL.criteria if c.variable in BEST)
+    left_out = evaluate(MODEL, grids(values), quality, np.full((2, 2), 100.0))
+    alone = evaluate(MODEL, grids(BEST), QUALITY, np.full((2, 2), 100.0))
+    # Not admitted anywhere: as if the input did not exist.
+    assert np.allclose(left_out.index, alone.index)
+    assert np.allclose(left_out.components[ComponentId.COVERAGE], present)
+    where = np.array([[True, False], [True, False]])
+    result = evaluate(
+        MODEL, grids(values), quality, np.full((2, 2), 100.0), admitted={"vegetation": where}
+    )
+    assert np.allclose(result.index[:, 1], alone.index[:, 1])
+    expected = (alone.index[0, 0] * present + gate * 1.0) / (present + gate)
+    assert np.allclose(result.index[:, 0], expected)
+    assert np.allclose(result.components[ComponentId.COVERAGE][:, 0], (present + gate) / (1 + gate))
+    assert np.allclose(result.components[ComponentId.COVERAGE][:, 1], present)
+    # Admitted where its input is missing: it lowers the coverage, never fills in.
+    gap = evaluate(
+        MODEL, grids(BEST), QUALITY, np.full((2, 2), 100.0), admitted={"vegetation": where}
+    )
+    assert np.allclose(gap.index, alone.index)
+    assert np.allclose(gap.components[ComponentId.COVERAGE][:, 0], present / (1 + gate))
+
+
+def test_the_explanation_says_a_criterion_was_not_admitted_in_this_domain() -> None:
+    values = {**BEST, Variable.VEGETATION_ANOMALY: 0.25}
+    quality = {**QUALITY, "vegetation": PERFECT}
+    sources = {**SOURCES, "vegetation": SOURCE}
+    caps = dict.fromkeys(DISTANCES, 10_000.0)
+    estimate = explain_cell(MODEL, values, CATEGORIES, quality, sources, 100.0, caps, UNVALIDATED)
+    reasons = {m.criterion: m.reason for m in estimate.missing}
+    assert reasons["vegetation"] is MissingReason.NOT_ADMITTED
+    assert "vegetation" not in {c.criterion for c in estimate.contributions}

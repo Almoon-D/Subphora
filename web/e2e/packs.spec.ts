@@ -176,9 +176,10 @@ test("a download cut by a reload resumes, storing nothing twice", async ({ conte
   network.holdAfter = network.tiles.length + 40;
   await packs(page).getByRole("button", { name: /Descargar el paquete/ }).click();
   await expect(packs(page).locator(".pack-progress")).toContainText("Descargando");
-  await expect.poll(() => network.tiles.length).toBeGreaterThanOrEqual(network.holdAfter);
+  // The download runs at the runner's pace, so these waits take the download's timeout.
+  await expect.poll(() => network.tiles.length, DOWNLOADED).toBeGreaterThanOrEqual(network.holdAfter);
   // Give the stored files time to be written down, then close the page mid-download.
-  await expect.poll(async () => (await stored(page)).length).toBeGreaterThanOrEqual(30);
+  await expect.poll(async () => (await stored(page)).length, DOWNLOADED).toBeGreaterThanOrEqual(30);
   // The held requests stay unanswered; the reloaded page's map is answered again.
   network.holdAfter = null;
   await page.reload();

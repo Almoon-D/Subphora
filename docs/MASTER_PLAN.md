@@ -236,7 +236,10 @@ stays an index.
 
 **Depth and cost (07).** Water-table elevation is interpolated only within one groundwater
 body from piezometric levels, with uncertainty growing with distance and "unknown" beyond a
-maximum distance (in `config/`). Depth = ground elevation (LiDAR) − water-table elevation,
+maximum distance (in `config/`). The owner's wells read with the pump at rest join them as
+private levels of their own body, computed when asked beside the public depth, never
+written into the public data, and never from a reading taken while pumping (decision
+0043). Depth = ground elevation (LiDAR) − water-table elevation,
 with propagated uncertainty, flagged as unreliable in karst. Drilling cost = depth range ×
 cost per metre plus fixed costs (`Decimal`, in `config/` with source and date).
 
@@ -289,6 +292,9 @@ tables (CSV).
   potential and confidence layers, and the parcel geometry (Catastro's terms forbid tiled
   requests and massive downloads, so no cadastral tiles), at zooms in `config/`,
    stored by the service worker with persistent storage requested.
+- **Well readings (17):** a water level typed at the well (its reference, who read it, the
+  pump's state) is kept on the device and sent by the same outbox to the well registry;
+  the device keeps the registry as last read, to pick the well with no coverage.
 - **Data safety:** a manual export of all unsynced data to a file, and a visible count of
   unsynced records.
 

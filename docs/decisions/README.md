@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0043](0043-owner-levels-offline-and-private.md) | The owner's water levels: typed offline, kept at rest, private beside the public | accepted |
 | [0042](0042-field-instrument-path.md) | No field instrument: contracted surveys when a spot needs one | accepted |
 | [0041](0041-vegetation-anomaly-and-context-layers.md) | The late-summer vegetation anomaly enters only where validation admits it | accepted |
 | [0040](0040-well-registry-and-beta-update.md) | The owner's wells: a private registry and a Beta update shown as its own layer | accepted |

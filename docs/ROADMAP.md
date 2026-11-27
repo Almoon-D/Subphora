@@ -25,7 +25,11 @@
 | 15 | `docs/sessions/done/15-satellite-climate.md` | Opus 5.5, high | done |
 | 15a | `docs/sessions/15a-recent-rainfall-and-detailed-vegetation.md` | Opus 5.5, high | next (needs the owner's AEMET key) |
 | 16 | `docs/sessions/done/16-hardware-planning.md` | Opus 5.5, high | done (decision 0042: no instrument) |
-| 17 | `docs/sessions/17-water-levels-in-the-field.md` | Opus 5.5, high | next |
+| 17 | `docs/sessions/done/17-water-levels-in-the-field.md` | Opus 5.5, high | done |
+| maintenance | `docs/sessions/maintenance.md` | Opus 5.5, medium | when needed |
+
+The build path of `MASTER_PLAN.md` §6 is done but for 15a, which waits for the owner's
+AEMET key.
 
 ## Live verification queue
 
@@ -36,7 +40,10 @@
   spreadsheet of their records: its columns, delimiter and date format are not known) and
   checks that "Índice actualizado con tus pozos" moves the map around them by a believable
   amount; `half_weight_m` and `range_m` in `wells.yaml` are starting judgements the owner's
-  validation can later measure. Queued by 14.
+  validation can later measure. Queued by 14. Then, on the phone at a well with no
+  coverage, types a reading and sees it reach the registry once back in coverage, and a
+  tap at the well show its depth; `min_rest_minutes` (120) is a starting judgement of how
+  long a pumped well takes to recover. Added by 17.
 
 - VERIFY-LIVE(home-deploy): the owner follows `deploy/GUIA.md` on the mini PC: Let's Encrypt
   certificate for the DuckDNS name (ports 80/443 forwarded, no CGNAT), sign-in from a phone
@@ -135,13 +142,14 @@
 - A hired survey's results (a sounding's layers, a tomography section) have no place in the
   app yet; a session could import them as evidence once the owner has one. (16)
 
-- The well registry needs a connection: a reading typed in the field with no coverage is
-  refused (the form keeps it; a field note goes through the outbox). Wells could join the
-  outbox as a record kind. (14)
+- Field mode's panel has no well readings: the owner leaves field mode to type one (the
+  outbox sends it either way). A new well still needs a connection; only readings go
+  offline. (17)
+- The owner's levels reach a tap's depth, not the candidates' depth and cost, the export
+  pack's depth grid or the section's water table, which keep the public piezometry; and
+  only wells inside the area's grid count (a neighbour's well 2 km away does not). (17)
 - Only the detailed map has the layer updated with the owner's wells; the national map's
   tiles and taps do not. A well weighs across a groundwater body's edge as within it. (14)
-- The owner's water levels are not yet used for depth to water; they could join the
-  piezometric levels as private ones, inside their body. (14)
 - Only 2,707 of IGME's 139,699 water points record a yield, nearly all in Asturias, Almería
   and León: the validation that admits the vegetation (and measures skill) cannot run in
   most of Spain until the owner's wells or another source label more wells. (15)
@@ -270,6 +278,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 17 — Water levels in the field (2026-11-27, version 0.21.0)
+
+- Landed (decision 0043): a reading states its reference (ground or casing top and height),
+  who read it and the pump (stopped, running, unknown) with its minutes; the wells panel
+  keeps it in IndexedDB first and the outbox sends it to `POST /api/wells/readings`
+  (created, duplicate, conflict, unknown_well); the device's copy of the registry lists the
+  wells offline; the device export holds unsent readings; the CSV import reads the same
+  columns. A tap on a detailed map gives the depth public and with the owner's readings at
+  rest, with the readings left out and why (`wells.levels` in `wells.yaml`).
+- Tested: offline entry, reload offline, a sync cut by a reload, retry without duplicates
+  (browser); a reading at rest moves the depth at its well to its own, a pumping, unknown or
+  recovering one never does; another body's level never counts; nothing in logs, the PDF
+  or an unticked pack.
+- Fixed in passing: `scripts/e2e_fixtures.py` builds again (the band reader of session 15).
+- VERIFY-LIVE: owner-wells (now also the real readings and `min_rest_minutes`).
 
 ### 16 — Hardware planning (2026-11-27, version 0.20.0)
 

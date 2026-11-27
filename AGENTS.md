@@ -6,8 +6,8 @@
 **Language.** The owner works in Spanish: talk to them, ask them questions and give them the
 end-of-session report in Spanish. Every file is in English — this file, `docs/`, prompts,
 code, comments, `CHANGELOG.md`, commits, and PR titles and descriptions (a squash merge
-turns the PR into the commit on `main`) — except `README.md` and `docs/GITHUB_SETTINGS.md`,
-which are for the owner, in Spanish.
+turns the PR into the commit on `main`) — except `README.md`, `docs/GITHUB_SETTINGS.md` and
+`deploy/GUIA.md`, which are for the owner, in Spanish.
 
 ## Read first — your slice, not whole files
 

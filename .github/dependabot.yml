@@ -12,7 +12,7 @@
 # (Settings → Advanced Security → Dependabot security updates).
 #
 # A project that adds another language or a Dockerfile adds its ecosystem here, with the
-# same schedule, cooldown and grouping (see the commented docker block).
+# same schedule, cooldown and grouping.
 version: 2
 updates:
   - package-ecosystem: uv
@@ -85,16 +85,44 @@ updates:
       - dependency-name: typescript
         versions: [">=6.1"]
 
-  # Uncomment when the project ships a Dockerfile: base images are dependencies too.
-  # - package-ecosystem: docker
-  #   directory: /deploy
-  #   schedule:
-  #     interval: monthly
-  #     time: "06:00"
-  #     timezone: Europe/Madrid
-  #   open-pull-requests-limit: 1
-  #   cooldown:
-  #     default-days: 7
-  #   groups:
-  #     images-minor-and-patch:
-  #       update-types: [minor, patch]
+  # The deployment's images (deploy/*.Dockerfile, deploy/compose.yaml; decision 0039): base
+  # images are dependencies too. CI does not build them, so a bump is checked by rebuilding
+  # on the owner's computer (deploy/GUIA.md → "Actualizar").
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      images-minor-and-patch:
+        update-types: [minor, patch]
+    # Python's image follows .python-version (3.15 → 3.16 is a new Python, which Docker tags
+    # make look like a minor update): the maintenance session moves both together.
+    ignore:
+      - dependency-name: python
+        update-types: [version-update:semver-minor]
+
+  - package-ecosystem: docker-compose
+    directory: /deploy
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    labels: [dependencies]
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      compose-minor-and-patch:
+        update-types: [minor, patch]

@@ -11,7 +11,7 @@ import pytest
 
 from subphora.api import create_app
 from subphora.config import Settings
-from tests.support import FIXTURES, fast_settings
+from tests.support import FIXTURES, fast_settings, signed_in
 
 type Answer = bytes | Callable[[httpx.Request], httpx.Response]
 
@@ -63,10 +63,8 @@ async def serve(
     settings: Settings, services: Services, root: Path
 ) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app(settings, root=root, transport=services.transport())
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            yield client
+    async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+        yield client
 
 
 async def _search(client: httpx.AsyncClient, text: str) -> httpx.Response:

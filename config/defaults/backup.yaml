@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Backups of data/ (MASTER_PLAN §4.9): `subphora backup create` writes one archive, the
+# `backup` service of deploy/compose.yaml does it every night. Paths are relative to the
+# repository root unless absolute. The destination is where the owner chose (in the
+# deployment, the folder SUBPHORA_BACKUP_DIR mounts there: an external disk, for example).
+source: data
+destination: backups
+# Top-level folders of the source left out: the cache is downloaded again on demand.
+exclude: [cache]
+# The newest archives kept; older ones are deleted after a new one is verified.
+keep: 14
+# When the nightly backup runs, in local time.
+nightly:
+  at: "03:30"
+  timezone: Europe/Madrid

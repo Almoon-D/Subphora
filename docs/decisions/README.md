@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0039](0039-home-mini-pc-and-login.md) | A home mini PC behind Caddy; sessions in SQLite; backups read back every night | accepted |
 | [0038](0038-report-and-export-pack.md) | The report: one shared catalogue, WeasyPrint with no fetching, GDAL for the pack | accepted |
 | [0037](0037-offline-packs-and-service-worker.md) | Offline packs: planned in the browser, stored in Cache Storage, served by a service worker | accepted |
 | [0036](0036-field-records-and-outbox.md) | Field records: append-only on the device, an idempotent outbox, SQLite on the server | accepted |

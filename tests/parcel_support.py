@@ -17,6 +17,7 @@ from subphora.config import Settings
 from subphora.domain.aoi import AoiOrigin, AreaOfInterest
 from subphora.domain.provenance import Provenance
 from tests.national_support import FakeSpain, small_settings
+from tests.support import signed_in
 
 SOURCE = Provenance(
     service_id="sigpac-queries",
@@ -103,10 +104,8 @@ async def serve(
     transport = (spain or FakeSpain()).transport()
     with ThreadPoolExecutor(max_workers=1) as executor:
         app = create_app(settings, root=root, transport=transport, executor=executor)
-        async with app.router.lifespan_context(app):
-            asgi = httpx.ASGITransport(app=app)
-            async with httpx.AsyncClient(transport=asgi, base_url="http://test") as client:
-                yield client
+        async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+            yield client
 
 
 def write_levels(settings: Settings, root: Path) -> None:

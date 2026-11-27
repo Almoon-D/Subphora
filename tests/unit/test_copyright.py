@@ -18,6 +18,7 @@ EDGE_LINES = 3
 # Files that cannot hold a comment, are generated, or are third-party data.
 EXEMPT = (
     "*.json",
+    "*.webmanifest",
     "*.lock",
     "*.gitkeep",
     "*/py.typed",

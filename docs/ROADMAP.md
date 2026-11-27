@@ -20,8 +20,8 @@
 | 10 | `docs/sessions/done/10-field-mode.md` | Opus 5.5, high | done |
 | 11 | `docs/sessions/done/11-offline-packs.md` | Opus 5.5, high | done |
 | 12 | `docs/sessions/done/12-report.md` | Opus 5.5, medium | done |
-| 13 | `docs/sessions/13-deployment.md` | Opus 5.5, high | next — version 1 |
-| 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | planned |
+| 13 | `docs/sessions/done/13-deployment.md` | Opus 5.5, high | done — version 1 |
+| 14 | `docs/sessions/14-well-registry-learning.md` | Opus 5.5, high | next |
 | 15 | `docs/sessions/15-satellite-climate.md` | Opus 5.5, high | planned |
 | 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
 
@@ -29,6 +29,12 @@
 
 <!-- VERIFY-LIVE(<what>) items: the check, the session that queued it, the condition that
      unblocks it. Removed when verified. -->
+
+- VERIFY-LIVE(home-deploy): the owner follows `deploy/GUIA.md` on the mini PC: Let's Encrypt
+  certificate for the DuckDNS name (ports 80/443 forwarded, no CGNAT), sign-in from a phone
+  on mobile data, install to the home screen on Android Chrome and iPhone Safari, the first
+  nightly backup on the external disk and one `subphora backup restore`. ARM64 was built and
+  started under emulation only. Queued by 13.
 
 - VERIFY-LIVE(offline-pack-phone): on a phone over HTTPS (session 13), download a pack of the
   owner's parcel, switch to airplane mode, close and reopen the app: the parcel, its
@@ -172,9 +178,8 @@
   with a link to full size; a better legend (by unit, from the tap) is still open: the
   detailed map (06) did not need one. (03, 06)
 - The file cache never deletes an expired entry; with the tile proxy it grows with every
-  view. Session 13 (deployment) adds a size cap or a sweep. (03)
-- `/api/layers/*` answers anyone who reaches the server: fine on `localhost`; session 13
-  puts the whole API behind the owner's access control before it is exposed. (03)
+  view. It needs a size cap or a sweep; deferred by 13 (the mini PC's disk holds it for now,
+  and backups leave the cache out). (03, 13)
 - SoilGrids gives no value on a tap; the detailed map (06) reads its clay from the WCS over
   the area and explains it per cell; sand is not a criterion of the model. (03, 06)
 - Regional layers: eight qualify and are drawn (03b, 03ba); every surveyed cell has a
@@ -194,7 +199,7 @@
   regional is partly transparent both show; a later session may hide the national layer
   inside the area once it is sure the regional one covers it. (03b)
 - The file cache keeps each area's rounded boundary (up to ~1 MB) for 30 days: the size cap
-  of session 13 covers it too. (03b)
+  of the deferred cache cap covers it too. (03b)
 - Ceuta and Melilla have no SIGPAC: a typed or drawn point there is placed by the
   territory's box alone (which holds a strip of Morocco beside Ceuta) and the card says it
   was not checked on land. A finer check needs an official boundary per click. (04)
@@ -211,7 +216,7 @@
   catchment beyond it is not counted, so its floodplain's wetness index is lower than a
   whole-basin computation would give. (05)
 - `data/cache` grows with every build's terrain windows (476 MB for two provinces): the size
-  cap of session 13 covers it. (05)
+  cap the cache still needs covers it. (05)
 - No elevation or relief layer is drawn: the IGN publishes its MDT as a map (WMS
   `EL.ElevationGridCoverage`, `servicios.idee.es/wms-inspire/mdt`); a hillshade layer could
   join the terrain layers in a later session. (05, owner)
@@ -223,7 +228,8 @@
   buffer) are refused: a municipality has only the national map. (06)
 - MAGNA lithology (free text per sheet) could refine permeability at 1:50,000 once a
   classification of its legends exists; the detailed map uses the 1:200,000 classes. (06)
-- `data/parcels` keeps every area's result and images; the size cap of session 13 covers it.
+- `data/parcels` keeps every area's result and images (and is backed up nightly): it needs
+  the same cap or sweep as the cache.
   The jobs' state lives in the server's memory: a restart forgets a failed or running job
   (a finished one is read from disk), and the page asks again. (06)
 
@@ -231,6 +237,22 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 13 — Deployment: version 1 on the phone (2026-11-27, version 0.17.0)
+
+- Owner's choice (decision 0039): a mini PC at home, over Oracle Always Free (halved in June
+  2026) and Hetzner CAX11 (~€7/month); DuckDNS names it.
+- Landed: `deploy/` (compose: API, Caddy with HTTPS and the PWA, nightly backup, optional
+  DuckDNS updater; runs as the owner's uid), `deploy/GUIA.md` in Spanish; login (`api/auth.py`,
+  `services/auth.py`, `store/auth.py`, `subphora users`); backups (`store/backup.py`,
+  `subphora backup create|list|verify|restore|nightly`); sign-in page, manifest and icons;
+  Docker ecosystems in Dependabot. The outbox waits (not refuses) on 401.
+- Live here: the stack built and run in Docker with `SUBPHORA_DOMAIN=localhost`: 401 without
+  a session, login cookie flags, `/sw.js` `no-cache`, a backup made, verified and restored in
+  the containers, the phone-sized page signed in and drew PNOA; Chrome found the manifest
+  installable. Found and fixed on the way: numba's and fontconfig's caches need /tmp.
+- Deferred: the cache and `data/parcels` size cap (follow-ups); off-site backup copies.
+- VERIFY-LIVE: home-deploy (new).
 
 ### 12 — Per-area report and professional pack (2026-11-26, version 0.16.0)
 

@@ -1,0 +1,36 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# The login (MASTER_PLAN §4.9): a few users added by `subphora users add`, no public
+# sign-up. Every API route except the login and the health check needs a session.
+#
+# The users and their sessions, relative to the repository root unless absolute (data/ is
+# git-ignored, hard rule 6). A busy database is waited for this long before the request
+# fails.
+database: data/auth/auth.sqlite
+busy_timeout_s: 5
+
+# The session cookie: HttpOnly, Secure and SameSite=Lax always (no setting turns them off).
+# A session lasts this long from the login; a phone in the field keeps it for weeks.
+cookie:
+  name: subphora_session
+  lifetime_days: 90
+
+# Passwords: hashed with scrypt (Python's hashlib). n, r and p are the cost; each hash
+# stores its own, so raising them takes effect at the next password set. These cost about
+# 128 MiB and a fraction of a second per login on a small computer, which a few users
+# can afford. max_memory_mb is the ceiling handed to OpenSSL, above 128 * n * r bytes.
+password:
+  min_length: 10
+  max_length: 256
+  scrypt:
+    n: 131072
+    r: 8
+    p: 1
+    max_memory_mb: 256
+  salt_bytes: 16
+  key_bytes: 32
+
+# After this many failed logins of one name within the window, that name is refused until
+# the window passes (answer 429 with Retry-After).
+lockout:
+  max_failures: 5
+  window_s: 900

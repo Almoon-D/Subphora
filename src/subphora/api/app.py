@@ -1,6 +1,9 @@
 # Copyright (c) 2026 Almoon-D. All rights reserved.
 """The HTTP API: ``create_app(settings)``, served by ``subphora serve``.
 
+Every route below needs a signed-in session (``api/auth.py``: the login, the logout,
+who is signed in, and the health check, the only routes open without one).
+
 - ``GET /api/search?q=``: every reading of what was typed (a cadastral or SIGPAC
   reference, coordinates, CartoCiudad's places for a name), each with the path that
   resolves it, or an error whose ``code`` says why there is none.
@@ -55,6 +58,7 @@ from pydantic import Field, ValidationError
 from starlette.background import BackgroundTask
 
 from subphora import __version__
+from subphora.api.auth import AuthGate, add_auth_routes
 from subphora.api.map import MapConfig, map_config
 from subphora.api.national import NationalMap, national_map
 from subphora.api.parcel import ParcelAnswer, parcel_answer
@@ -80,6 +84,7 @@ from subphora.geo import MAX_TILE_ZOOM
 from subphora.report import CatalogueError, ReportService
 from subphora.services.aoi import AoiService
 from subphora.services.areas import AreaService
+from subphora.services.auth import AuthService
 from subphora.services.export import ExportService
 from subphora.services.field import FieldService
 from subphora.services.layers import LayerService
@@ -206,6 +211,7 @@ def create_app(
             workers = executor or stack.enter_context(
                 ProcessPoolExecutor(max_workers=settings.parcel.jobs.workers)
             )
+            app.state.auth = AuthService(settings, root)
             cache = FileCache(settings.store.cache_path(root))
             parcels = ParcelService(client, settings.sources, cache)
             app.state.aoi = AoiService(client, settings, cache, parcels)
@@ -226,6 +232,8 @@ def create_app(
             yield
 
     app = FastAPI(title="Subphora", version=__version__, lifespan=lifespan)
+    app.add_middleware(AuthGate, settings=settings)
+    add_auth_routes(app, settings)
     map_body = map_config(settings)
 
     @app.exception_handler(SearchError)

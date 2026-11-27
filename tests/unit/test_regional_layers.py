@@ -19,7 +19,7 @@ from subphora.config.regional import Evidence, QualificationRule, qualification_
 from subphora.domain.layers import LayerDetail
 from subphora.geo.areas import BoundaryError, contains, round_to_grid
 from subphora.sources.boundaries import BoundaryParseError, boundary_params, parse_boundary
-from tests.support import FIXTURES, fast_settings
+from tests.support import FIXTURES, fast_settings, signed_in
 
 # ── The rule ─────────────────────────────────────────────────────────────────────────────
 
@@ -436,10 +436,8 @@ async def serve(
     settings: Settings, upstream: Upstream, root: Path
 ) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app(settings, root=root, transport=upstream.transport())
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            yield client
+    async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+        yield client
 
 
 def info(theme: str, lon: float, lat: float, zoom: float = 14) -> str:

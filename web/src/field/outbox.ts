@@ -3,11 +3,12 @@
 // file after its record, to the server's idempotent endpoints. A record the server
 // already holds comes back as a duplicate and counts as sent, so a sync retried after a
 // cut connection or a reload never duplicates anything. A refusal is kept with its reason;
-// a network failure or a server error stops the round, to be tried again later.
+// a network failure, a server error or an ended session stops the round, to be tried
+// again later.
 import type { FieldDb, Pending } from "./db.ts";
 import type { Observation } from "./records.ts";
 
-export type SyncState = "done" | "offline" | "server_error";
+export type SyncState = "done" | "offline" | "server_error" | "signed_out";
 
 export interface SyncReport {
   state: SyncState;
@@ -38,6 +39,10 @@ async function ask(fetcher: typeof fetch, url: string, init: RequestInit): Promi
   }
   if (response.status >= 500) {
     throw new Stop("server_error");
+  }
+  // The session ended: nothing is refused, the round stops until the person signs in.
+  if (response.status === 401) {
+    throw new Stop("signed_out");
   }
   return response;
 }

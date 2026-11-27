@@ -7,6 +7,21 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.17.0] - 2026-11-27
+
+- Version 1 on the phone: `deploy/` runs Subphora on a home computer with Docker Compose,
+  with HTTPS from Caddy (certificates obtained and renewed by themselves), on x86-64 and
+  ARM64; `deploy/GUIA.md` walks the owner through it step by step, in Spanish.
+- Login: a sign-in page with a name and password per family member (`subphora users add`);
+  every part of the app and the API now needs it. Five wrong passwords lock that name for
+  15 minutes; a session lasts 90 days.
+- With no coverage the app still opens on what the phone holds; if the session ends while
+  away, field records wait on the phone and are sent after signing in again.
+- Nightly backups of the private data to a folder the owner chooses (an external disk),
+  each read back in full before older ones are deleted; `subphora backup restore` brings
+  one back and keeps what it replaces.
+- The app installs on Android and iPhone home screens, with its own icon.
+
 ## [0.16.0] - 2026-11-26
 
 - Report: once an area's detailed map is done, "Descargar el informe (PDF)" gives a report a

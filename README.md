@@ -21,6 +21,7 @@ y por qué.
 | `config/defaults/` + `config/owner.yaml` | Nada hardcodeado: valores por defecto y tus cambios |
 | `src/subphora/` | El servidor (API FastAPI) y la línea de comandos |
 | `web/` | La aplicación web: React, MapLibre, TypeScript |
+| `deploy/` | Tu servidor en casa: Docker Compose, Caddy (HTTPS) y la guía paso a paso |
 | `.github/workflows/ci.yml` | `make check` en cada PR (en segundos si solo cambian docs) |
 | `.github/workflows/release.yml` | Publica la release cuando cambia la versión (la 0.0.0 no) |
 | `.github/dependabot.yml` | Una tanda al mes, agrupada; CI mergea sola lo que no es major |
@@ -31,9 +32,14 @@ Necesitas [uv](https://docs.astral.sh/uv/) y Node 26 (la versión de `.nvmrc`; c
 `nvm install` dentro del repositorio).
 
 ```
-make setup     # entorno de Python y del front end
-make dev       # arranca la API y la web; abre http://localhost:5173
+make setup                       # entorno de Python y del front end
+uv run subphora users add <tú>   # tu usuario (te pide la contraseña dos veces)
+make dev                         # arranca la API y la web; abre http://localhost:5173
 ```
+
+La aplicación pide nombre y contraseña (en local, con Chrome o Firefox). Para tenerla en el
+móvil, en tu mini PC con HTTPS y copias cada noche, sigue la guía
+[deploy/GUIA.md](deploy/GUIA.md).
 
 En la caja de búsqueda escribe cualquiera de estas cosas y pulsa *Buscar*:
 
@@ -86,6 +92,8 @@ uv run subphora national build --region ES-Z   # mapa nacional de una provincia
 uv run subphora national build --all           # toda España (~5 GB libres, varias horas)
 uv run subphora piezometry import              # niveles piezométricos (ver abajo)
 uv run subphora field summary                  # lo registrado en campo que ha llegado
+uv run subphora users add|password|remove|list # quién puede entrar
+uv run subphora backup create|list|verify|restore  # copias de data/ (ver deploy/GUIA.md)
 ```
 
 El mapa nacional se guarda en `data/national/` y `make dev` lo muestra al abrir el mapa.

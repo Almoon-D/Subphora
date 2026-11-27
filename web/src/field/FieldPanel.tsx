@@ -207,6 +207,8 @@ function Outbox({ outbox, onExport }: { outbox: OutboxView; onExport: () => void
     state = t("field.offline");
   } else if (last === "server_error") {
     state = t("field.serverError");
+  } else if (last === "signed_out") {
+    state = t("field.signedOut");
   } else {
     state = t("field.waitingToSync");
   }

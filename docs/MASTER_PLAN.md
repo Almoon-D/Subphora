@@ -130,9 +130,10 @@ cannot (JSON, lock files, `.python-version`, binaries, empty markers) and third-
 **Interface.** Spanish, every string translatable from day one. Field mode has large controls,
 high contrast for sunlight, and works with gloves.
 
-**Hosting.** Any cheap Linux machine: a free tier (such as Oracle Cloud Always Free), a cheap
-paid server, or a computer the owner buys. The app is packaged to run on any of them; the
-owner picks in session 13 (decision 0007). Until then it runs locally (`make dev`).
+**Hosting.** A mini PC in the owner's home (decision 0039), chosen in session 13 over a free
+cloud tier and a cheap paid server; the package runs on any Linux machine, x86-64 or ARM64
+(decision 0007), so moving is a restore of a backup. A free DuckDNS name follows the home
+connection's address. For development it runs locally (`make dev`).
 
 ## 4. Architecture
 
@@ -299,10 +300,15 @@ enforces in code.
 
 ### 4.9 Deployment (session 13)
 
-Docker Compose with the API and a Caddy reverse proxy (HTTPS, static PWA), on any Linux host
-(x86-64 or ARM64). A login for the few users (hashed passwords, secure cookies), nightly
-backups of `data/` to a place the owner chooses, and secrets only from the environment
-(decision 0007).
+Docker Compose (`deploy/`) with the API, a Caddy reverse proxy (HTTPS with automatic
+certificates, the static PWA, `/sw.js` never cached) and a nightly backup, on any Linux host
+(x86-64 or ARM64); the owner's step-by-step guide is `deploy/GUIA.md`. A login for the few
+users (`subphora users`, scrypt hashes, a session cookie that is HttpOnly, Secure and
+SameSite=Lax, a lockout after repeated failures); every API route but the login and the
+health check needs a session. Nightly backups of `data/` (the cache left out) to a folder
+the owner chooses, each read back in full (the restore test) before old ones are pruned;
+`subphora backup restore` keeps what it replaces. Secrets only from the environment
+(`deploy/.env`), nothing private in an image (decisions 0007, 0039).
 
 ## 5. Layout
 
@@ -322,7 +328,7 @@ src/subphora/
 web/          the PWA: Vite, React, TypeScript, MapLibre GL JS           (02)
 config/       defaults/, owner.yaml, legal/ (rules as data)              (09)
 data/         private data and caches, git-ignored                       (02)
-deploy/       Docker Compose and Caddy                                   (13)
+deploy/       Docker Compose, Caddy and the owner's guide                (13)
 ```
 
 The number is the session that creates each package.

@@ -2,7 +2,7 @@
 # The API image (MASTER_PLAN §4.9): `subphora serve`, the user and backup commands, and the
 # nightly backup service. Built for x86-64 and ARM64 from the same file. It holds no
 # private data and no secret: data/ is a volume, keys come from the environment.
-FROM ghcr.io/astral-sh/uv:0.11.32 AS uv
+FROM ghcr.io/astral-sh/uv:0.13.10 AS uv
 
 FROM python:3.15-slim-trixie
 

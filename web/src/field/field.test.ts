@@ -310,6 +310,16 @@ describe("the outbox", () => {
     expect((await syncOnce(db, 50, server.fetch)).state).toBe("done");
   });
 
+  it("waits when the session has ended, refusing nothing", async () => {
+    const db = await freshDb();
+    await fill(db);
+    const server = new FakeServer();
+    server.failures = [{ status: 401, code: "unauthenticated" }];
+    expect(await syncOnce(db, 50, server.fetch)).toEqual({ state: "signed_out", sent: 0 });
+    expect(await db.counts()).toEqual({ unsynced: 4, refused: 0 });
+    expect((await syncOnce(db, 50, server.fetch)).state).toBe("done");
+  });
+
   it("keeps a refused record with its reason and sends the others", async () => {
     const db = await freshDb();
     const records = await fill(db);

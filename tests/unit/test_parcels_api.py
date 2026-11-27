@@ -10,7 +10,7 @@ import pytest
 
 from subphora.api import create_app
 from subphora.config import Settings
-from tests.support import Catastro, fast_settings, fixture_bytes, parcel_fixture
+from tests.support import Catastro, fast_settings, fixture_bytes, parcel_fixture, signed_in
 
 SANTIAGO = "7279701NH3477G"
 
@@ -26,10 +26,8 @@ async def serve(
 ) -> AsyncIterator[httpx.AsyncClient]:
     """The app over ASGI, its lifespan run (Starlette's TestClient wants httpx2)."""
     app = create_app(settings, root=root, transport=catastro.transport())
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            yield client
+    async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+        yield client
 
 
 def santiago() -> Catastro:

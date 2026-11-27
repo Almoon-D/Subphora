@@ -22,7 +22,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
     config = sub.add_parser("config", help="validate the configuration and print it")
     config.add_argument("key", nargs="?", help="print only this dotted key, e.g. api.port")
-    sub.add_parser("serve", help="run the API server (host and port from config/api.yaml)")
+    serve = sub.add_parser("serve", help="run the API server (host and port from config/api.yaml)")
+    serve.add_argument("--host", help="listen on this address instead (the container: 0.0.0.0)")
+    users = sub.add_parser("users", help="the people who may sign in (no public sign-up)")
+    users_sub = users.add_subparsers(dest="users_command", required=True)
+    for command, text in (
+        ("add", "add a user; the password is asked twice"),
+        ("password", "set a user's password; their devices sign in again"),
+        ("remove", "remove a user and end their sessions"),
+    ):
+        parser_ = users_sub.add_parser(command, help=text)
+        parser_.add_argument("name", help="the login name: lower case, digits, '.', '-', '_'")
+        if command != "remove":
+            parser_.add_argument(
+                "--password-stdin",
+                action="store_true",
+                help="read the password from the first line of standard input",
+            )
+    users_sub.add_parser("list", help="the users' names")
+    backup = sub.add_parser("backup", help="backups of data/ (config/defaults/backup.yaml)")
+    backup_sub = backup.add_subparsers(dest="backup_command", required=True)
+    backup_sub.add_parser("create", help="write one archive, read it back, prune old ones")
+    backup_sub.add_parser("list", help="the archives in the destination")
+    verify = backup_sub.add_parser("verify", help="read an archive back: files, sums, databases")
+    verify.add_argument("archive", help="the .tar.gz to check")
+    restore = backup_sub.add_parser(
+        "restore", help="put an archive's files in place of data/ (stop the server first)"
+    )
+    restore.add_argument("archive", help="the .tar.gz to restore")
+    backup_sub.add_parser("nightly", help="run the backup every night, for ever (the service)")
     sources = sub.add_parser("sources", help="the catalogue of external services")
     sources_sub = sources.add_subparsers(dest="sources_command", required=True)
     check = sources_sub.add_parser(
@@ -72,7 +100,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "config":
         return _print_config(settings, args.key)
     if args.command == "serve":
-        return _serve(settings)
+        return _serve(settings, args.host)
+    if args.command == "users":
+        return _users(settings, args.users_command, args)
+    if args.command == "backup":
+        return _backup(settings, args.backup_command, getattr(args, "archive", None))
     if args.command == "national":
         return _national_build(settings, args.region, all_provinces=args.all)
     if args.command == "piezometry":
@@ -99,7 +131,7 @@ def _print_config(settings: Settings, key: str | None) -> int:
     return 0
 
 
-def _serve(settings: Settings) -> int:
+def _serve(settings: Settings, host: str | None) -> int:
     # Imported here: the other commands do not need the web stack.
     import uvicorn
 
@@ -109,11 +141,94 @@ def _serve(settings: Settings) -> int:
     # private parcels (hard rule 6).
     uvicorn.run(
         create_app(settings),
-        host=settings.api.host,
+        host=host or settings.api.host,
         port=settings.api.port,
         access_log=False,
         log_level=settings.core.log_level.lower(),
     )
+    return 0
+
+
+def _read_password(from_stdin: bool) -> str | None:
+    import getpass
+    import sys
+
+    if from_stdin:
+        return sys.stdin.readline().rstrip("\r\n")
+    first = getpass.getpass("Password: ")
+    if getpass.getpass("Again: ") != first:
+        print("FAILED: the two passwords differ")
+        return None
+    return first
+
+
+def _users(settings: Settings, command: str, args: argparse.Namespace) -> int:
+    from subphora.config import REPO_ROOT
+    from subphora.domain.auth import AuthError
+    from subphora.services.auth import AuthService
+
+    service = AuthService(settings, REPO_ROOT)
+    try:
+        if command == "list":
+            names = asyncio.run(service.users())
+            print("\n".join(names) if names else "no users yet: subphora users add <name>")
+            return 0
+        name = service.check_name(args.name)
+        if command == "remove":
+            asyncio.run(service.remove_user(name))
+            print(f"{name}: removed")
+            return 0
+        password = _read_password(args.password_stdin)
+        if password is None:
+            return EXIT_USAGE
+        if command == "add":
+            asyncio.run(service.add_user(name, password))
+            print(f"{name}: added")
+        else:
+            asyncio.run(service.set_password(name, password))
+            print(f"{name}: password set; their devices sign in again")
+    except AuthError as exc:
+        print(f"FAILED: {exc.detail}")
+        return EXIT_FAILED_CHECK
+    return 0
+
+
+def _backup(settings: Settings, command: str, archive: str | None) -> int:
+    from pathlib import Path
+
+    from subphora.config import REPO_ROOT
+    from subphora.domain.backup import BackupError, BackupSummary
+    from subphora.services.backup import BackupService
+    from subphora.store.backup import archives
+
+    service = BackupService(settings, REPO_ROOT)
+
+    def show(summary: BackupSummary, what: str) -> None:
+        print(
+            f"{summary.archive}: {what}; {summary.files} files ({summary.databases} databases), "
+            f"{summary.size_bytes} bytes, made {summary.created_at.isoformat()}"
+        )
+
+    try:
+        if command == "create":
+            summary, pruned = service.run()
+            show(summary, "written and verified")
+            print(f"in {service.destination}; {len(pruned)} older archives deleted")
+        elif command == "list":
+            found = archives(service.destination)
+            print("\n".join(p.name for p in found) if found else "no archives yet")
+        elif command == "verify":
+            show(service.verify(Path(archive or "")), "verified")
+        elif command == "restore":
+            previous = service.restore(Path(archive or ""))
+            print("restored")
+            if previous is not None:
+                print(f"the files that were there are kept in {previous}")
+        else:
+            asyncio.run(service.nightly())
+    except BackupError as exc:
+        print(f"FAILED ({exc.failure.value}): {exc.detail}")
+        return EXIT_FAILED_CHECK
     return 0
 
 

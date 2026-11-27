@@ -24,6 +24,7 @@ htmlcov/
 *.pem
 *.key
 data/
+backups/
 *.sqlite3
 *.db
 

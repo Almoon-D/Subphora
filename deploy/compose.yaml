@@ -1,0 +1,78 @@
+# Copyright (c) 2026 Almoon-D. All rights reserved.
+# Subphora on the owner's computer (MASTER_PLAN §4.9, decision 0039): the API, Caddy with
+# HTTPS and the PWA, and the nightly backup. `docker compose up -d --build` from this
+# folder, with the values in .env (copy .env.example). Runs on x86-64 and ARM64.
+name: subphora
+
+x-api: &api
+  build:
+    context: ..
+    dockerfile: deploy/api.Dockerfile
+  image: subphora-api:local
+  restart: unless-stopped
+  # As the computer's own user, so the files in data/ and the backups are theirs.
+  user: "${SUBPHORA_UID:-1000}:${SUBPHORA_GID:-1000}"
+  env_file:
+    - path: .env
+      required: true
+
+services:
+  api:
+    <<: *api
+    volumes:
+      - ${SUBPHORA_DATA_DIR:-../data}:/app/data
+      - ../config/owner.yaml:/app/config/owner.yaml:ro
+    # Reached only by Caddy, on the compose network; no port is published.
+    expose:
+      - "8000"
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: subphora-web:local
+    restart: unless-stopped
+    environment:
+      SUBPHORA_DOMAIN: ${SUBPHORA_DOMAIN:?set SUBPHORA_DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+
+  backup:
+    <<: *api
+    command: ["subphora", "backup", "nightly"]
+    volumes:
+      - ${SUBPHORA_DATA_DIR:-../data}:/app/data
+      - ../config/owner.yaml:/app/config/owner.yaml:ro
+      - ${SUBPHORA_BACKUP_DIR:?set SUBPHORA_BACKUP_DIR in .env}:/app/backups
+    healthcheck:
+      disable: true
+
+  # Keeps a free DuckDNS name pointing at the home connection's changing address. Started
+  # only with `--profile duckdns`; not needed with a domain of your own and a fixed address.
+  duckdns:
+    image: curlimages/curl:8.23.0
+    restart: unless-stopped
+    profiles: [duckdns]
+    environment:
+      DUCKDNS_SUBDOMAIN: ${DUCKDNS_SUBDOMAIN:-}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN:-}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        while true; do
+        curl -fsS -o /dev/null --max-time 30
+        "https://www.duckdns.org/update?domains=$${DUCKDNS_SUBDOMAIN}&token=$${DUCKDNS_TOKEN}&ip="
+        && echo "duckdns: updated" || echo "duckdns: update failed";
+        sleep 300; done
+
+volumes:
+  caddy-data:
+  caddy-config:

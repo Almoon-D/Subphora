@@ -339,6 +339,7 @@ describe("the service worker", () => {
     expect(routeOf(at("/api/search?q=x"), "GET", origin)).toBe("network");
     expect(routeOf(at("/api/aoi/point?x=1"), "GET", origin)).toBe("network");
     expect(routeOf(at("/api/field/observations"), "POST", origin)).toBe("network");
+    expect(routeOf(at("/api/auth/me"), "GET", origin)).toBe("network");
     expect(shellUrls([`${origin}/`, `${origin}/api/search?q=x`, "https://www.ign.es/x", `${origin}/api/map`, `${origin}/`], origin)).toEqual([
       `${origin}/`,
       `${origin}/api/map`,

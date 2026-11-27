@@ -3,7 +3,7 @@
 // its scripts, /api/map and /api/national) from the network, kept for the next time, and
 // from what was kept when the network fails, errs or is too slow; a pack's files and the
 // API's other answers the same way but never kept outside their pack; requests that change
-// something (the field outbox) and searches always go to the network. With no coverage the
+// something (the field outbox), searches and the session always go to the network. With no coverage the
 // page therefore opens, and a pack's map draws, from what the device holds.
 
 /** The app's own files and settings: kept on every successful load. */
@@ -14,8 +14,8 @@ export const SHELL_CACHE = "subphora-shell";
 export type Route = "shell" | "stored" | "network";
 
 const SHELL_API = new Set(["/api/map", "/api/national"]);
-// Answers that are never worth an old copy: searches and the field outbox.
-const LIVE_API = ["/api/search", "/api/aoi/", "/api/field/", "/api/section"];
+// Answers that are never worth an old copy: searches, the field outbox and the session.
+const LIVE_API = ["/api/search", "/api/aoi/", "/api/field/", "/api/section", "/api/auth/"];
 
 export function routeOf(url: URL, method: string, origin: string): Route {
   if (method !== "GET") {

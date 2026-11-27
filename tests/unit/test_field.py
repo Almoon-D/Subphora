@@ -26,7 +26,7 @@ from subphora.api.map import map_config
 from subphora.config import Settings
 from subphora.domain.field import FieldSummary, Observation, ObservationKind
 from subphora.services.field import FieldService
-from tests.support import fast_settings
+from tests.support import fast_settings, signed_in
 
 PHOTO = b"\xff\xd8\xff\xe0 synthetic jpeg bytes"
 VOICE = b"\x1aE\xdf\xa3 synthetic webm bytes"
@@ -49,10 +49,8 @@ async def serve(settings: Settings, root: Path) -> AsyncIterator[httpx.AsyncClie
         transport=httpx.MockTransport(_no_network),
         executor=ThreadPoolExecutor(max_workers=1),
     )
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            yield client
+    async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+        yield client
 
 
 def new_id() -> str:

@@ -11,6 +11,8 @@ from typing import Any, Literal, Self
 import yaml
 from pydantic import model_validator
 
+from subphora.config.auth import AuthSettings
+from subphora.config.backup import BackupSettings
 from subphora.config.base import Section
 from subphora.config.depth import DrillingSettings, PiezometrySettings
 from subphora.config.field import FieldSettings
@@ -36,6 +38,8 @@ __all__ = [
     "CONFIG_DIR",
     "REPO_ROOT",
     "ApiSettings",
+    "AuthSettings",
+    "BackupSettings",
     "CoreSettings",
     "DrillingSettings",
     "FieldSettings",
@@ -84,6 +88,8 @@ class Settings(Section):
     field: FieldSettings
     packs: PacksSettings
     report: ReportSettings
+    auth: AuthSettings
+    backup: BackupSettings
 
     @model_validator(mode="after")
     def _validation_and_depth_consistent(self) -> Self:

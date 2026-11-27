@@ -3,6 +3,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { App } from "./App.tsx";
+import { Gate } from "./auth/Gate.tsx";
 import "./styles.css";
 
 const root = document.getElementById("root");
@@ -11,6 +12,8 @@ if (!root) {
 }
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <Gate>
+      <App />
+    </Gate>
   </StrictMode>,
 );

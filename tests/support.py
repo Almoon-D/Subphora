@@ -108,3 +108,30 @@ class Catastro:
         if callable(answer):
             return answer(request)
         return httpx.Response(200, content=answer)
+
+
+TEST_USER = "tester"
+
+
+def signed_in(app: Any, settings: Settings, root: Path) -> httpx.AsyncClient:
+    """A client of ``app`` (inside its lifespan) holding a live session of a test user,
+    over https so that the Secure cookie travels. The session is written to the users'
+    store directly: the login itself is tested in tests/unit/test_auth.py."""
+    import hashlib
+    import secrets
+    from datetime import UTC, datetime, timedelta
+
+    from subphora.store.auth import AuthStore
+
+    store = AuthStore(settings.auth.database_path(root), settings.auth.busy_timeout_s)
+    now = datetime.now(UTC)
+    if store.password_hash(TEST_USER) is None:
+        store.add_user(TEST_USER, "scrypt$2$1$1$AA==$AA==", now)
+    token = secrets.token_urlsafe(32)
+    digest = hashlib.sha256(token.encode()).hexdigest()
+    store.add_session(digest, TEST_USER, now, now + timedelta(days=1))
+    return httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app),
+        base_url="https://test",
+        headers={"Cookie": f"{settings.auth.cookie.name}={token}"},
+    )

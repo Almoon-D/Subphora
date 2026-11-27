@@ -28,6 +28,7 @@ from subphora.sources import CatalogueClient
 from subphora.store import FileCache
 from subphora.store.national import read_manifests, read_map, region_tif, tiles_path
 from tests.national_support import MADRID, FakeSpain, small_settings
+from tests.support import signed_in
 
 BOX = ",".join(str(v) for v in MADRID)
 
@@ -221,10 +222,8 @@ def test_the_command_needs_a_region_or_all() -> None:
 @asynccontextmanager
 async def serve(settings: Settings, root: Path) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app(settings, root=root, transport=FakeSpain().transport())
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            yield client
+    async with app.router.lifespan_context(app), signed_in(app, settings, root) as client:
+        yield client
 
 
 async def test_before_any_build_the_map_says_it_is_not_built(

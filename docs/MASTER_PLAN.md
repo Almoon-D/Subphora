@@ -61,8 +61,8 @@ reduce the uncertainty.
 - No paid service, paid API or recurring cost without the owner's approval in a decision.
 - No unprompted recommendations to hire a hydrogeologist or other professional. The
   professional export pack (session 12) exists for when the owner chooses to use one.
-- No hardware design or purchase before session 16. Until then, the data model only stays
-  open to a future instrument (§4.8).
+- No field instrument is bought or built (decision 0042): subsurface measurements come from
+  surveys the owner hires when a spot needs one (§4.8).
 
 ## 3. Constraints
 
@@ -294,11 +294,12 @@ tables (CSV).
 
 ### 4.8 Room for hardware
 
-Hardware is not designed before session 16 (decision 0008). The design keeps two things open
-for it: observations have a `kind`, so a future instrument reading or survey line is a new
-kind rather than a new store; and a measurement that injects current is gated by the safety
-checklist of hard rule 3, which the session that first controls or imports instrument data
-enforces in code.
+Decision 0042: no instrument is bought or built; the owner hires a survey when a candidate
+spot justifies it, and the options and prices are in `docs/knowledge/field-instruments.md`.
+The design keeps two things open: observations have a `kind`, so an instrument reading or a
+survey line would be a new kind rather than a new store; and a measurement that injects
+current is gated by the safety checklist of hard rule 3, which the session that first
+controls or imports instrument data would enforce in code.
 
 ### 4.9 Deployment (session 13)
 
@@ -358,5 +359,6 @@ Each session ends in something the owner can see or run. The table with status i
 | 14 | Well registry and learning | Logged wells and outcomes update the map |
 | 15 | Satellite and climate layers | Late-summer vegetation anomaly (irrigation masked), ground motion, rainfall |
 | 16 | Hardware planning | Options compared with prices; the owner decides |
+| 17 | Water levels in the field | A level typed at the well with no coverage reaches the registry and the depth to water |
 
 Copyright (c) 2026 Almoon-D. All rights reserved.

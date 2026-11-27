@@ -43,7 +43,7 @@ def _utc(value: datetime) -> datetime:
 
 class ObservationKind(StrEnum):
     """What a record holds. An instrument reading would be a new kind (§4.8); none exists
-    before session 16."""
+    (decision 0042)."""
 
     NOTE = "note"
     PHOTO = "photo"

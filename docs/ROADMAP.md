@@ -24,7 +24,8 @@
 | 14 | `docs/sessions/done/14-well-registry-learning.md` | Opus 5.5, high | done |
 | 15 | `docs/sessions/done/15-satellite-climate.md` | Opus 5.5, high | done |
 | 15a | `docs/sessions/15a-recent-rainfall-and-detailed-vegetation.md` | Opus 5.5, high | next (needs the owner's AEMET key) |
-| 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
+| 16 | `docs/sessions/done/16-hardware-planning.md` | Opus 5.5, high | done (decision 0042: no instrument) |
+| 17 | `docs/sessions/17-water-levels-in-the-field.md` | Opus 5.5, high | next |
 
 ## Live verification queue
 
@@ -130,6 +131,9 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- A hired survey's results (a sounding's layers, a tomography section) have no place in the
+  app yet; a session could import them as evidence once the owner has one. (16)
 
 - The well registry needs a connection: a reading typed in the field with no coverage is
   refused (the form keeps it; a field note goes through the outbox). Wells could join the
@@ -266,6 +270,20 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 16 — Hardware planning (2026-11-27, version 0.20.0)
+
+- Landed: the live survey of field instruments (`docs/knowledge/field-instruments.md`):
+  water-level meters, OhmPi v2024 (BOM, 50 V/48 mA with the DPH5005, CERN-OHL-S and GPL),
+  HVSR (Raspberry Shake 3D), VLF, contracted studies and drilling prices in Spain, RTK and
+  IGN's free correction service, level loggers, and the fit per Spanish setting.
+- Recommended: a 100 m water-level meter, then a 4-electrode OhmPi meter for vertical
+  soundings, about €1,700-2,000. Owner's ruling (decision 0042, supersedes 0008): nothing is
+  bought or built; surveys are hired when a spot needs one.
+- Prompt 17 written (water levels typed at the well with no coverage, from any source);
+  MASTER_PLAN §2, §4.8, §6 and hard rule 3 updated.
+- Not found live: TEM and magnetic-resonance prices in Spain; which VLF transmitters are on
+  air; a priced generic dipper from a Spanish shop besides one Amazon listing.
 
 ### 15 — Satellite and climate layers (2026-11-27, version 0.19.0)
 

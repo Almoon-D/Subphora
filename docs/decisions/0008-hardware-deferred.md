@@ -1,6 +1,6 @@
 # 0008 — Hardware deferred to session 16
 
-- Date: 2026-11-24 · Status: accepted · Owner ruling (0003)
+- Date: 2026-11-24 · Status: superseded by 0042 · Owner ruling (0003)
 - Context: the brief asks for a field instrument; the owner chose to build the software first.
 - Decision: no instrument is chosen, bought or designed before session 16, which researches
   options live and puts them to the owner. Session 00's preliminary notes, not approved and to

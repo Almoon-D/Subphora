@@ -584,6 +584,7 @@ def test_the_command_line_imports_counts_and_validates_without_printing_records(
 def test_store_failures_are_errors_of_the_registry(settings: Settings, tmp_path: Path) -> None:
     import asyncio
 
+    from subphora.services.wells import WellsService
     from subphora.store.wells import WellsStore
 
     (tmp_path / "wells.sqlite").mkdir()
@@ -591,3 +592,7 @@ def test_store_failures_are_errors_of_the_registry(settings: Settings, tmp_path:
     with pytest.raises(WellsError) as caught:
         asyncio.run(store.records())
     assert caught.value.failure is WellsFailure.STORE_UNAVAILABLE
+    # The detailed map still answers: the registry's stamp says it is unavailable.
+    (tmp_path / "data").write_text("a file where data/ goes")
+    stamp = asyncio.run(WellsService(settings, tmp_path).current_stamp())
+    assert len(stamp) == 16

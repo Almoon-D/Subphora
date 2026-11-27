@@ -93,7 +93,12 @@ class WellsService:
         return hashlib.sha256(text.encode()).hexdigest()[:_STAMP_LENGTH]
 
     async def current_stamp(self) -> str:
-        return self.stamp(await self._store.records())
+        """The registry's stamp; a failing registry gets a stamp of its own, so that the
+        detailed map still answers (its layer of the wells then says the registry failed)."""
+        try:
+            return self.stamp(await self._store.records())
+        except WellsError:
+            return hashlib.sha256(b"unavailable").hexdigest()[:_STAMP_LENGTH]
 
     def _check(self, well: Well) -> None:
         if len(well.name) > self._wells.name_max_chars:

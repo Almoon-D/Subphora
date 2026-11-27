@@ -3,8 +3,10 @@
 (MASTER_PLAN §4.3, depth and cost).
 
 The water table comes only from piezometers of the groundwater body under the spot, with an
-uncertainty that grows with distance; beyond the maximum distance, outside every body, or
-without the imported levels, the depth is "unknown" and says why. A spot in carbonate rock
+uncertainty that grows with distance; the owner's wells read at rest join them as private
+levels of their own body when asked, never written into the public data. Beyond the
+maximum distance, outside every body, or without any levels, the depth is "unknown" and
+says why. A spot in carbonate rock
 (possible karst) is flagged: there the water table between piezometers is unreliable. The
 cost is a range in euros (``Decimal``), from priced settings that name their source.
 """
@@ -50,6 +52,30 @@ class LevelsSource(DomainModel):
         return self
 
 
+class OwnLevel(DomainModel):
+    """One of the owner's wells as a private level: the water-table elevation its readings at
+    rest give (m above sea level; ground from the area's terrain model, minus the depth
+    below the ground), their range, how many and when, and its distance to the spot."""
+
+    well_id: str = Field(min_length=1)
+    distance_m: float = Field(ge=0)
+    ground_m: float
+    level_m: float
+    low_m: float
+    high_m: float
+    readings: int = Field(ge=1)
+    first: date
+    last: date
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        if not self.low_m <= self.level_m <= self.high_m:
+            raise ValueError("a level lies inside its range")
+        if self.last < self.first:
+            raise ValueError("the readings' period ends after it starts")
+        return self
+
+
 class WaterTable(DomainModel):
     """The interpolated water-table elevation (m above sea level) and its range."""
 
@@ -81,6 +107,8 @@ class DepthEstimate(DomainModel):
     karst: bool = False
     # The sources of the piezometers' levels used, national first.
     sources: tuple[LevelsSource, ...] = ()
+    # The owner's wells used as private levels, nearest first.
+    own_levels: tuple[OwnLevel, ...] = ()
 
     @model_validator(mode="after")
     def _consistent(self) -> Self:
@@ -88,7 +116,7 @@ class DepthEstimate(DomainModel):
         if self.state == "estimated":
             if (
                 self.reason is not None
-                or not self.sources
+                or not (self.sources or self.own_levels)
                 or self.ground_m is None
                 or self.water_table is None
                 or self.depth_m is None
@@ -98,7 +126,12 @@ class DepthEstimate(DomainModel):
                 raise ValueError("an estimated depth has every figure and its source, no reason")
             if not self.low_m <= self.depth_m <= self.high_m:
                 raise ValueError("the depth lies inside its range")
-        elif self.reason is None or any(f is not None for f in figures) or self.sources:
+        elif (
+            self.reason is None
+            or any(f is not None for f in figures)
+            or self.sources
+            or self.own_levels
+        ):
             raise ValueError("an unknown depth says why and has no figures")
         return self
 

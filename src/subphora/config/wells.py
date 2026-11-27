@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import Field, PositiveFloat, PositiveInt, field_validator, model_validator
 
 from subphora.config.base import Section
+from subphora.config.depth import LevelSummary
 
 # The CSV columns the import reads, each with the names that stand for it.
 CSV_COLUMNS = frozenset(
@@ -27,6 +28,11 @@ CSV_COLUMNS = frozenset(
         "note",
         "measured_at",
         "depth_to_water_m",
+        "reference",
+        "reference_height_m",
+        "measured_by",
+        "pump",
+        "pump_minutes",
     }
 )
 
@@ -61,11 +67,30 @@ class OutcomeWords(Section):
     unknown: list[str] = Field(min_length=1)
 
 
+class ReferenceWords(Section):
+    ground: list[str] = Field(min_length=1)
+    casing_top: list[str] = Field(min_length=1)
+
+
+class MeasuredByWords(Section):
+    owner: list[str] = Field(min_length=1)
+    driller: list[str] = Field(min_length=1)
+    contractor: list[str] = Field(min_length=1)
+
+
+class PumpWords(Section):
+    stopped: list[str] = Field(min_length=1)
+    running: list[str] = Field(min_length=1)
+
+
 class CsvSettings(Section):
     max_bytes: PositiveInt
     max_rows: PositiveInt
     columns: dict[str, list[str]]
     outcomes: OutcomeWords
+    references: ReferenceWords
+    measured_by: MeasuredByWords
+    pump: PumpWords
     productive_above_l_s: float = Field(ge=0)
     date_formats: list[str] = Field(min_length=1)
     datetime_formats: list[str] = Field(min_length=1)
@@ -86,10 +111,23 @@ class CsvSettings(Section):
             raise ValueError(f"wells.csv.columns names exactly {sorted(CSV_COLUMNS)}")
         if any(not names for names in self.columns.values()):
             raise ValueError("wells.csv.columns: every column has a name")
-        words = [*self.outcomes.productive, *self.outcomes.dry, *self.outcomes.unknown]
-        if len({w.lower() for w in words}) != len(words):
-            raise ValueError("wells.csv.outcomes: a word stands for one outcome")
+        for name, group in (
+            ("outcomes", self.outcomes),
+            ("references", self.references),
+            ("measured_by", self.measured_by),
+            ("pump", self.pump),
+        ):
+            words = [w for values in group.model_dump().values() for w in values]
+            if len({w.lower() for w in words}) != len(words):
+                raise ValueError(f"wells.csv.{name}: a word stands for one value")
         return self
+
+
+class OwnLevelsSettings(Section):
+    """The owner's readings as private levels of the depth to water."""
+
+    min_rest_minutes: int = Field(ge=0)
+    summary: LevelSummary
 
 
 class OwnerValidationSettings(Section):
@@ -102,4 +140,5 @@ class WellsSettings(Section):
     note_max_chars: PositiveInt
     update: UpdateSettings
     csv: CsvSettings
+    levels: OwnLevelsSettings
     validation: OwnerValidationSettings

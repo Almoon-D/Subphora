@@ -9,7 +9,8 @@ tests/national_support.py (no network): ``uv run python scripts/e2e_fixtures.py`
   ``parcel-queued.json``, ``parcel-daimiel.json``, ``explain-parcel-daimiel.json`` and
   ``parcel-campos.json``. Campos lies outside both boxes and far from every piezometer.
   Before the tap, one synthetic productive well is logged 40 m east of the first
-  candidate, so the tap's answer carries its value updated with the owner's wells.
+  candidate, with one made-up reading at rest, so the tap's answer carries its value
+  updated with the owner's wells and its depth with the well's private level.
 - The legal panel at the Daimiel point's centre: ``legal-daimiel.json``.
 - The cross-section under a 1.2 km line running east through the Daimiel point, across the
   synthetic fault: ``section-daimiel.json``.
@@ -51,6 +52,19 @@ WELL_SPACING_M = 700.0
 # The synthetic well logged before the tap: a made-up id and name, 40 m east of the spot.
 SYNTHETIC_WELL_ID = "5d3c2b1a-0f9e-4d8c-8b7a-6f5e4d3c2b1a"
 WELL_OFFSET_DEG = 40 / 86_000
+# The synthetic well's made-up reading: 30 m below a casing top 0.5 m above the ground,
+# with the pump stopped overnight.
+SYNTHETIC_READING = {
+    "id": "019acb2e-3c00-7000-8000-000000000017",
+    "well_id": SYNTHETIC_WELL_ID,
+    "measured_at": "2026-11-20T08:00:00Z",
+    "depth_to_water_m": 30.0,
+    "reference": "casing_top",
+    "reference_height_m": 0.5,
+    "measured_by": "owner",
+    "pump": "stopped",
+    "pump_minutes": 600,
+}
 # A 1.2 km line running east through the Daimiel point (area-point-daimiel.json).
 SECTION_LINE = {"start": [-3.6184, 39.0675], "end": [-3.6046, 39.0675]}
 
@@ -132,7 +146,9 @@ async def main(root: Path) -> None:
     spain = FakeSpain(wells=WELL_SPACING_M)
     regions = [r for spec in BOXES for r in resolve_region(settings, spec)]
     async with CatalogueClient(settings.sources, __version__, spain.transport()) as client:
-        builder = NationalBuilder(client, settings, FileCache(root / "cache"), root)
+        builder = NationalBuilder(
+            client, settings, FileCache(root / "cache"), root, band_reader=spain.read_band
+        )
         with ThreadPoolExecutor(max_workers=2) as executor:
             report = await builder.build(regions, executor, 2)
     if report.failed:
@@ -164,6 +180,8 @@ async def main(root: Path) -> None:
             }
             logged = await api.put(f"/api/wells/{SYNTHETIC_WELL_ID}", json=well)
             logged.raise_for_status()
+            read = await api.post("/api/wells/readings", json={"readings": [SYNTHETIC_READING]})
+            read.raise_for_status()
             tapped = await api.get(
                 f"/api/parcel/{queued['job']['id']}/explain",
                 params={"lon": first["longitude"], "lat": first["latitude"]},

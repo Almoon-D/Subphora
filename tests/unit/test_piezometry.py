@@ -128,18 +128,18 @@ def test_an_access_file_can_be_read_without_a_zip(tmp_path: Path, fake_mdb_expor
 def test_a_level_is_the_recent_median_and_too_few_or_too_old_are_left_out() -> None:
     settings = load_settings().piezometry
     levels = [(date(2024, month, 1), float(month)) for month in range(1, 13)]
-    summary = summarise(levels, settings, date(2026, 11, 26))
+    summary = summarise(levels, settings.summary, date(2026, 11, 26))
     assert summary is not None
     assert summary.level == pytest.approx(6.5)
     assert summary.low < summary.level < summary.high
     assert summary.count == 12
     # Only the recent window counts: a level 20 years before the last is not in it.
-    with_old = summarise([(date(2004, 1, 1), 999.0), *levels], settings, date(2026, 11, 26))
+    with_old = summarise([(date(2004, 1, 1), 999.0), *levels], settings.summary, date(2026, 11, 26))
     assert with_old is not None
     assert with_old.count == 12
-    assert summarise(levels[:3], settings, date(2026, 11, 26)) is None
-    assert summarise(levels, settings, date(2045, 1, 1)) is None
-    assert summarise([], settings, date(2026, 11, 26)) is None
+    assert summarise(levels[:3], settings.summary, date(2026, 11, 26)) is None
+    assert summarise(levels, settings.summary, date(2045, 1, 1)) is None
+    assert summarise([], settings.summary, date(2026, 11, 26)) is None
 
 
 def _point() -> Piezometer:

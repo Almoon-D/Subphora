@@ -8,7 +8,12 @@
   area's stored index and the wells known now, so a well logged a moment ago shows at
   once and the area's own map is never changed: the two layers can be compared.
 - A tap on the detailed map gets the same update at that point, with every well that
-  moved it.
+  moved it, and the depth to water there twice: from the public piezometry alone, and with
+  the owner's wells read at rest as private levels of their own groundwater body (never
+  a reading taken while pumping). Both are computed when asked; the area's stored map,
+  its candidates, its report and its export pack keep the public depth.
+- Readings come one by one from the panel, or in batches from the device's outbox, each
+  kept once under its id.
 - The owner's wells validate the national index apart from the public wells, per domain,
   productive against dry, with decision 0030's method and thresholds.
 - Nothing here logs a record's content (a name, a position, a note).
@@ -16,8 +21,11 @@
 
 import asyncio
 import hashlib
+import math
+from collections import Counter
 from collections.abc import Sequence
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -25,14 +33,19 @@ import numpy as np
 from numpy.typing import NDArray
 
 from subphora.config import Settings
+from subphora.domain.depth import OwnLevel
 from subphora.domain.parcel_map import ParcelError, ParcelExplanation, ParcelFailure
 from subphora.domain.potential import Variable
 from subphora.domain.validation import NO_BODY, DomainValidation
 from subphora.domain.wells import (
     KNOWN_OUTCOMES,
     Change,
+    DepthWithWells,
     ImportReport,
+    LevelLeftOut,
     OwnerValidation,
+    PumpState,
+    ReadingResult,
     Registry,
     Well,
     WellOutcome,
@@ -42,13 +55,15 @@ from subphora.domain.wells import (
     WellsError,
     WellsFailure,
 )
-from subphora.geo.grid import transform_xy
+from subphora.geo.grid import GridWindow, transform_xy
 from subphora.geo.render import overlay_image, transparent_png
+from subphora.model.depth import PiezometerPoint, depth_at
 from subphora.model.evaluate import Category
 from subphora.model.learning import KnownWell, update_at, update_grid
 from subphora.model.validation import Labelled, probabilities, validate_domain
 from subphora.services.national_map import estimate_at
 from subphora.services.parcel import ParcelMapService
+from subphora.services.piezometry import piezometer_points, summarise
 from subphora.services.validation import domain_codes
 from subphora.services.wells_csv import parse_wells_csv
 from subphora.store.file_cache import Clock, utc_now
@@ -59,6 +74,7 @@ from subphora.store.national import (
     read_manifests,
     region_tif,
 )
+from subphora.store.piezometry import read_piezometry
 from subphora.store.wells import WellsStore
 
 _LON_LAT = "EPSG:4326"
@@ -74,6 +90,7 @@ class WellsService:
         store = self._wells.store
         self._store = WellsStore(store.database_path(root), store.busy_timeout_s)
         self._national_root = settings.national.build.output_path(root)
+        self._levels_path = settings.piezometry.output_path(root)
         self._clock = clock
 
     # ── The registry ───────────────────────────────────────────────────────────────────
@@ -127,6 +144,13 @@ class WellsService:
                 WellsFailure.CONFLICT, f"the reading {reading.id} is held with other content"
             )
         return WellSaved(id=reading.id, change=change)
+
+    async def add_readings(self, readings: Sequence[WellReading]) -> list[ReadingResult]:
+        """A batch from the device's outbox: each reading kept once, or refused on its own."""
+        limit = self._settings.field.sync.batch_size
+        if len(readings) > limit:
+            raise WellsError(WellsFailure.TOO_LARGE, f"at most {limit} readings a request")
+        return await self._store.add_readings(readings)
 
     async def import_csv(self, content: bytes) -> ImportReport:
         parsed = await asyncio.to_thread(parse_wells_csv, content, self._wells)
@@ -198,20 +222,25 @@ class WellsService:
     async def explain(
         self, maps: ParcelMapService, area_id: str, lon: float, lat: float
     ) -> ParcelExplanation:
-        """The detailed map's estimate at a point, with its value updated by the wells."""
+        """The detailed map's estimate at a point, with its value updated by the wells and
+        the depth to water with the owner's levels beside the public one."""
         explanation = await maps.explain(area_id, lon, lat)
+        records = await self._store.records()
+        depth = await asyncio.to_thread(
+            self._depth, maps.root, area_id, lon, lat, records, self._clock()
+        )
         estimate = explanation.estimate
-        if estimate.score is None:
-            return explanation
-        analysis = await maps.analysis(area_id)
-        wells = await self._known(analysis.crs)
-        kind: Literal["index", "probability"]
-        if estimate.probability is not None:
-            prior, kind = estimate.probability.value, "probability"
-        else:
-            prior, kind = estimate.score, "index"
-        x, y = transform_xy(lon, lat, _LON_LAT, analysis.crs)
-        updated = update_at(prior, kind, x, y, wells, self._wells.update)
+        updated = None
+        if estimate.score is not None:
+            analysis = await maps.analysis(area_id)
+            wells = await self._known(analysis.crs)
+            kind: Literal["index", "probability"]
+            if estimate.probability is not None:
+                prior, kind = estimate.probability.value, "probability"
+            else:
+                prior, kind = estimate.score, "index"
+            x, y = transform_xy(lon, lat, _LON_LAT, analysis.crs)
+            updated = update_at(prior, kind, x, y, wells, self._wells.update)
         return ParcelExplanation(
             longitude=explanation.longitude,
             latitude=explanation.latitude,
@@ -220,7 +249,116 @@ class WellsService:
             built_at=explanation.built_at,
             estimate=estimate,
             updated=updated,
+            depth=depth,
         )
+
+    # ── The depth to water with the owner's levels ─────────────────────────────────────
+
+    def _depth(
+        self,
+        root: Path,
+        area_id: str,
+        lon: float,
+        lat: float,
+        records: Sequence[WellRecord],
+        now: datetime,
+    ) -> DepthWithWells:
+        """The depth at a point of an area, public and with the owner's levels. Blocks."""
+        grid = _AreaGrid.read(root, self._manifest(root, area_id))
+        x, y = transform_xy(lon, lat, _LON_LAT, grid.window.crs)
+        cell = grid.window.cell_of(x, y)
+        if cell is None:
+            raise ParcelError(ParcelFailure.OUTSIDE_GRID, "the point lies outside the area")
+        try:
+            levels = read_piezometry(self._levels_path)
+        except ValueError as exc:
+            raise ParcelError(ParcelFailure.UNREADABLE, str(exc)) from exc
+        piezometry = self._settings.piezometry
+        table = piezometry.water_table
+        public = (
+            []
+            if levels is None
+            else piezometer_points(levels, grid.window.crs, (x, y, x, y), table.max_distance_m)
+        )
+        own, points, left_out = self._own_levels(grid, records, now)
+        ground = grid.ground(cell)
+        body = grid.body(cell)
+        permeability = grid.permeability(cell)
+        karst = permeability is not None and piezometry.is_karst(permeability)
+        sources = None if levels is None else levels.source_map()
+        site = (x, y, ground, body)
+        return DepthWithWells(
+            public=depth_at(*site, public, table, karst, sources),
+            with_wells=depth_at(*site, [*public, *points], table, karst, sources, own),
+            left_out=left_out,
+        )
+
+    def _unusable(self, reading: WellReading) -> LevelLeftOut | None:
+        """Why a reading is no level of the water table, or None: it was read at rest."""
+        if reading.pump is PumpState.RUNNING:
+            return LevelLeftOut.PUMPING
+        if reading.pump is PumpState.UNKNOWN:
+            return LevelLeftOut.PUMP_UNKNOWN
+        rest = self._wells.levels.min_rest_minutes
+        if reading.pump_minutes is not None and reading.pump_minutes < rest:
+            return LevelLeftOut.RECOVERING
+        return None
+
+    def _own_levels(
+        self, grid: _AreaGrid, records: Sequence[WellRecord], now: datetime
+    ) -> tuple[dict[str, OwnLevel], list[PiezometerPoint], dict[LevelLeftOut, int]]:
+        """The owner's wells inside the area's grid as private levels of their own body,
+        from their readings at rest; and the readings left out, by why."""
+        own: dict[str, OwnLevel] = {}
+        points: list[PiezometerPoint] = []
+        left_out: Counter[LevelLeftOut] = Counter()
+        summary = self._wells.levels.summary
+        for record in records:
+            at_rest = []
+            for reading in record.readings:
+                reason = self._unusable(reading)
+                if reason is None:
+                    at_rest.append(reading)
+                else:
+                    left_out[reason] += 1
+            if not at_rest:
+                continue
+            well = record.well
+            x, y = transform_xy(well.longitude, well.latitude, _LON_LAT, grid.window.crs)
+            depths = [(r.measured_at.astimezone(UTC).date(), r.below_ground_m) for r in at_rest]
+            placed = _placed(grid, grid.window.cell_of(x, y))
+            summarised = summarise(depths, summary, now.date())
+            if isinstance(placed, LevelLeftOut) or summarised is None:
+                left_out[placed if isinstance(placed, LevelLeftOut) else LevelLeftOut.TOO_OLD] += (
+                    len(at_rest)
+                )
+                continue
+            ground, body = placed
+            # The depths' range turns over into the levels': the deepest water is the lowest.
+            level = OwnLevel(
+                well_id=well.id,
+                distance_m=0.0,
+                ground_m=ground,
+                level_m=ground - summarised.level,
+                low_m=ground - summarised.high,
+                high_m=ground - summarised.low,
+                readings=summarised.count,
+                first=summarised.first,
+                last=summarised.last,
+            )
+            own[well.id] = level
+            points.append(
+                PiezometerPoint(
+                    x=x,
+                    y=y,
+                    body=body[0],
+                    level_m=level.level_m,
+                    low_m=level.low_m,
+                    high_m=level.high_m,
+                    well_id=well.id,
+                )
+            )
+        return own, points, dict(left_out)
 
     # ── The index against the owner's wells ────────────────────────────────────────────
 
@@ -274,6 +412,86 @@ class WellsService:
         return OwnerValidation(
             validations=tuple(validations), off_map=off_map, unknown_outcome=unknown
         )
+
+
+@dataclass(frozen=True, slots=True)
+class _AreaGrid:
+    """What the depth needs of an area's stored grid: its window, the ground elevation,
+    the groundwater body and the permeability class at each cell, and their categories."""
+
+    window: GridWindow
+    elevation: NDArray[np.float32]
+    bodies: NDArray[np.float32]
+    permeabilities: NDArray[np.float32]
+    body_categories: tuple[Category, ...]
+    permeability_categories: tuple[Category, ...]
+
+    @classmethod
+    def read(cls, root: Path, manifest: RegionManifest) -> _AreaGrid:
+        names = [
+            Variable.ELEVATION_M.value,
+            Variable.GROUNDWATER_BODY.value,
+            Variable.PERMEABILITY_CLASS.value,
+        ]
+        try:
+            bands, _, _ = read_bands(region_tif(root, manifest.region_id), names)
+        except ValueError as exc:
+            raise ParcelError(ParcelFailure.UNREADABLE, str(exc)) from exc
+
+        def categories(variable: Variable) -> tuple[Category, ...]:
+            items = manifest.categories.get(variable, ())
+            return tuple(Category(cls=c.cls, label=c.label) for c in items)
+
+        return cls(
+            window=GridWindow(
+                crs=manifest.crs,
+                cell_m=manifest.cell_m,
+                west=manifest.west,
+                north=manifest.north,
+                width=manifest.width,
+                height=manifest.height,
+            ),
+            elevation=bands[names[0]],
+            bodies=bands[names[1]],
+            permeabilities=bands[names[2]],
+            body_categories=categories(Variable.GROUNDWATER_BODY),
+            permeability_categories=categories(Variable.PERMEABILITY_CLASS),
+        )
+
+    def ground(self, cell: tuple[int, int]) -> float:
+        return float(self.elevation[cell])
+
+    @staticmethod
+    def _category(
+        grid: NDArray[np.float32], items: Sequence[Category], cell: tuple[int, int]
+    ) -> Category | None:
+        value = float(grid[cell])
+        code = -1 if math.isnan(value) else int(value)
+        return items[code] if 0 <= code < len(items) else None
+
+    def body(self, cell: tuple[int, int]) -> tuple[str, str] | None:
+        """The (code, label) of the groundwater body at a cell; None outside every body."""
+        found = self._category(self.bodies, self.body_categories, cell)
+        return None if found is None else (found.cls, found.label)
+
+    def permeability(self, cell: tuple[int, int]) -> str | None:
+        found = self._category(self.permeabilities, self.permeability_categories, cell)
+        return None if found is None else found.label
+
+
+def _placed(
+    grid: _AreaGrid, cell: tuple[int, int] | None
+) -> tuple[float, tuple[str, str]] | LevelLeftOut:
+    """A well's ground elevation and groundwater body from the area's grid, or why not."""
+    if cell is None:
+        return LevelLeftOut.OUTSIDE_AREA
+    ground = grid.ground(cell)
+    if math.isnan(ground):
+        return LevelLeftOut.NO_GROUND_ELEVATION
+    body = grid.body(cell)
+    if body is None:
+        return LevelLeftOut.OUTSIDE_BODIES
+    return ground, body
 
 
 def _labelled(points: Sequence[tuple[float, float, float]], block_m: float) -> Labelled:

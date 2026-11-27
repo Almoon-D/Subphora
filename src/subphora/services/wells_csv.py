@@ -9,6 +9,9 @@
   semicolon or tab); with a semicolon, numbers may use a decimal comma.
 - A position is longitude and latitude in degrees, or x and y in the CRS whose EPSG code
   the row gives.
+- A reading's level is below the ground unless its reference column names the top of the
+  casing, whose height above the ground is given; who read it and the pump's state are
+  read from their words, and are "unknown" when blank.
 - Ids are stable: a well without one gets a UUID made from its name, and a reading one made
   from its well and time, so importing the same file again changes nothing.
 - An error names the row and the column, never the value (a record is private).
@@ -28,7 +31,16 @@ from pydantic import ValidationError
 from pyproj.exceptions import ProjError
 
 from subphora.config.wells import CsvSettings, WellsSettings
-from subphora.domain.wells import Well, WellOutcome, WellReading, WellsError, WellsFailure
+from subphora.domain.wells import (
+    LevelReference,
+    MeasuredBy,
+    PumpState,
+    Well,
+    WellOutcome,
+    WellReading,
+    WellsError,
+    WellsFailure,
+)
 from subphora.geo.grid import transform_xy
 
 # The namespace of the ids made for wells and readings that come without one.
@@ -38,6 +50,8 @@ _DELIMITERS = ",;\t"
 _SAMPLE = 8192
 # The well's own columns (the rest are a reading's).
 _WELL_COLUMNS = ("longitude", "latitude", "depth_m", "flow_l_s", "outcome", "drilled_on", "note")
+# A reading's columns besides its date and level.
+_READING_DETAILS = ("reference", "reference_height_m", "measured_by", "pump", "pump_minutes")
 
 
 @dataclass(slots=True)
@@ -156,6 +170,17 @@ class _Row:
                 return outcome
         raise self.fail("outcome", "is not a known outcome")
 
+    def word_of[T](self, column: str, words: dict[T, list[str]]) -> T | None:
+        """The value a column's word stands for; None when it is blank."""
+        word = self.text(column)
+        if word is None:
+            return None
+        key = normalise(word)
+        for value, names in words.items():
+            if key in {normalise(n) for n in names}:
+                return value
+        raise self.fail(column, "is not a known word")
+
     def position(self) -> tuple[float, float]:
         lon, lat = self.number_of("longitude"), self.number_of("latitude")
         if lon is not None and lat is not None:
@@ -273,10 +298,48 @@ def _read_row(
     if (measured_at is None) != (level is None):
         raise row.fail("reading", "needs both its date and its level")
     if measured_at is not None and level is not None:
-        reading = WellReading(
+        parsed.readings.append(
+            (row.number, _reading(row, settings.csv, well_id, measured_at, level))
+        )
+    elif any(row.text(c) is not None for c in _READING_DETAILS):
+        raise row.fail("reading", "has details but no date and level")
+
+
+def _reading(
+    row: _Row, options: CsvSettings, well_id: str, measured_at: datetime, level: float
+) -> WellReading:
+    reference = row.word_of(
+        "reference",
+        {
+            LevelReference.GROUND: options.references.ground,
+            LevelReference.CASING_TOP: options.references.casing_top,
+        },
+    )
+    measured_by = row.word_of(
+        "measured_by",
+        {
+            MeasuredBy.OWNER: options.measured_by.owner,
+            MeasuredBy.DRILLER: options.measured_by.driller,
+            MeasuredBy.CONTRACTOR: options.measured_by.contractor,
+        },
+    )
+    pump = row.word_of(
+        "pump", {PumpState.STOPPED: options.pump.stopped, PumpState.RUNNING: options.pump.running}
+    )
+    minutes = row.number_of("pump_minutes")
+    if minutes is not None and (minutes < 0 or minutes != int(minutes)):
+        raise row.fail("pump_minutes", "is not a whole number of minutes")
+    try:
+        return WellReading(
             id=stable_id("reading", well_id, measured_at.astimezone(UTC).isoformat()),
             well_id=well_id,
             measured_at=measured_at,
             depth_to_water_m=level,
+            reference=reference or LevelReference.GROUND,
+            reference_height_m=row.number_of("reference_height_m") or 0.0,
+            measured_by=measured_by or MeasuredBy.UNKNOWN,
+            pump=pump or PumpState.UNKNOWN,
+            pump_minutes=None if minutes is None else int(minutes),
         )
-        parsed.readings.append((row.number, reading))
+    except ValidationError as exc:
+        raise row.fail("reading", "states its reference or pump inconsistently") from exc

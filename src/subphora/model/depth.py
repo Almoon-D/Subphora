@@ -6,6 +6,8 @@
   piezometer of another body is never used, however near.
 - Its range is the piezometers' weighted seasonal half-range, widened with the distance to
   the nearest one; past the maximum distance the depth is "unknown".
+- The owner's wells read at rest are points like the piezometers, of their own body, that
+  carry the well's id instead of a public source: the estimate lists them apart.
 - Depth = ground elevation (the terrain model) - water table, never below 0; the range
   follows from the water table's. Carbonate rock (possible karst) is flagged.
 - The same rules give a depth grid over a whole area (``depth_grid``), for the export
@@ -29,6 +31,7 @@ from subphora.domain.depth import (
     DepthUnknown,
     DrillingCost,
     LevelsSource,
+    OwnLevel,
     WaterTable,
 )
 
@@ -50,6 +53,8 @@ class PiezometerPoint:
     high_m: float
     # The services of the levels it summarises.
     sources: tuple[str, ...] = ()
+    # The owner's well it is, for a private level (no public source).
+    well_id: str | None = None
 
 
 def _nearest(
@@ -110,15 +115,17 @@ def depth_at(
     settings: WaterTableSettings,
     karst: bool,
     sources: Mapping[str, LevelsSource] | None,
+    own: Mapping[str, OwnLevel] | None = None,
 ) -> DepthEstimate:
     """The depth to water at a spot; ``body`` is its groundwater body (code, label) or
     None outside every body; ``sources`` (by service) is None when no levels were
-    imported."""
+    imported; ``own`` holds the owner's private levels (by well id) among the points."""
 
     def unknown(reason: DepthUnknown) -> DepthEstimate:
         return DepthEstimate(state="unknown", reason=reason, karst=karst)
 
-    if sources is None:
+    own = own or {}
+    if sources is None and not own:
         return unknown(DepthUnknown.NOT_IMPORTED)
     if body is None:
         return unknown(DepthUnknown.OUTSIDE_BODIES)
@@ -127,7 +134,13 @@ def depth_at(
     table = water_table(x, y, body[0], body[1], piezometers, settings)
     if table is None:
         return unknown(DepthUnknown.NO_PIEZOMETER_NEARBY)
-    used = {s for _, p in _nearest(x, y, body[0], piezometers, settings) for s in p.sources}
+    near = _nearest(x, y, body[0], piezometers, settings)
+    used = {s for _, p in near for s in p.sources}
+    wells = [
+        own[p.well_id].model_copy(update={"distance_m": d})
+        for d, p in near
+        if p.well_id is not None and p.well_id in own
+    ]
     return DepthEstimate(
         state="estimated",
         ground_m=ground_m,
@@ -136,7 +149,8 @@ def depth_at(
         low_m=max(0.0, ground_m - table.high_m),
         high_m=max(0.0, ground_m - table.low_m),
         karst=karst,
-        sources=tuple(s for key, s in sources.items() if key in used),
+        sources=tuple(s for key, s in (sources or {}).items() if key in used),
+        own_levels=tuple(wells),
     )
 
 

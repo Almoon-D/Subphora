@@ -267,6 +267,22 @@
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
 
+### 15 — Satellite and climate layers (2026-11-27, version 0.19.0)
+
+- Landed (decision 0041): Sentinel-2 through Earth Search and its AWS COGs (80 m overview),
+  the five-summer composite per tile, the anomaly against the dry land within 2 km with
+  SIGPAC's irrigated enclosures masked; the criterion tried per domain (paired bootstrap
+  AUC gain) and used only where admitted (the detailed map lists it as missing until 15a);
+  trials in the validation, "not admitted" in the explanation; context layers: EGMS
+  ground motion (owner's files in `data/egms`), SIMPA recharge and rainfall (MITECO).
+- Live, Almería (ES-AL, 32 min cold): 4 domains validated; the vegetation entered Medio-Bajo
+  Andarax (AUC 0.846 → 0.856, gain 0.010 [0.003, 0.016]) and stayed out of Nacimiento,
+  Níjar and Campo de Dalías (gain intervals reach 0). A La Mancha box had 4,491 water points
+  and none with a yield: nothing measured, so nothing entered.
+- Fixed on live data: SIGPAC tiles holding points among the enclosures; 404 tiles at z12.
+- Deferred to 15a: AEMET recent rainfall (needs the key), the 10 m vegetation detail.
+- VERIFY-LIVE: egms-format (new); egms-terms, keyed-services moved to the owner and 15a.
+
 ### 14 — Well registry and learning from the field (2026-11-27, version 0.18.0)
 
 - Landed (decision 0040): the private registry (`store/wells.py`, `data/wells/`) with

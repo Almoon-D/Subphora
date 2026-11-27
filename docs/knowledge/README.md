@@ -21,6 +21,7 @@ The source catalogue (`config/defaults/sources.yaml`) names the file for each se
 | `soil.md` | Soil options and the recommendation (decision 0013) |
 | `copernicus.md` | Sentinel-2 (CDSE and Earth Search STAC, the AWS COGs) and EGMS |
 | `aemet.md` | AEMET OpenData |
+| `field-instruments.md` | Water-level meters, resistivity (OhmPi), HVSR, VLF, contracted surveys, positioning, loggers: prices and fit (decision 0042) |
 | `google-maps.md` | Map Tiles API terms, prices, caps (not used: decision 0020) |
 | `nationwide-inputs.md` | What covers all of Spain, for session 05 |
 | `legal-groundwater.md` | Water Law, Regulation, Andalusian law, basin-plan rules |

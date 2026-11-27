@@ -70,7 +70,7 @@ enforces it. The session that first touches a rule's area adds its enforcement a
    disclaimer; "not evaluated" and "rules not loaded" are explicit states, never a blank.
 3. **No measurement without the safety checklist.** Any code that starts a current-injecting
    measurement or imports its readings refuses unless a passed checklist record is attached.
-   No instrument code exists before session 16 decides one.
+   No instrument code exists before session 18 (decision 0042).
 4. **Official APIs and terms only; no secrets in the repository.** The HTTP client calls only
    hosts in the source catalogue (`config/defaults/sources.yaml`), each with its terms recorded
    in `docs/knowledge/`; anything else is refused; data whose terms forbid storing it is

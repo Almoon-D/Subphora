@@ -7,6 +7,16 @@ the release notes. At most 8 bullets per section, in plain English: what changed
 not a file list.
 A new project starts at 0.0.0 with no section; its first session adds `## [0.1.0] - <date>`.
 
+## [0.20.0] - 2026-11-27
+
+- A comparison of field instruments with today's prices: water-level meters, home-built
+  resistivity meters (OhmPi), passive seismic, VLF, hired surveys, precise GPS and level
+  loggers, and what each can find in limestone, in sedimentary basins and in hard rock.
+- The recommendation put to the owner: first a 100 m water-level meter for your wells, then
+  a 4-electrode resistivity meter for soundings, about €1,700-2,000 in all.
+- The next three sessions are written: levels typed at the well with no coverage, the
+  meter's build guide with its safety checklist, and soundings on the map.
+
 ## [0.19.0] - 2026-11-27
 
 - A new map layer, "Vegetación verde a final de verano": where the land stays greener

@@ -6,6 +6,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 
 | # | Decision | Status |
 |---|---|---|
+| [0042](0042-field-instrument-path.md) | Field instruments: a water-level meter, then a 4-electrode resistivity meter | proposed, awaiting the owner's ruling |
 | [0041](0041-vegetation-anomaly-and-context-layers.md) | The late-summer vegetation anomaly enters only where validation admits it | accepted |
 | [0040](0040-well-registry-and-beta-update.md) | The owner's wells: a private registry and a Beta update shown as its own layer | accepted |
 | [0039](0039-home-mini-pc-and-login.md) | A home mini PC behind Caddy; sessions in SQLite; backups read back every night | accepted |
@@ -39,7 +40,7 @@ later one supersedes it and both say so. This index lists every decision, newest
 | [0011](0011-owner-ruling-follow-up.md) | Owner ruling after the plan: versions, spending, copyright, subsurface | accepted |
 | [0010](0010-foral-cadastres-not-supported.md) | Foral cadastres: "not supported yet" | accepted |
 | [0009](0009-proprietary-licence.md) | Proprietary licence | accepted |
-| [0008](0008-hardware-deferred.md) | Hardware deferred to session 16 | accepted |
+| [0008](0008-hardware-deferred.md) | Hardware deferred to session 16 | superseded by 0042 |
 | [0007](0007-host-agnostic-deployment.md) | Host-agnostic deployment, host chosen in session 13 | accepted |
 | [0006](0006-transparent-two-scale-model.md) | A transparent water-potential model at two scales, without an LLM | accepted |
 | [0005](0005-google-base-map.md) | Google base maps: optional, capped, never offline | superseded by 0020 |

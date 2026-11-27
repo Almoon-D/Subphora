@@ -24,7 +24,10 @@
 | 14 | `docs/sessions/done/14-well-registry-learning.md` | Opus 5.5, high | done |
 | 15 | `docs/sessions/done/15-satellite-climate.md` | Opus 5.5, high | done |
 | 15a | `docs/sessions/15a-recent-rainfall-and-detailed-vegetation.md` | Opus 5.5, high | next (needs the owner's AEMET key) |
-| 16 | `docs/sessions/16-hardware-planning.md` | Opus 5.5, high | planned |
+| 16 | `docs/sessions/done/16-hardware-planning.md` | Opus 5.5, high | done (owner's ruling on decision 0042) |
+| 17 | `docs/sessions/17-water-levels-in-the-field.md` | Opus 5.5, high | next |
+| 18 | `docs/sessions/18-resistivity-meter-build-and-safety.md` | Opus 5.5, high | planned |
+| 19 | `docs/sessions/19-soundings-to-the-map.md` | Opus 5.5, high | planned |
 
 ## Live verification queue
 
@@ -130,6 +133,13 @@
 ## Follow-ups
 
 <!-- Out-of-scope findings: one line each, with the session that found it. -->
+
+- Decision 0042's budget beyond the board BOM (Raspberry Pi, DPH5005, batteries, reels,
+  electrodes, enclosure) is an estimate; session 18 prices it with suppliers. (16)
+- After the first soundings, a ruling on growing to ERT (two MUX v2024 boards, about €120
+  each in parts, and 16-32 electrodes), and on HVSR where basin fill over bedrock matters. (16)
+- A water-level logger (a vented 4-20 mA/RS485 sensor and an ESP32, or a Levelogger) once
+  hand readings show which well is worth watching. (16)
 
 - The well registry needs a connection: a reading typed in the field with no coverage is
   refused (the form keeps it; a field note goes through the outbox). Wells could join the
@@ -266,6 +276,20 @@
 
 <!-- Newest first. At most 15 lines per entry: landed, deferred, live findings, VERIFY-LIVE.
      When this section passes ~300 lines, move the oldest entries to docs/archive/. -->
+
+### 16 — Hardware planning (2026-11-27, version 0.20.0)
+
+- Landed: the live survey of field instruments (`docs/knowledge/field-instruments.md`):
+  water-level meters, OhmPi v2024 (BOM, 50 V/48 mA with the DPH5005, CERN-OHL-S and GPL),
+  HVSR (Raspberry Shake 3D), VLF, contracted studies and drilling prices in Spain, RTK and
+  IGN's free correction service, level loggers, and the fit per Spanish setting.
+- Decision 0042 (supersedes 0008): a 100 m water-level meter, then a 4-electrode OhmPi meter
+  for vertical soundings, about €1,700-2,000 in all; ERT, HVSR, VLF, RTK and loggers wait.
+- Prompts 17 (levels typed offline at the well), 18 (build guide, checklist, import) and 19
+  (inversion with pyGIMLi, the sounding on the map) written; MASTER_PLAN §2, §4.8, §6 and
+  hard rule 3 point at them.
+- Not found live: TEM and magnetic-resonance prices in Spain; which VLF transmitters are on
+  air; a priced generic dipper from a Spanish shop besides one Amazon listing.
 
 ### 15 — Satellite and climate layers (2026-11-27, version 0.19.0)
 

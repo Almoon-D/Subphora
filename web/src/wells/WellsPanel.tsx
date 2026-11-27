@@ -350,7 +350,8 @@ export function WellsPanel({ tapped, onChanged }: Props) {
       <p className="note">{t("wells.privacy")}</p>
       {registry === null && <p className="note">{t("wells.loading")}</p>}
       {registry && !registry.ok && (
-        <p className="error" role="alert">
+        // Read on opening, not asked for: no alert (the page's alerts answer what was done).
+        <p className="error" data-wells-failure={registry.failure}>
           {failureText(registry)}
         </p>
       )}

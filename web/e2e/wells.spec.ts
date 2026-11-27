@@ -167,7 +167,7 @@ test("a registry out of reach says so and keeps what was typed", async ({ page }
   const registry = await mockApi(page);
   registry.reachable = false;
   await page.goto("/");
-  await expect(panel(page).getByRole("alert").first()).toContainText("El registro de pozos del servidor falla ahora");
+  await expect(panel(page).locator("[data-wells-failure]")).toContainText("El registro de pozos del servidor falla ahora");
   const form = panel(page).locator("form.well-form");
   await form.getByLabel("Nombre").fill("Pozo sintético");
   await form.getByRole("button", { name: "Guardar pozo" }).click();
